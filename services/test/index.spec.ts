@@ -1,4 +1,4 @@
-import { env, createExecutionContext, waitOnExecutionContext, SELF } from 'cloudflare:test';
+import { env } from 'cloudflare:test';
 import { describe, it, expect, beforeEach } from 'vitest';
 import worker from '../src/index';
 
@@ -15,9 +15,7 @@ describe('checkout endpoint', () => {
 				cancel_url: 'https://example.com/cancel',
 			}),
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(403);
 	});
 
@@ -30,9 +28,7 @@ describe('checkout endpoint', () => {
 				cancel_url: 'https://example.com/cancel',
 			}),
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(400);
 	});
 
@@ -46,9 +42,7 @@ describe('checkout endpoint', () => {
 				cancel_url: 'https://example.com/cancel',
 			}),
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(400);
 	});
 
@@ -57,18 +51,14 @@ describe('checkout endpoint', () => {
 			method: 'OPTIONS',
 			headers: { Origin: 'https://example.com' },
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(204);
 		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('POST, OPTIONS');
 	});
 
 	it('returns 405 for non-POST', async () => {
 		const request = new IncomingRequest('http://example.com/checkout', { method: 'GET' });
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, env, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, env);
 		expect(response.status).toBe(405);
 	});
 });
@@ -79,9 +69,7 @@ describe('products endpoint', () => {
 			method: 'GET',
 			headers: { Origin: 'http://evil.com' },
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(405); // 405 because GET goes to createProductHandler which checks method first
 	});
 
@@ -91,9 +79,7 @@ describe('products endpoint', () => {
 			headers: { 'Content-Type': 'application/json', Origin: 'http://evil.com' },
 			body: JSON.stringify({ name: 'Test Product' }),
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(403);
 	});
 
@@ -102,9 +88,7 @@ describe('products endpoint', () => {
 			method: 'OPTIONS',
 			headers: { Origin: 'https://example.com' },
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(204);
 		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('POST, OPTIONS');
 	});
@@ -115,9 +99,7 @@ describe('products endpoint', () => {
 			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
 			body: JSON.stringify({ name: 'Updated' }),
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(405);
 	});
 
@@ -126,9 +108,7 @@ describe('products endpoint', () => {
 			method: 'DELETE',
 			headers: { Origin: 'https://example.com' },
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(405);
 	});
 
@@ -137,9 +117,7 @@ describe('products endpoint', () => {
 			method: 'OPTIONS',
 			headers: { Origin: 'https://example.com' },
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(405); // OPTIONS not handled without matching PUT/DELETE/GET
 	});
 
@@ -149,9 +127,7 @@ describe('products endpoint', () => {
 			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
 			body: JSON.stringify({ name: 'Test' }),
 		});
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' }, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(405);
 	});
 });
@@ -159,9 +135,7 @@ describe('products endpoint', () => {
 describe('routing', () => {
 	it('returns 404 for unknown routes', async () => {
 		const request = new IncomingRequest('http://example.com/unknown', { method: 'GET' });
-		const ctx = createExecutionContext();
-		const response = await worker.fetch(request, env, ctx);
-		await waitOnExecutionContext(ctx);
+		const response = await worker.fetch(request, env);
 		expect(response.status).toBe(404);
 	});
 });

@@ -87,7 +87,7 @@ describe('withStripeHandler', () => {
 			ALLOWED_ORIGINS: 'https://example.com',
 			STRIPE_SECRET_KEY: 'sk_test_123',
 			RATE_LIMIT_KV: mockKV,
-		} as Env;
+		} as unknown as Env;
 		const response = await handler(request, env);
 		expect(response.status).toBe(429);
 	});
@@ -104,7 +104,7 @@ describe('withStripeHandler', () => {
 		const env = { ALLOWED_ORIGINS: 'https://example.com', STRIPE_SECRET_KEY: 'sk_test_123' } as Env;
 		const response = await handler(request, env);
 		expect(response.status).toBe(500);
-		const body = await response.json();
+		const body = (await response.json()) as any;
 		expect(body.error).toBe('An error occurred');
 	});
 });
