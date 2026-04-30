@@ -1,0 +1,42 @@
+[
+  {
+    "id": "testimonial-1",
+    "name": "Jennifer Walker",
+    "location": "Burlington, VT",
+    "rating": 5,
+    "text": "I've been buying Golden Hive honey for years, and it never disappoints. The wildflower honey is absolutely divine — I put it in my morning tea and drizzle it over oatmeal. You can really taste the difference between this and the stuff from the grocery store.",
+    "date": "2024-12-15"
+  },
+  {
+    "id": "testimonial-2",
+    "name": "Robert Chen",
+    "location": "Boston, MA",
+    "rating": 5,
+    "text": "Ordered the gift set for my mother's birthday, and she loved it! The packaging was beautiful, and the honey was the best she's ever had. We're now both on the monthly honey club. Can't wait for next month's batch!",
+    "date": "2024-11-28"
+  },
+  {
+    "id": "testimonial-3",
+    "name": "Emily Hartwell",
+    "location": "Montpelier, VT",
+    "rating": 5,
+    "text": "As a fellow beekeeper, I really appreciate the care Golden Hive takes with their bees. Their commitment to sustainable practices shows in the quality of their products. The buckwheat honey is incredible — bold and complex.",
+    "date": "2024-10-10"
+  },
+  {
+    "id": "testimonial-4",
+    "name": "Michael Torres",
+    "location": "New York, NY",
+    "rating": 5,
+    "text": "The beeswax candles are a game changer. I bought a pack for my girlfriend, and we now use them every Sunday evening. They burn so nicely and give off the most wonderful warm glow. Will definitely order more.",
+    "date": "2024-09-22"
+  },
+  {
+    "id": "testimonial-5",
+    "name": "Sarah & David Miller",
+    "location": "Portland, OR",
+    "rating": 5,
+    "text": "We discovered Golden Hive at a farmers market in Stowe and were immediately hooked. The lip balms are now a staple in our household — natural, effective, and they actually smell like honey. Our kids love them too!",
+    "date": "2024-08-05"
+  }
+]

@@ -1,0 +1,38 @@
+{
+  "name": "bee-epic-apiary",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://lucivuc.github.io/bee-epic-apiary/",
+  "scripts": {
+    "services:deploy": "npm run deploy --prefix services",
+    "services:dev": "npm run dev --prefix services",
+    "services:start": "npm run start --prefix services",
+    "services:cf-typegen": "npm run cf-typegen --prefix services",
+    "services:test": "npm run test --prefix services",
+    "services:install": "npm install --prefix services",
+    "web:deploy": "npm run deploy --prefix web",
+    "web:dev": "npm run dev --prefix web",
+    "web:build": "npm run build --prefix web",
+    "web:lint": "npm run lint --prefix web",
+    "web:preview": "npm run preview --prefix web",
+    "web:predeploy": "npm run predeploy --prefix web",
+    "web:install": "npm install --prefix web",
+    "dev": "concurrently \"npm run services:dev\" \"npm run web:dev\"",
+    "build": "npm run services:deploy && npm run web:build",
+    "lint": "npm run web:lint",
+    "preview": "npm run web:preview",
+    "predeploy": "npm run build",
+    "preinstall": "npm run services:install && npm run web:install",
+    "deploy": "npm run services:deploy && npm run web:deploy",
+    "format": "prettier --write .",
+    "format:staged": "pretty-quick --staged --no-restage --verbose",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "prettier": "^3.8.3",
+    "pretty-quick": "^4.2.2"
+  }
+}

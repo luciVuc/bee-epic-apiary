@@ -1,0 +1,57 @@
+{
+  "businessName": "Bee Epic Apiary",
+  "tagline": "Pure, Raw Honey from Bay Area's Finest Flowers",
+  "heroHeadline": "Nature's Sweetest Gift, Straight from the Hive",
+  "heroSubheadline": "Small-batch, raw honey harvested with care from our California apiary. Every jar captures the essence of wild California flowers.",
+  "aboutTitle": "Our Story",
+  "aboutText": [
+    "Bee Epic Apiary was founded in 2009 when beekeeper Sarah Mitchell received her first two hives as a wedding gift. What started as a quiet hobby in the meadows of rural California has grown into a beloved local business dedicated to sustainable beekeeping and exceptional honey.",
+    "Our bees forage among the pristine wildflowers of the Green Mountain State, away from pesticides and industrial agriculture. We believe in letting nature do its work — our honey is never heated, filtered, or processed. It goes from hive to jar just as the bees made it.",
+    "Every drop of Bee Epic Apiary honey carries the flavors of California: clover, wildflower, buckwheat, and apple blossom. We're proud to share this liquid gold with families across the Bay Area and beyond."
+  ],
+  "processTitle": "From Hive to Your Table",
+  "processSubtitle": "Follow our journey from the first flower to your kitchen shelf",
+  "productsTitle": "Our Products",
+  "productsSubtitle": "Small-batch, raw honey and bee products from our California apiary",
+  "testimonialsTitle": "What Our Customers Say",
+  "testimonialsSubtitle": "Join our community of honey lovers",
+  "contactTitle": "Contact Us",
+  "contactSubtitle": "We'd love to hear from you",
+  "noProductsFound": "No products found in this category.",
+  "footerTagline": "Built with ❤️ in California",
+  "yearsExperience": "15+ Years",
+  "yearsExperienceLabel": "of Experience",
+  "rawNatural": "100%",
+  "rawNaturalLabel": "Raw & Natural",
+  "californiaProud": "California",
+  "californiaProudLabel": "Proud",
+  "sinceYear": "Since 2009",
+  "sinceYearLabel": "Sustaining beekeeping tradition",
+  "navLinks": [
+    { "id": "home", "label": "Home" },
+    { "id": "about", "label": "About" },
+    { "id": "process", "label": "Our Process" },
+    { "id": "products", "label": "Shop" },
+    { "id": "testimonials", "label": "Testimonials" },
+    { "id": "contact", "label": "Contact" }
+  ],
+  "orderConfirmed": "Order Confirmed!",
+  "orderConfirmationMessage": "Thank you for your order. A confirmation email will be sent shortly.",
+  "questionsContact": "Questions? Contact us at",
+  "continueShopping": "Continue Shopping",
+  "email": "hello@beeepicapiary.com",
+  "phone": "(510) 555-APIARY",
+  "location": "Union City, California",
+  "categories": [
+    { "id": "ALL", "label": "All Products" },
+    { "id": "HONEY", "label": "Honey" },
+    { "id": "BEESWAX", "label": "Beeswax" },
+    { "id": "GIFTS", "label": "Gift Sets" },
+    { "id": "SUBSCRIPTIONS", "label": "Subscriptions" }
+  ],
+  "socialLinks": {
+    "instagram": "https://instagram.com/beeepicapiary",
+    "facebook": "https://facebook.com/beeepicapiary",
+    "etsy": "https://etsy.com/shop/beeepicapiary"
+  }
+}

@@ -1,0 +1,152 @@
+[
+  {
+    "id": "prod_UO303XfKyCAtqZ",
+    "name": "Wildflower Raw Honey",
+    "slug": "wildflower-raw-honey",
+    "description": "A beautiful blend of nectar from Bay Area's wild meadows.",
+    "longDescription": "Our signature wildflower honey is a celebration of Bay Area's diverse flora. Each batch captures the unique character of the season's blooms — from clover and alfalfa to wild rose and black-eyed Susan. This raw, unfiltered honey retains all its natural enzymes, pollen, and propolis. Perfect for tea, toast, or straight from the jar.",
+    "price": 1400,
+    "stripePriceId": "price_1TPGunDz32YdTgbTJiI8WC6d",
+    "stripePaymentLinkId": "test_bJeaEXdW9dLQ4I6gkDcjS08",
+    "category": "HONEY",
+    "imageUrls": [
+      "/golden-hive-apiary/images/products/wildflower.png",
+      "/golden-hive-apiary/images/products/wildflower.png"
+    ],
+    "thumbnailUrls": [
+      "/golden-hive-apiary/images/products/wildflower-thumb.png",
+      "/golden-hive-apiary/images/products/wildflower-thumb.png"
+    ],
+    "inStock": true,
+    "featured": true,
+    "weight": "16 oz",
+    "tags": ["raw", "unfiltered", "local"]
+  },
+  {
+    "id": "prod_UO318ICtMi0zxd",
+    "name": "Clover Blossom Honey",
+    "slug": "clover-blossom-honey",
+    "description": "Light, sweet, and exceptionally smooth.",
+    "longDescription": "Clover honey is the classic American honey — and ours is something special. Harvested from clover-rich meadows in late summer, this honey boasts a light golden color and remarkably smooth, sweet flavor. It's perfect for those new to raw honey, adding a gentle sweetness to any dish.",
+    "price": 1200,
+    "stripePriceId": "price_1TPGvODz32YdTgbTCivJIlSE",
+    "stripePaymentLinkId": "test_00w14n4lz6jo1vUb0jcjS0d",
+    "category": "HONEY",
+    "imageUrls": ["/golden-hive-apiary/images/products/clover.png"],
+    "thumbnailUrls": ["/golden-hive-apiary/images/products/clover-thumb.png"],
+    "inStock": true,
+    "featured": true,
+    "weight": "12 oz",
+    "tags": ["raw", "smooth", "classic"]
+  },
+  {
+    "id": "prod_UO32OqZElnIDiU",
+    "name": "Buckwheat Dark Honey",
+    "slug": "buckwheat-dark-honey",
+    "description": "Rich, robust, and malty — honey at its most bold.",
+    "longDescription": "For those who love intensity, our buckwheat honey delivers. Dark, rich, and remarkably robust, it has notes of molasses, caramel, and dark cherries. Buckwheat honey is also one of the highest in antioxidants. A truly distinctive honey for the adventurous palate.",
+    "price": 1600,
+    "stripePriceId": "price_1TPGwgDz32YdTgbTIlD1iJ9t",
+    "stripePaymentLinkId": "test_5kQ14n9FT8rw3E21pJcjS0e",
+    "category": "HONEY",
+    "imageUrls": ["/golden-hive-apiary/images/products/buckwheat.png"],
+    "thumbnailUrls": [
+      "/golden-hive-apiary/images/products/buckwheat-thumb.png"
+    ],
+    "inStock": true,
+    "featured": false,
+    "weight": "12 oz",
+    "tags": ["raw", "dark", "robust"]
+  },
+  {
+    "id": "prod_UO35lvWDea7spN",
+    "name": "Beeswax Lip Balm Set",
+    "slug": "beeswax-lip-balm",
+    "description": "Natural lip care with raw Bay Area beeswax.",
+    "longDescription": "Our lip balms are made with 100% pure beeswax from our own hives, blended with organic coconut oil and a touch of local honey. These little tubes of softness are a year-round essential. Set of 4 — keep one everywhere: pocket, purse, desk, and bedside.",
+    "price": 1200,
+    "stripePriceId": "price_1TPGzIDz32YdTgbT2KKUpKMs",
+    "stripePaymentLinkId": "test_bJe14nbO17ns1vUgkDcjS0f",
+    "category": "BEESWAX",
+    "imageUrls": ["/golden-hive-apiary/images/products/lip-balm.png"],
+    "thumbnailUrls": ["/golden-hive-apiary/images/products/lip-balm-thumb.png"],
+    "inStock": true,
+    "featured": false,
+    "weight": "4 x 0.15 oz",
+    "tags": ["beeswax", "natural", "gift"]
+  },
+  {
+    "id": "prod_UO36JO83axyMY9",
+    "name": "Hand-Rolled Beeswax Candles",
+    "slug": "beeswax-candles",
+    "description": "Pure beeswax candles, hand-rolled in our workshop.",
+    "longDescription": "There's nothing quite like the warm glow of a beeswax candle. Hand-rolled from sheets of our own pure beeswax, these candles burn cleanly and emit a subtle, natural honey scent. Each purchase supports our bees and brings a touch of golden warmth to your home.",
+    "price": 2400,
+    "stripePriceId": "price_1TPGzrDz32YdTgbT4WiJeNEq",
+    "stripePaymentLinkId": "test_7sY6oH5pDbDI2zY6K3cjS0c",
+    "category": "BEESWAX",
+    "imageUrls": ["/golden-hive-apiary/images/products/candles.png"],
+    "thumbnailUrls": ["/golden-hive-apiary/images/products/candles-thumb.png"],
+    "inStock": true,
+    "featured": false,
+    "weight": "4 candles",
+    "tags": ["beeswax", "handmade", "decor"]
+  },
+  {
+    "id": "prod_UO36TpDHrZ6mU5",
+    "name": "Honey Lover's Gift Set",
+    "slug": "honey-lovers-gift-set",
+    "description": "A perfect introduction to Golden Hive favorites.",
+    "longDescription": "Our most popular gift! This beautifully packaged set includes two jars of our raw honey (wildflower and clover), a tin of beeswax lip balm, and a small hand-rolled beeswax candle. Wrapped in kraft paper with a ribbon — ready for gifting.",
+    "price": 4500,
+    "stripePriceId": "price_1TPH0WDz32YdTgbT76cSiBib",
+    "stripePaymentLinkId": "test_9B628rbO1bDI0rQd8rcjS0b",
+    "category": "GIFTS",
+    "imageUrls": ["/golden-hive-apiary/images/products/gift-junior.png"],
+    "thumbnailUrls": [
+      "/golden-hive-apiary/images/products/gift-junior-thumb.png"
+    ],
+    "inStock": true,
+    "featured": true,
+    "weight": "2 jars + balm + candle",
+    "tags": ["gift", "set", "featured"]
+  },
+  {
+    "id": "prod_UO37P4qDjU2t13",
+    "name": "Premium Hive Collection",
+    "slug": "premium-hive-collection",
+    "description": "Our finest selection in an elegant wooden box.",
+    "longDescription": "The ultimate Golden Hive experience. This premium collection features all three honey varieties, two beeswax lip balm sets, two hand-rolled candles, and a beautiful wooden honey dipper. Presented in a handcrafted wooden box made by Bay Area artisans — a gift they'll treasure.",
+    "price": 9500,
+    "stripePriceId": "price_1TPH0tDz32YdTgbThDq3b1FL",
+    "stripePaymentLinkId": "test_7sYeVd19n6jo3E26K3cjS0a",
+    "category": "GIFTS",
+    "imageUrls": ["/golden-hive-apiary/images/products/gift-premium.png"],
+    "thumbnailUrls": [
+      "/golden-hive-apiary/images/products/gift-premium-thumb.png"
+    ],
+    "inStock": true,
+    "featured": false,
+    "weight": "3 jars + 2 balms + 2 candles",
+    "tags": ["gift", "premium", "luxury"]
+  },
+  {
+    "id": "prod_UO376lFrkmINHo",
+    "name": "Monthly Honey Club",
+    "slug": "monthly-honey-club",
+    "description": "Fresh honey delivered to your door every month.",
+    "longDescription": "Join our Honey Club and receive a fresh jar of seasonal raw honey each month, along with a notes from the hive telling the story of what's in bloom. You'll taste honey that's completely unique to each time of year. Subscriptions can be paused or cancelled anytime.",
+    "price": 2200,
+    "stripePriceId": "price_1TPH1VDz32YdTgbTNxPerqyT",
+    "stripePaymentLinkId": "test_9B69AT19ngY2eiG5FZcjS09",
+    "category": "SUBSCRIPTIONS",
+    "imageUrls": ["/golden-hive-apiary/images/products/subscription.png"],
+    "thumbnailUrls": [
+      "/golden-hive-apiary/images/products/subscription-thumb.png"
+    ],
+    "inStock": true,
+    "featured": false,
+    "weight": "12 oz / month",
+    "tags": ["subscription", "monthly", "club"]
+  }
+]

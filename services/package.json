@@ -1,0 +1,29 @@
+{
+	"name": "bee-epic-apiary-services",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev",
+		"start": "wrangler dev",
+		"cf-typegen": "wrangler types",
+		"format": "prettier --write .",
+		"format:staged": "pretty-quick --staged --no-restage --verbose",
+		"test": "vitest"
+	},
+	"devDependencies": {
+		"@cloudflare/vitest-pool-workers": "^0.12.4",
+		"@types/dotenv": "^6.1.1",
+		"@types/node": "^25.6.0",
+		"@types/stripe": "^8.0.416",
+		"prettier": "^3.8.3",
+		"pretty-quick": "^4.2.2",
+		"typescript": "^5.5.2",
+		"vitest": "~3.2.0",
+		"wrangler": "^4.85.0"
+	},
+	"dependencies": {
+		"dotenv": "^17.4.2",
+		"stripe": "^22.1.0"
+	}
+}
