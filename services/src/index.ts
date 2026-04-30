@@ -11,4 +11,8 @@
  * Learn more at https://developers.cloudflare.com/workers/
  */
 
-export * from './stripe';
+import router from './router';
+
+export default {
+	fetch: router,
+} satisfies ExportedHandler<Env>;

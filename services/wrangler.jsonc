@@ -40,4 +40,14 @@
 	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
 	 */
 	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+	/**
+	 * KV Namespaces (for rate limiting)
+	 * https://developers.cloudflare.com/workers/runtime-apis/kv/
+	 */
+	"kv_namespaces": [
+		{
+			"binding": "RATE_LIMIT_KV",
+			"id": "d0a3f2e1b4c5d6e7f8a9b0c1d2e3f4a", // Replace with actual KV namespace ID after creation
+		},
+	],
 }

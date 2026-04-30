@@ -1,51 +1,49 @@
 // workers/get-products.ts
+import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
-import { handleCORS, isAllowedOrigin, jsonResponse } from '../../utils';
+import { jsonResponse } from '../../utils';
+
+const CACHE_TTL = 300; // 5 minutes in seconds
 
 export default {
-	async fetch(request: Request, env: Env): Promise<Response> {
-		// Handle CORS preflight
-		if (request.method === 'OPTIONS') {
-			return handleCORS(request, env, 'GET');
-		}
+	fetch: withStripeHandler('GET', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
+		// Extract product ID from URL if present
+		const url = new URL(request.url);
+		const pathParts = url.pathname.split('/');
+		const productId = pathParts[pathParts.length - 1];
 
-		// Only allow GET
-		if (request.method !== 'GET') {
-			return jsonResponse({ error: 'Method not allowed' }, 405);
-		}
-
-		// Validate origin
-		const origin = request.headers.get('Origin');
-		if (!isAllowedOrigin(origin, env)) {
-			return jsonResponse({ error: 'Forbidden' }, 403);
-		}
-
-		try {
-			// Extract product ID from URL if present
-			const url = new URL(request.url);
-			const pathParts = url.pathname.split('/');
-			const productId = pathParts[pathParts.length - 1];
-
-			// Initialize Stripe
-			const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-				apiVersion: '2026-04-22.dahlia',
-				httpClient: Stripe.createFetchHttpClient(),
-			});
-
-			let result;
-			if (productId && productId !== 'products') {
-				// Get single product
-				result = (await stripe.products.retrieve(productId)) as Stripe.Response<Stripe.Product>;
-			} else {
-				// Get all products
-				result = (await stripe.products.list()) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+		// Try to get from cache first (only for GET all products, not individual products)
+		if (!productId || productId === 'products') {
+			const cache = caches.default;
+			const cacheKey = new Request(url.toString(), { method: 'GET' });
+			const cachedResponse = await cache.match(cacheKey);
+			if (cachedResponse) {
+				return cachedResponse;
 			}
-
-			return jsonResponse(result, 200, origin, env);
-		} catch (error: any) {
-			console.error('Stripe error:', error);
-
-			return jsonResponse({ error: error.message }, 400, origin, env);
 		}
-	},
+
+		let result;
+		if (productId && productId !== 'products') {
+			// Get single product
+			result = (await stripe.products.retrieve(productId)) as Stripe.Response<Stripe.Product>;
+		} else {
+			// Get all products
+			result = (await stripe.products.list()) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+		}
+
+		const response = jsonResponse(result, 200, origin, env);
+
+		// Cache the response for GET all products
+		if (!productId || productId === 'products') {
+			const cache = caches.default;
+			const cacheKey = new Request(url.toString(), { method: 'GET' });
+			// Clone the response before caching
+			const responseToCache = response.clone();
+			// Add cache headers
+			responseToCache.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
+			await cache.put(cacheKey, responseToCache);
+		}
+
+		return response;
+	}),
 } satisfies ExportedHandler<Env>;

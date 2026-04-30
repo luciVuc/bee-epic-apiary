@@ -2,12 +2,17 @@
 
 ## Commands
 
-| Command              | Purpose                                           |
-| -------------------- | ------------------------------------------------- |
-| `npm run dev`        | Local development server                          |
-| `npm run test`       | Run Vitest with Workers pool                      |
-| `npm run deploy`     | Deploy to Cloudflare                              |
-| `npm run cf-typegen` | Regenerate Env types after wrangler.jsonc changes |
+| Command                 | Purpose                                           |
+| ----------------------- | ------------------------------------------------- |
+| `npm run dev`           | Local development server                          |
+| `npm run test`          | Run Vitest with Workers pool                      |
+| `npm run test:coverage` | Run tests with coverage report                    |
+| `npm run deploy`        | Deploy to Cloudflare                              |
+| `npm run cf-typegen`    | Regenerate Env types after wrangler.jsonc changes |
+
+## Coverage
+
+[![codecov](https://codecov.io/gh/user/repo/branch/main/graph/badge.svg)](https://codecov.io/gh/user/repo)
 
 ## Architecture
 
