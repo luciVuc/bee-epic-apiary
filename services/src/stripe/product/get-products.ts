@@ -5,6 +5,26 @@ import { jsonResponse } from '../../utils';
 
 const CACHE_TTL = 300; // 5 minutes in seconds
 
+/**
+ * Stripe Product Retrieve Handler
+ *
+ * Handles GET /products (list all) and GET /products/:id (get single) requests.
+ * GET /products responses are cached for 5 minutes.
+ *
+ * @module get-products
+ */
+
+/**
+ * Export default fetch handler for GET /products and GET /products/:id endpoints
+ * Retrieves product(s) from Stripe with optional caching for list endpoint
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with product(s)
+ */
 export default {
 	fetch: withStripeHandler('GET', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
 		// Extract product ID from URL using regex

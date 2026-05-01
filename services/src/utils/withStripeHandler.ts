@@ -2,12 +2,19 @@ import Stripe from 'stripe';
 import { handleCORS, isAllowedOrigin, jsonResponse, RateLimiter } from '.';
 import type { HttpMethod } from './handleCORS';
 
-const RATE_LIMIT_MAX = 100; // requests
+const RATE_LIMIT_MAX = 100; // requests per minute
 const RATE_LIMIT_WINDOW = 60; // seconds (1 minute)
 
-// Cache Stripe instance per worker instance
+// Cache Stripe instance per worker instance (module scope)
 let stripeInstance: Stripe | null = null;
 
+/**
+ * Gets or creates a cached Stripe instance.
+ * Reuses the same instance across requests to avoid unnecessary initialization.
+ *
+ * @param {string} secretKey - Stripe secret key for authentication
+ * @returns {Stripe} Initialized Stripe client instance
+ */
 function getStripeInstance(secretKey: string): Stripe {
 	if (!stripeInstance) {
 		stripeInstance = new Stripe(secretKey, {
@@ -18,6 +25,34 @@ function getStripeInstance(secretKey: string): Stripe {
 	return stripeInstance;
 }
 
+/**
+ * Type definition for Stripe handler functions that process requests after middleware.
+ *
+ * @typedef {Function} StripeHandler
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} HTTP response from the handler
+ */
+type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
+
+/**
+ * Wrapper function for Stripe handlers that adds common middleware.
+ * Handles CORS preflight, method validation, origin validation, rate limiting, and Stripe initialization.
+ *
+ * @param {HttpMethod} method - HTTP method this handler accepts
+ * @param {StripeHandler} handler - The actual request handler to execute after middleware
+ * @returns {Function} A fetch handler function that wraps the provided handler with middleware
+ *
+ * @example
+ * export default {
+ *   fetch: withStripeHandler('POST', async (stripe, request, env, origin) => {
+ *     // Your handler logic here
+ *     return jsonResponse({ success: true }, 200, origin, env);
+ *   }),
+ * } satisfies ExportedHandler<Env>;
+ */
 export function withStripeHandler(
 	method: HttpMethod,
 	handler: (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>,

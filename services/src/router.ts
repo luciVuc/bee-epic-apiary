@@ -5,6 +5,19 @@ import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
 import { jsonResponse, handleCORS, checkAuth } from './utils';
 
+/**
+ * Routes incoming HTTP requests to the appropriate handler based on pathname and HTTP method.
+ * Handles CORS preflight, authentication for protected routes, and method validation.
+ *
+ * @param {Request} request - The incoming HTTP request
+ * @param {Env} env - Cloudflare Worker environment variables and bindings
+ * @returns {Promise<Response>} The HTTP response from the matched handler
+ *
+ * @example
+ * // Routes /checkout to checkout handler
+ * // Routes /products to product handlers (with auth for POST)
+ * // Routes /products/:id to product handlers (with auth for PUT, DELETE)
+ */
 export const router = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
 	const pathname = url.pathname;

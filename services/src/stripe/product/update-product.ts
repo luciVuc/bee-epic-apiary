@@ -3,6 +3,33 @@ import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse, isValidUrl } from '../../utils';
 
+/**
+ * Stripe Product Update Handler
+ *
+ * Handles PUT /products/:id requests to update an existing Stripe product.
+ * Requires authentication if API_SECRET_KEY is set.
+ *
+ * @module update-product
+ */
+
+/**
+ * Export default fetch handler for PUT /products/:id endpoint
+ * Updates a Stripe product with validation for URLs
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request with update data
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with updated product
+ *
+ * @example
+ * // Request body:
+ * // {
+ * //   "name": "Updated Product Name",
+ * //   "description": "Updated description"
+ * // }
+ */
 export default {
 	fetch: withStripeHandler('PUT', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
 		// Extract product ID from URL using regex

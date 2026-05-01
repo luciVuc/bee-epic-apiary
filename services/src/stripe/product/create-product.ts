@@ -3,6 +3,35 @@ import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse, isValidUrl } from '../../utils';
 
+/**
+ * Stripe Product Create Handler
+ *
+ * Handles POST /products requests to create a new Stripe product.
+ * Requires authentication if API_SECRET_KEY is set.
+ *
+ * @module create-product
+ */
+
+/**
+ * Export default fetch handler for POST /products endpoint
+ * Creates a new Stripe product with validation for name and URLs
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request with product data
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with created product
+ *
+ * @example
+ * // Request body:
+ * // {
+ * //   "name": "My Product",
+ * //   "description": "Product description",
+ * //   "images": ["https://example.com/image.png"],
+ * //   "url": "https://example.com/product"
+ * // }
+ */
 export default {
 	fetch: withStripeHandler('POST', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
 		// Parse request body

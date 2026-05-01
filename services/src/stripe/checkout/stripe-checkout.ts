@@ -2,6 +2,34 @@ import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { isValidUrl, jsonResponse } from '../../utils';
 
+/**
+ * Stripe Checkout Session Handler
+ *
+ * Handles POST /checkout requests to create Stripe Checkout sessions.
+ * Automatically separates recurring and one-time items into separate sessions.
+ *
+ * @module stripe-checkout
+ */
+
+/**
+ * Export default fetch handler for /checkout endpoint
+ * Creates Stripe Checkout sessions for one-time payments and/or subscriptions
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request with line_items, success_url, cancel_url
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with session URLs
+ *
+ * @example
+ * // Request body:
+ * // {
+ * //   "line_items": [{ "price": "price_123", "quantity": 1 }],
+ * //   "success_url": "https://example.com/success",
+ * //   "cancel_url": "https://example.com/cancel"
+ * // }
+ */
 export default {
 	fetch: withStripeHandler('POST', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
 		// Parse request body

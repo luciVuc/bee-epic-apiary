@@ -1,18 +1,18 @@
 /**
- * Welcome to Cloudflare Workers! This is your first worker.
+ * Bee Epic Apiary - Stripe Services Cloudflare Worker
  *
- * - Run `npm run dev` in your terminal to start a development server
- * - Open a browser tab at http://localhost:8787/ to see your worker in action
- * - Run `npm run deploy` to publish your worker
+ * Entry point for the Cloudflare Worker that provides Stripe checkout and product management APIs.
+ * Exports the default fetch handler that routes all incoming requests to the router.
  *
- * Bind resources to your worker in `wrangler.jsonc`. After adding bindings, a type definition for the
- * `Env` object can be regenerated with `npm run cf-typegen`.
- *
- * Learn more at https://developers.cloudflare.com/workers/
+ * @module index
  */
 
 import router from './router';
 
+/**
+ * Default export for Cloudflare Worker
+ * @type {ExportedHandler<Env>}
+ */
 export default {
 	fetch: router,
 } satisfies ExportedHandler<Env>;

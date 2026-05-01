@@ -18,6 +18,14 @@ Authorization: Bearer <your-api-secret-key>
 
 If `API_SECRET_KEY` is not set, authentication is disabled (suitable for development).
 
+### Error Responses for Authentication
+
+| Status Code | Message                                                    | Description                                    |
+| ----------- | ---------------------------------------------------------- | ---------------------------------------------- |
+| 401         | `Missing authorization header`                             | No Authorization header provided               |
+| 401         | `Invalid authorization header format. Use: Bearer <token>` | Header is not in `Bearer <token>` format       |
+| 403         | `Invalid API key`                                          | Provided token does not match `API_SECRET_KEY` |
+
 ## Endpoints
 
 ### Checkout
@@ -26,9 +34,11 @@ If `API_SECRET_KEY` is not set, authentication is disabled (suitable for develop
 
 `POST /checkout`
 
-Creates Stripe checkout sessions for one-time payments and/or subscriptions.
+Creates Stripe checkout sessions for one-time payments and/or subscriptions. Recurring and one-time items are automatically separated into separate sessions.
 
-**Request Body:**
+**Authentication**: Not required (public endpoint).
+
+**Request Body**:
 
 ```json
 {
@@ -46,23 +56,21 @@ Creates Stripe checkout sessions for one-time payments and/or subscriptions.
 }
 ```
 
-**Validation:**
+**Validation Rules**:
 
 - `line_items` is required and must be a non-empty array
 - Each item must have either `price` or `price_data`
 - Each item must have `quantity >= 1`
-- `success_url` and `cancel_url` are required and must be valid URLs
+- `success_url` and `cancel_url` are required and must be valid HTTP/HTTPS URLs
 
-**Response:**
+**Response**:
 
 ```json
 {
-	"sessions": ["https://checkout.stripe.com/pay/cs_..."],
-	"message": "Single checkout session created"
+  "sessions": ["https://checkout.stripe.com/pay/cs_..."],
+  "message": "Single checkout session created" | "Multiple checkout sessions created"
 }
 ```
-
-Note: If you mix recurring and one-time items, multiple sessions will be created.
 
 ---
 
@@ -74,7 +82,9 @@ Note: If you mix recurring and one-time items, multiple sessions will be created
 
 Returns a list of all Stripe products. Response is cached for 5 minutes.
 
-**Response:** Stripe API response (see [Stripe Products List](https://stripe.com/docs/api/products/list))
+**Authentication**: Not required.
+
+**Response**: Stripe API response (see [Stripe Products List](https://stripe.com/docs/api/products/list))
 
 ---
 
@@ -84,7 +94,9 @@ Returns a list of all Stripe products. Response is cached for 5 minutes.
 
 Returns a single product by ID.
 
-**Response:** Stripe Product object (see [Stripe Product Retrieve](https://stripe.com/docs/api/products/retrieve))
+**Authentication**: Not required.
+
+**Response**: Stripe Product object (see [Stripe Product Retrieve](https://stripe.com/docs/api/products/retrieve))
 
 ---
 
@@ -92,11 +104,11 @@ Returns a single product by ID.
 
 `POST /products`
 
-**Authentication:** Required (if `API_SECRET_KEY` is set)
+**Authentication**: Required (if `API_SECRET_KEY` is set).
 
 Creates a new Stripe product.
 
-**Request Body:** Stripe ProductCreateParams (see [Stripe Product Create](https://stripe.com/docs/api/products/create))
+**Request Body**: Stripe ProductCreateParams (see [Stripe Product Create](https://stripe.com/docs/api/products/create))
 
 ```json
 {
@@ -107,10 +119,12 @@ Creates a new Stripe product.
 }
 ```
 
-**Validation:**
+**Validation Rules**:
 
 - `name` is required and must be a non-empty string
 - URLs in `images` and `url` are validated
+
+**Response**: Stripe Product object
 
 ---
 
@@ -118,15 +132,17 @@ Creates a new Stripe product.
 
 `PUT /products/:id`
 
-**Authentication:** Required (if `API_SECRET_KEY` is set)
+**Authentication**: Required (if `API_SECRET_KEY` is set).
 
 Updates an existing product.
 
-**Request Body:** Stripe ProductUpdateParams (see [Stripe Product Update](https://stripe.com/docs/api/products/update))
+**Request Body**: Stripe ProductUpdateParams (see [Stripe Product Update](https://stripe.com/docs/api/products/update))
 
-**Validation:**
+**Validation Rules**:
 
 - URLs in `images` and `url` are validated
+
+**Response**: Stripe Product object
 
 ---
 
@@ -134,11 +150,11 @@ Updates an existing product.
 
 `DELETE /products/:id`
 
-**Authentication:** Required (if `API_SECRET_KEY` is set)
+**Authentication**: Required (if `API_SECRET_KEY` is set).
 
 Deletes a product.
 
-**Response:** Stripe delete confirmation
+**Response**: Stripe delete confirmation object
 
 ---
 
@@ -148,6 +164,7 @@ Deletes a product.
 - Set to `*` to allow all origins (development only)
 - Otherwise, provide comma-separated list: `https://example.com,https://app.example.com`
 - Preflight requests are handled automatically
+- All responses include appropriate CORS headers
 
 ---
 
@@ -155,7 +172,18 @@ Deletes a product.
 
 - Configured via `RATE_LIMIT_KV` KV namespace binding
 - Default: 100 requests per minute per IP
-- Uses Cloudflare's trusted `cf.connectingIp` field
+- Uses Cloudflare's trusted `cf.connectingIp` field to prevent IP spoofing
+- Rate limiting is disabled if `RATE_LIMIT_KV` is not set
+
+**Rate Limit Exceeded Response**:
+
+```json
+{
+	"error": "Rate limit exceeded"
+}
+```
+
+Status Code: 429
 
 ---
 
@@ -169,28 +197,22 @@ All errors return JSON:
 }
 ```
 
-**Status Codes:**
-
-- `400` - Bad Request (validation error)
-- `401` - Unauthorized (missing/invalid auth)
-- `403` - Forbidden (invalid origin or API key)
-- `404` - Not Found
-- `405` - Method Not Allowed
-- `429` - Rate Limit Exceeded
-- `500` - Internal Server Error
+**Status Codes**:
+| Status Code | Description |
+|-------------|-------------|
+| 400 | Bad Request (validation error) |
+| 401 | Unauthorized (missing/invalid auth) |
+| 403 | Forbidden (invalid origin or API key) |
+| 404 | Not Found |
+| 405 | Method Not Allowed |
+| 429 | Rate Limit Exceeded |
+| 500 | Internal Server Error |
 
 ---
 
 ## Environment Variables
 
-| Variable            | Required | Description                            |
-| ------------------- | -------- | -------------------------------------- |
-| `STRIPE_SECRET_KEY` | Yes      | Stripe secret key                      |
-| `ALLOWED_ORIGINS`   | Yes      | Comma-separated allowed origins or `*` |
-| `API_SECRET_KEY`    | No       | API key for product CRUD operations    |
-| `RATE_LIMIT_KV`     | No       | KV namespace for rate limiting         |
-
-Set secrets using: `npx wrangler secret put STRIPE_SECRET_KEY`
+See [AGENTS.md](./AGENTS.md#environment-variables) for full details.
 
 ---
 

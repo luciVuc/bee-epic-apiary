@@ -1,14 +1,17 @@
-# stripe-checkout (Cloudflare Worker)
+# Bee Epic Apiary - Stripe Services Cloudflare Worker
+
+This directory contains a Cloudflare Worker providing Stripe checkout session creation and product CRUD (Create, Read, Update, Delete) operations, with CORS handling, rate limiting, and optional API key authentication.
 
 ## Commands
 
-| Command                 | Purpose                                           |
-| ----------------------- | ------------------------------------------------- |
-| `npm run dev`           | Local development server                          |
-| `npm run test`          | Run Vitest with Workers pool                      |
-| `npm run test:coverage` | Run tests with coverage report                    |
-| `npm run deploy`        | Deploy to Cloudflare                              |
-| `npm run cf-typegen`    | Regenerate Env types after wrangler.jsonc changes |
+| Command                 | Purpose                                                 |
+| ----------------------- | ------------------------------------------------------- |
+| `npm run dev`           | Start local development server with Wrangler            |
+| `npm run test`          | Run Vitest tests with Cloudflare Workers pool           |
+| `npm run deploy`        | Deploy worker to Cloudflare                             |
+| `npm run cf-typegen`    | Regenerate `Env` type definitions from `wrangler.jsonc` |
+| `npm run format`        | Format code with Prettier                               |
+| `npm run format:staged` | Format staged files with Prettier (via pretty-quick)    |
 
 ## Coverage
 
@@ -16,22 +19,97 @@
 
 ## Architecture
 
-- **Entry**: `src/index.ts` — exports `fetch` handler
-- **Env loading**: `src/env.ts` uses `dotenv.config()` at runtime (unusual for Workers — env vars also come from Wrangler bindings)
-- **Bindings**: defined in `wrangler.jsonc` — regenerate types after changes: `npm run cf-typegen`
+### Entry Point
+
+- **`src/index.ts`**: Exports the `fetch` handler that routes all incoming requests.
+
+### Routing
+
+- **`src/router.ts`**: Manual route matching for `/checkout`, `/products`, and `/products/:id` endpoints. Handles method validation, CORS preflight, and authentication for protected routes.
+
+### Stripe Integration
+
+- **`src/stripe/`**: Contains all Stripe-related handlers:
+  - `checkout/`: Stripe Checkout session creation (handles one-time and subscription items)
+  - `product/`: Product CRUD operations (create, read, update, delete)
+
+### Utilities
+
+- **`src/utils/`**: Shared utility modules:
+  - `auth.ts`: Optional API key authentication middleware
+  - `handleCORS.ts`: CORS preflight and header handling
+  - `isAllowedOrigin.ts`: Validates request origins against `ALLOWED_ORIGINS` env var
+  - `isValidUrl.ts`: URL validation utility
+  - `jsonResponse.ts`: Standardized JSON response helper with CORS headers
+  - `rateLimiter.ts`: KV-based rate limiting class
+  - `withStripeHandler.ts`: Wrapper for Stripe handlers (centralizes CORS, rate limiting, origin validation, Stripe initialization)
+
+### Bindings
+
+- Defined in `wrangler.jsonc`. Regenerate TypeScript types after changing bindings:
+  ```bash
+  npm run cf-typegen
+  ```
 
 ## Testing
 
-Uses `@cloudflare/vitest-pool-workers` with `cloudflare:test`. Test file at `test/index.spec.ts` needs updating — currently expects "Hello World!" but worker handles Stripe checkout.
+- Uses `@cloudflare/vitest-pool-workers` with `cloudflare:test` for Cloudflare-specific testing.
+- Test files located in `test/` directory:
+  - `index.spec.ts`: Integration tests for routing, checkout, and products endpoints
+  - `stripe/`: Unit tests for Stripe handlers
+  - `utils/`: Unit tests for utility functions
+- All 55 tests currently passing.
+- Run tests:
+  ```bash
+  npm run test
+  ```
 
-## Env Vars
+## Environment Variables
 
-Required in `.env`:
+### Required
 
-- `STRIPE_SECRET_KEY`
-- `ALLOWED_ORIGINS`
+| Variable            | Description                                                  | Source                                                        |
+| ------------------- | ------------------------------------------------------------ | ------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY` | Stripe secret key for API authentication                     | Wrangler Secret (`npx wrangler secret put STRIPE_SECRET_KEY`) |
+| `ALLOWED_ORIGINS`   | Comma-separated list of allowed CORS origins, or `*` for all | Wrangler Secret or `.env`                                     |
+
+### Optional
+
+| Variable         | Description                                                                                 | Default                                  |
+| ---------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `API_SECRET_KEY` | API key for authenticating product CRUD operations. If not set, authentication is disabled. | None (dev mode)                          |
+| `RATE_LIMIT_KV`  | Cloudflare KV namespace binding for rate limiting                                           | None (rate limiting disabled if not set) |
+
+### Local Development
+
+Create a `.env` file in the `services/` directory with:
+
+```env
+STRIPE_SECRET_KEY=sk_test_...
+ALLOWED_ORIGINS=http://localhost:8787,http://localhost:3000
+# Optional:
+# API_SECRET_KEY=your-secret-key
+```
 
 ## Gotchas
 
-- dotenv loads at runtime in `src/env.ts` — values also available via Wrangler env bindings
-- Test snapshot expects "Hello World!" but worker behavior differs — verify or update tests
+- **No `dotenv` runtime loading**: This worker uses Cloudflare Workers' native env bindings, not `dotenv`. Env vars are set via Wrangler secrets or `.env` for local development.
+- **KV Namespace**: You must create a KV namespace for rate limiting before deploying:
+  ```bash
+  npx wrangler kv namespace create "RATE_LIMIT_KV"
+  ```
+  Copy the namespace ID and replace the placeholder in `wrangler.jsonc`.
+- **Stripe API Version**: The worker uses Stripe API version `2026-04-22.dahlia` (configured in `withStripeHandler.ts`). Update this when upgrading the Stripe SDK.
+- **Compatibility Date**: Set to `2026-03-10` to match the installed Cloudflare Workers Runtime. Update after upgrading Wrangler.
+- **CORS Headers**: All responses include CORS headers if the request origin is allowed. Preflight requests are handled automatically.
+
+## Security
+
+- **Origin Validation**: All requests are validated against `ALLOWED_ORIGINS` to prevent unauthorized cross-origin requests.
+- **Rate Limiting**: Uses Cloudflare KV to limit requests to 100 per minute per IP (configurable in `withStripeHandler.ts`). Uses trusted `cf.connectingIp` field to prevent IP spoofing.
+- **Optional Authentication**: Product CRUD endpoints (`POST /products`, `PUT /products/:id`, `DELETE /products/:id`) require API key authentication if `API_SECRET_KEY` is set.
+- **Input Validation**: All endpoints validate input (e.g., required fields, URL formats, quantity limits).
+
+## Contributing
+
+Follow the guidelines in this document and the [Source Code Documentation](./SOURCE.md) when making changes. Run tests and linting before submitting changes.
