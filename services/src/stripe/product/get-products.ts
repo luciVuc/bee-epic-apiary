@@ -7,13 +7,13 @@ const CACHE_TTL = 300; // 5 minutes in seconds
 
 export default {
 	fetch: withStripeHandler('GET', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
-		// Extract product ID from URL if present
+		// Extract product ID from URL using regex
 		const url = new URL(request.url);
-		const pathParts = url.pathname.split('/');
-		const productId = pathParts[pathParts.length - 1];
+		const productIdMatch = url.pathname.match(/\/products\/([^/]+)/);
+		const productId = productIdMatch ? productIdMatch[1] : null;
 
 		// Try to get from cache first (only for GET all products, not individual products)
-		if (!productId || productId === 'products') {
+		if (!productId) {
 			const cache = caches.default;
 			const cacheKey = new Request(url.toString(), { method: 'GET' });
 			const cachedResponse = await cache.match(cacheKey);
@@ -23,7 +23,7 @@ export default {
 		}
 
 		let result;
-		if (productId && productId !== 'products') {
+		if (productId) {
 			// Get single product
 			result = (await stripe.products.retrieve(productId)) as Stripe.Response<Stripe.Product>;
 		} else {
@@ -34,7 +34,7 @@ export default {
 		const response = jsonResponse(result, 200, origin, env);
 
 		// Cache the response for GET all products
-		if (!productId || productId === 'products') {
+		if (!productId) {
 			const cache = caches.default;
 			const cacheKey = new Request(url.toString(), { method: 'GET' });
 			// Clone the response before caching

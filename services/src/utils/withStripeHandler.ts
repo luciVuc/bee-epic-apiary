@@ -1,5 +1,5 @@
 import Stripe from 'stripe';
-import { handleCORS, isAllowedOrigin, jsonResponse } from '.';
+import { handleCORS, isAllowedOrigin, jsonResponse, RateLimiter } from '.';
 import type { HttpMethod } from './handleCORS';
 
 const RATE_LIMIT_MAX = 100; // requests
@@ -29,17 +29,14 @@ export function withStripeHandler(
 		// Rate limiting (if KV binding is available)
 		if (env.RATE_LIMIT_KV) {
 			const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
-			const kvKey = `rate_limit:${clientIP}:${method}`;
-			const currentCountStr = await env.RATE_LIMIT_KV.get(kvKey);
-			const currentCount = currentCountStr ? parseInt(currentCountStr, 10) : 0;
-
-			if (currentCount >= RATE_LIMIT_MAX) {
+			const rateLimiter = new RateLimiter(env.RATE_LIMIT_KV, {
+				maxRequests: RATE_LIMIT_MAX,
+				windowSeconds: RATE_LIMIT_WINDOW,
+			});
+			const result = await rateLimiter.check(`${clientIP}:${method}`);
+			if (!result.allowed) {
 				return jsonResponse({ error: 'Rate limit exceeded' }, 429, origin, env);
 			}
-
-			await env.RATE_LIMIT_KV.put(kvKey, (currentCount + 1).toString(), {
-				expirationTtl: RATE_LIMIT_WINDOW,
-			});
 		}
 
 		try {

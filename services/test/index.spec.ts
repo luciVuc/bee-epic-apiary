@@ -70,7 +70,7 @@ describe('products endpoint', () => {
 			headers: { Origin: 'http://evil.com' },
 		});
 		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
-		expect(response.status).toBe(405); // 405 because GET goes to createProductHandler which checks method first
+		expect(response.status).toBe(403);
 	});
 
 	it('returns 403 for disallowed origin on POST', async () => {
@@ -112,13 +112,14 @@ describe('products endpoint', () => {
 		expect(response.status).toBe(405);
 	});
 
-	it('returns 405 for OPTIONS on product by ID (no matching method)', async () => {
+	it('handles OPTIONS on product by ID', async () => {
 		const request = new IncomingRequest('http://example.com/products/prod_123', {
 			method: 'OPTIONS',
 			headers: { Origin: 'https://example.com' },
 		});
 		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
-		expect(response.status).toBe(405); // OPTIONS not handled without matching PUT/DELETE/GET
+		expect(response.status).toBe(204);
+		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('PUT, DELETE, GET, OPTIONS');
 	});
 
 	it('returns 405 for POST on /products/:id', async () => {

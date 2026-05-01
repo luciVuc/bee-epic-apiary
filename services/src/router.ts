@@ -3,7 +3,7 @@ import createProductHandler from './stripe/product/create-product';
 import getProductsHandler from './stripe/product/get-products';
 import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
-import { jsonResponse } from './utils';
+import { jsonResponse, handleCORS } from './utils';
 
 export const router = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
@@ -16,31 +16,22 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 
 	// Route: /products (Product CRUD operations)
 	if (pathname === '/products' || pathname === '/products/') {
-		if (['POST', 'GET', 'OPTIONS'].includes(request.method)) {
-			return createProductHandler.fetch(request, env); // createProductHandler handles POST, getProductsHandler handles GET via withStripeHandler
-		}
-		if (request.method === 'POST') {
-			return createProductHandler.fetch(request, env);
-		}
-		if (request.method === 'GET') {
-			return getProductsHandler.fetch(request, env);
-		}
+		if (request.method === 'POST') return createProductHandler.fetch(request, env);
+		if (request.method === 'GET') return getProductsHandler.fetch(request, env);
+		if (request.method === 'OPTIONS') return createProductHandler.fetch(request, env);
 		return jsonResponse({ error: 'Method not allowed' }, 405);
 	}
 
 	// Route: /products/:id (Product operations by ID)
 	const productIdMatch = pathname.match(/^\/products\/([^/]+)$/);
 	if (productIdMatch) {
-		if (['PUT', 'DELETE', 'GET', 'OPTIONS'].includes(request.method)) {
-			if (request.method === 'PUT') {
-				return updateProductHandler.fetch(request, env);
-			}
-			if (request.method === 'DELETE') {
-				return deleteProductHandler.fetch(request, env);
-			}
-			if (request.method === 'GET') {
-				return getProductsHandler.fetch(request, env);
-			}
+		if (request.method === 'PUT') return updateProductHandler.fetch(request, env);
+		if (request.method === 'DELETE') return deleteProductHandler.fetch(request, env);
+		if (request.method === 'GET') return getProductsHandler.fetch(request, env);
+		if (request.method === 'OPTIONS') {
+			const response = handleCORS(request, env, 'OPTIONS');
+			response.headers.set('Access-Control-Allow-Methods', 'PUT, DELETE, GET, OPTIONS');
+			return response;
 		}
 		return jsonResponse({ error: 'Method not allowed' }, 405);
 	}
