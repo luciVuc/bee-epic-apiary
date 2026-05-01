@@ -15,18 +15,11 @@ const CACHE_TTL = 300; // 5 minutes in seconds
  */
 
 /**
- * Export default fetch handler for GET /products and GET /products/:id endpoints
- * Retrieves product(s) from Stripe with optional caching for list endpoint
- *
- * @type {ExportedHandler<Env>}
- * @param {Stripe} stripe - Initialized Stripe client
- * @param {Request} request - Incoming HTTP request
- * @param {Env} env - Cloudflare Worker environment variables
- * @param {string | null} origin - Request origin for CORS headers
- * @returns {Promise<Response>} JSON response with product(s)
+ * Inner handler for getting products.
+ * Exported for testing with mocked Stripe instances.
  */
-export default {
-	fetch: withStripeHandler('GET', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
+export async function handleGetProducts(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
+	try {
 		// Extract product ID from URL using regex
 		const url = new URL(request.url);
 		const productIdMatch = url.pathname.match(/\/products\/([^/]+)/);
@@ -65,5 +58,25 @@ export default {
 		}
 
 		return response;
-	}),
+	} catch (error: any) {
+		console.error('Get products error:', error);
+		const statusCode = error.statusCode || 500;
+		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+		return jsonResponse({ error: message }, statusCode, origin, env);
+	}
+}
+
+/**
+ * Export default fetch handler for GET /products and GET /products/:id endpoints
+ * Retrieves product(s) from Stripe with optional caching for list endpoint
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with product(s)
+ */
+export default {
+	fetch: withStripeHandler('GET', handleGetProducts),
 } satisfies ExportedHandler<Env>;

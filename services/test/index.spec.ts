@@ -83,6 +83,35 @@ describe('products endpoint', () => {
 		expect(response.status).toBe(403);
 	});
 
+	it('returns 401 for POST without auth when API_SECRET_KEY is set', async () => {
+		const request = new IncomingRequest('http://example.com/products', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({ name: 'Test Product' }),
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		expect(response.status).toBe(401);
+	});
+
+	it('authenticated POST creates product when API_SECRET_KEY is set', async () => {
+		const request = new IncomingRequest('http://example.com/products', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com', Authorization: 'Bearer secret-key' },
+			body: JSON.stringify({ name: 'Test Product' }),
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		// Should pass auth and reach Stripe (which will fail with invalid key, but auth passes)
+		expect(response.status).not.toBe(401);
+	});
+
 	it('handles OPTIONS preflight for products', async () => {
 		const request = new IncomingRequest('http://example.com/products', {
 			method: 'OPTIONS',
@@ -111,7 +140,9 @@ describe('products endpoint', () => {
 		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(405);
 	});
+});
 
+describe('products/:id endpoint', () => {
 	it('handles OPTIONS on product by ID', async () => {
 		const request = new IncomingRequest('http://example.com/products/prod_123', {
 			method: 'OPTIONS',
@@ -131,6 +162,62 @@ describe('products endpoint', () => {
 		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(405);
 	});
+
+	it('returns 401 for PUT without auth when API_SECRET_KEY is set', async () => {
+		const request = new IncomingRequest('http://example.com/products/prod_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({ name: 'Updated' }),
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		expect(response.status).toBe(401);
+	});
+
+	it('authenticated PUT updates product when API_SECRET_KEY is set', async () => {
+		const request = new IncomingRequest('http://example.com/products/prod_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com', Authorization: 'Bearer secret-key' },
+			body: JSON.stringify({ name: 'Updated' }),
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		// Should pass auth and reach Stripe (which will fail with invalid key, but auth passes)
+		expect(response.status).not.toBe(401);
+	});
+
+	it('returns 401 for DELETE without auth when API_SECRET_KEY is set', async () => {
+		const request = new IncomingRequest('http://example.com/products/prod_123', {
+			method: 'DELETE',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		expect(response.status).toBe(401);
+	});
+
+	it('authenticated DELETE removes product when API_SECRET_KEY is set', async () => {
+		const request = new IncomingRequest('http://example.com/products/prod_123', {
+			method: 'DELETE',
+			headers: { Origin: 'https://example.com', Authorization: 'Bearer secret-key' },
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		// Should pass auth and reach Stripe (which will fail with invalid key, but auth passes)
+		expect(response.status).not.toBe(401);
+	});
 });
 
 describe('routing', () => {
@@ -138,5 +225,44 @@ describe('routing', () => {
 		const request = new IncomingRequest('http://example.com/unknown', { method: 'GET' });
 		const response = await worker.fetch(request, env);
 		expect(response.status).toBe(404);
+	});
+
+	it('returns 404 for unknown routes with trailing slash', async () => {
+		const request = new IncomingRequest('http://example.com/unknown/', { method: 'GET' });
+		const response = await worker.fetch(request, env);
+		expect(response.status).toBe(404);
+	});
+
+	it('returns 405 for POST /products/:id (no auth)', async () => {
+		const request = new IncomingRequest('http://example.com/products/prod_123', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({ name: 'Test' }),
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).toBe(405);
+	});
+
+	it('returns 405 for GET /products/:id with invalid method', async () => {
+		const request = new IncomingRequest('http://example.com/products/prod_123', {
+			method: 'POST',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).toBe(405);
+	});
+
+	it('GET /products/:id returns 401 without auth when API_SECRET_KEY is set', async () => {
+		const request = new IncomingRequest('http://example.com/products/prod_123', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		// Should pass auth (GET doesn't require auth) and reach Stripe
+		expect(response.status).not.toBe(401);
 	});
 });

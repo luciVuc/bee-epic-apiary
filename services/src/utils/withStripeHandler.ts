@@ -15,7 +15,7 @@ let stripeInstance: Stripe | null = null;
  * @param {string} secretKey - Stripe secret key for authentication
  * @returns {Stripe} Initialized Stripe client instance
  */
-function getStripeInstance(secretKey: string): Stripe {
+export function getStripeInstance(secretKey: string): Stripe {
 	if (!stripeInstance) {
 		stripeInstance = new Stripe(secretKey, {
 			apiVersion: '2026-04-22.dahlia',
@@ -56,6 +56,7 @@ type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string
 export function withStripeHandler(
 	method: HttpMethod,
 	handler: (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>,
+	stripeInstance?: Stripe, // Optional: for testing
 ) {
 	return async (request: Request, env: Env): Promise<Response> => {
 		// Handle CORS preflight
@@ -88,8 +89,8 @@ export function withStripeHandler(
 		}
 
 		try {
-			// Get or create Stripe instance (cached in module scope)
-			const stripe = getStripeInstance(env.STRIPE_SECRET_KEY);
+			// Get or create Stripe instance (use provided instance for testing)
+			const stripe = stripeInstance || getStripeInstance(env.STRIPE_SECRET_KEY);
 
 			return await handler(stripe, request, env, origin);
 		} catch (error: any) {

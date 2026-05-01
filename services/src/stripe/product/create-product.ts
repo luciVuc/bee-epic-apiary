@@ -13,27 +13,11 @@ import { jsonResponse, isValidUrl } from '../../utils';
  */
 
 /**
- * Export default fetch handler for POST /products endpoint
- * Creates a new Stripe product with validation for name and URLs
- *
- * @type {ExportedHandler<Env>}
- * @param {Stripe} stripe - Initialized Stripe client
- * @param {Request} request - Incoming HTTP request with product data
- * @param {Env} env - Cloudflare Worker environment variables
- * @param {string | null} origin - Request origin for CORS headers
- * @returns {Promise<Response>} JSON response with created product
- *
- * @example
- * // Request body:
- * // {
- * //   "name": "My Product",
- * //   "description": "Product description",
- * //   "images": ["https://example.com/image.png"],
- * //   "url": "https://example.com/product"
- * // }
+ * Inner handler for creating products.
+ * Exported for testing with mocked Stripe instances.
  */
-export default {
-	fetch: withStripeHandler('POST', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
+export async function handleCreateProduct(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
+	try {
 		// Parse request body
 		const productData = (await request.json()) as Stripe.ProductCreateParams;
 
@@ -57,5 +41,34 @@ export default {
 
 		const product = await stripe.products.create(productData);
 		return jsonResponse(product, 200, origin, env);
-	}),
+	} catch (error: any) {
+		console.error('Create product error:', error);
+		const statusCode = error.statusCode || 500;
+		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+		return jsonResponse({ error: message }, statusCode, origin, env);
+	}
+}
+
+/**
+ * Export default fetch handler for POST /products endpoint
+ * Creates a new Stripe product with validation for name and URLs
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request with product data
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with created product
+ *
+ * @example
+ * // Request body:
+ * // {
+ * //   "name": "My Product",
+ * //   "description": "Product description",
+ * //   "images": ["https://example.com/image.png"],
+ * //   "url": "https://example.com/product"
+ * // }
+ */
+export default {
+	fetch: withStripeHandler('POST', handleCreateProduct),
 } satisfies ExportedHandler<Env>;

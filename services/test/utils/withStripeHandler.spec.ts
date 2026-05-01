@@ -92,9 +92,41 @@ describe('withStripeHandler', () => {
 		expect(response.status).toBe(429);
 	});
 
-	it('sanitizes 500 error messages', async () => {
+	it('handles Stripe errors with statusCode <500', async () => {
+		const errorHandler = vi.fn().mockImplementation(() => {
+			throw { statusCode: 400, message: 'Bad request' };
+		});
+		const handler = withStripeHandler('POST' as HttpMethod, errorHandler);
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { ALLOWED_ORIGINS: 'https://example.com', STRIPE_SECRET_KEY: 'sk_test_123' } as Env;
+		const response = await handler(request, env);
+		expect(response.status).toBe(400);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('Bad request');
+	});
+
+	it('handles Stripe errors with statusCode >=500', async () => {
 		const errorHandler = vi.fn().mockImplementation(() => {
 			throw { statusCode: 500, message: 'Internal server error details' };
+		});
+		const handler = withStripeHandler('POST' as HttpMethod, errorHandler);
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { ALLOWED_ORIGINS: 'https://example.com', STRIPE_SECRET_KEY: 'sk_test_123' } as Env;
+		const response = await handler(request, env);
+		expect(response.status).toBe(500);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
+	it('handles errors without statusCode', async () => {
+		const errorHandler = vi.fn().mockImplementation(() => {
+			throw new Error('Something went wrong');
 		});
 		const handler = withStripeHandler('POST' as HttpMethod, errorHandler);
 		const request = new Request('http://example.com/checkout', {

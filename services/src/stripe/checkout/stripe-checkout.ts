@@ -12,26 +12,11 @@ import { isValidUrl, jsonResponse } from '../../utils';
  */
 
 /**
- * Export default fetch handler for /checkout endpoint
- * Creates Stripe Checkout sessions for one-time payments and/or subscriptions
- *
- * @type {ExportedHandler<Env>}
- * @param {Stripe} stripe - Initialized Stripe client
- * @param {Request} request - Incoming HTTP request with line_items, success_url, cancel_url
- * @param {Env} env - Cloudflare Worker environment variables
- * @param {string | null} origin - Request origin for CORS headers
- * @returns {Promise<Response>} JSON response with session URLs
- *
- * @example
- * // Request body:
- * // {
- * //   "line_items": [{ "price": "price_123", "quantity": 1 }],
- * //   "success_url": "https://example.com/success",
- * //   "cancel_url": "https://example.com/cancel"
- * // }
+ * Inner handler for creating checkout sessions.
+ * Exported for testing with mocked Stripe instances.
  */
-export default {
-	fetch: withStripeHandler('POST', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
+export async function handleCheckout(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
+	try {
 		// Parse request body
 		const body = (await request.json()) as Stripe.Checkout.SessionCreateParams;
 
@@ -128,5 +113,33 @@ export default {
 			origin,
 			env,
 		);
-	}),
+	} catch (error: any) {
+		console.error('Checkout error:', error);
+		const statusCode = error.statusCode || 500;
+		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+		return jsonResponse({ error: message }, statusCode, origin, env);
+	}
+}
+
+/**
+ * Export default fetch handler for /checkout endpoint
+ * Creates Stripe Checkout sessions for one-time payments and/or subscriptions
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request with line_items, success_url, cancel_url
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with session URLs
+ *
+ * @example
+ * // Request body:
+ * // {
+ * //   "line_items": [{ "price": "price_123", "quantity": 1 }],
+ * //   "success_url": "https://example.com/success",
+ * //   "cancel_url": "https://example.com/cancel"
+ * // }
+ */
+export default {
+	fetch: withStripeHandler('POST', handleCheckout),
 } satisfies ExportedHandler<Env>;

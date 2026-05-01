@@ -13,25 +13,11 @@ import { jsonResponse, isValidUrl } from '../../utils';
  */
 
 /**
- * Export default fetch handler for PUT /products/:id endpoint
- * Updates a Stripe product with validation for URLs
- *
- * @type {ExportedHandler<Env>}
- * @param {Stripe} stripe - Initialized Stripe client
- * @param {Request} request - Incoming HTTP request with update data
- * @param {Env} env - Cloudflare Worker environment variables
- * @param {string | null} origin - Request origin for CORS headers
- * @returns {Promise<Response>} JSON response with updated product
- *
- * @example
- * // Request body:
- * // {
- * //   "name": "Updated Product Name",
- * //   "description": "Updated description"
- * // }
+ * Inner handler for updating products.
+ * Exported for testing with mocked Stripe instances.
  */
-export default {
-	fetch: withStripeHandler('PUT', async (stripe: Stripe, request: Request, env: Env, origin: string | null) => {
+export async function handleUpdateProduct(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
+	try {
 		// Extract product ID from URL using regex
 		const url = new URL(request.url);
 		const productIdMatch = url.pathname.match(/\/products\/([^/]+)/);
@@ -63,5 +49,32 @@ export default {
 		const product = await stripe.products.update(productId, updates);
 
 		return jsonResponse(product, 200, origin, env);
-	}),
+	} catch (error: any) {
+		console.error('Update product error:', error);
+		const statusCode = error.statusCode || 500;
+		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+		return jsonResponse({ error: message }, statusCode, origin, env);
+	}
+}
+
+/**
+ * Export default fetch handler for PUT /products/:id endpoint
+ * Updates a Stripe product with validation for URLs
+ *
+ * @type {ExportedHandler<Env>}
+ * @param {Stripe} stripe - Initialized Stripe client
+ * @param {Request} request - Incoming HTTP request with update data
+ * @param {Env} env - Cloudflare Worker environment variables
+ * @param {string | null} origin - Request origin for CORS headers
+ * @returns {Promise<Response>} JSON response with updated product
+ *
+ * @example
+ * // Request body:
+ * // {
+ * //   "name": "Updated Product Name",
+ * //   "description": "Updated description"
+ * // }
+ */
+export default {
+	fetch: withStripeHandler('PUT', handleUpdateProduct),
 } satisfies ExportedHandler<Env>;
