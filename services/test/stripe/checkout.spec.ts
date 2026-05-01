@@ -248,4 +248,61 @@ describe('stripe-checkout handler', () => {
 		const body = (await response.json()) as any;
 		expect(body.sessions).toHaveLength(0);
 	});
+
+	it('handles Stripe errors with statusCode >= 500', async () => {
+		mockStripe.prices.retrieve.mockRejectedValue({ statusCode: 500, message: 'Internal Server Error' });
+
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({
+				line_items: [{ price: 'price_500', quantity: 1 }],
+				success_url: 'https://example.com/success',
+				cancel_url: 'https://example.com/cancel',
+			}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(500);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
+	it('handles Stripe errors with missing message when statusCode < 500', async () => {
+		mockStripe.prices.retrieve.mockRejectedValue({ statusCode: 400 }); // No message
+
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({
+				line_items: [{ price: 'price_400', quantity: 1 }],
+				success_url: 'https://example.com/success',
+				cancel_url: 'https://example.com/cancel',
+			}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(400);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
+	it('handles Stripe errors with undefined statusCode (defaults to 500)', async () => {
+		mockStripe.prices.retrieve.mockRejectedValue({ message: 'Something failed' }); // No statusCode
+
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({
+				line_items: [{ price: 'price_unknown', quantity: 1 }],
+				success_url: 'https://example.com/success',
+				cancel_url: 'https://example.com/cancel',
+			}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(500);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
 });

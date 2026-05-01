@@ -133,6 +133,51 @@ describe('create-product handler', () => {
 		expect(body.error).toBe('Invalid API Key');
 	});
 
+	it('handles Stripe errors with statusCode >= 500', async () => {
+		mockStripe.products.create.mockRejectedValue({ statusCode: 500, message: 'Internal Server Error' });
+
+		const request = new Request('http://example.com/products', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({ name: 'Test Product' }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(500);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
+	it('handles Stripe errors with missing message when statusCode < 500', async () => {
+		mockStripe.products.create.mockRejectedValue({ statusCode: 400 }); // No message
+
+		const request = new Request('http://example.com/products', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({ name: 'Test Product' }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(400);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
+	it('handles Stripe errors with undefined statusCode (defaults to 500)', async () => {
+		mockStripe.products.create.mockRejectedValue({ message: 'Something failed' }); // No statusCode
+
+		const request = new Request('http://example.com/products', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({ name: 'Test Product' }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(500);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
 	// Tests for middleware (using worker.fetch)
 	it('returns 403 for disallowed origin', async () => {
 		const request = new Request('http://example.com/products', {

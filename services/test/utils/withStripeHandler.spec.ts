@@ -139,4 +139,20 @@ describe('withStripeHandler', () => {
 		const body = (await response.json()) as any;
 		expect(body.error).toBe('An error occurred');
 	});
+
+	it('handles Stripe errors with statusCode < 500 and missing message', async () => {
+		const errorHandler = vi.fn().mockImplementation(() => {
+			throw { statusCode: 400 }; // No message
+		});
+		const handler = withStripeHandler('POST' as HttpMethod, errorHandler);
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { ALLOWED_ORIGINS: 'https://example.com', STRIPE_SECRET_KEY: 'sk_test_123' } as Env;
+		const response = await handler(request, env);
+		expect(response.status).toBe(400);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
 });
