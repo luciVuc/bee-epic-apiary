@@ -37,10 +37,10 @@ export default {
 		if (!productId) {
 			const cache = caches.default;
 			const cacheKey = new Request(url.toString(), { method: 'GET' });
+			// Add cache headers to response
+			response.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
 			// Clone the response before caching
 			const responseToCache = response.clone();
-			// Add cache headers
-			responseToCache.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
 			await cache.put(cacheKey, responseToCache);
 		}
 

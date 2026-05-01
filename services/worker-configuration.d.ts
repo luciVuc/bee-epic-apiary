@@ -6,6 +6,7 @@ declare namespace Cloudflare {
 		mainModule: typeof import('./src/index');
 	}
 	interface Env {
+		API_SECRET_KEY?: string;
 		RATE_LIMIT_KV: KVNamespace;
 		STRIPE_SECRET_KEY: string;
 		ALLOWED_ORIGINS: string;

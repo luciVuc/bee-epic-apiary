@@ -47,7 +47,9 @@
 	"kv_namespaces": [
 		{
 			"binding": "RATE_LIMIT_KV",
-			"id": "d0a3f2e1b4c5d6e7f8a9b0c1d2e3f4a", // Replace with actual KV namespace ID after creation
+			"id": "d0a3f2e1b4c5d6e7f8a9b0c1d2e3f4a", // TODO: Replace with actual KV namespace ID
+			// To create a KV namespace, run: npx wrangler kv namespace create "RATE_LIMIT_KV"
+			// Then copy the ID from the output and replace it above
 		},
 	],
 }

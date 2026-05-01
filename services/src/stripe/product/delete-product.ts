@@ -17,4 +17,4 @@ export default {
 		const deleted = await stripe.products.del(productId);
 		return jsonResponse(deleted, 200, origin, env);
 	}),
-};
+} satisfies ExportedHandler<Env>;

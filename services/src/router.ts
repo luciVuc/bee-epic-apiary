@@ -3,11 +3,12 @@ import createProductHandler from './stripe/product/create-product';
 import getProductsHandler from './stripe/product/get-products';
 import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
-import { jsonResponse, handleCORS } from './utils';
+import { jsonResponse, handleCORS, checkAuth } from './utils';
 
 export const router = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
 	const pathname = url.pathname;
+	const origin = request.headers.get('Origin');
 
 	// Route: /checkout (Stripe checkout session creation)
 	if (pathname === '/checkout' || pathname === '/checkout/') {
@@ -16,15 +17,25 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 
 	// Route: /products (Product CRUD operations)
 	if (pathname === '/products' || pathname === '/products/') {
-		if (request.method === 'POST') return createProductHandler.fetch(request, env);
+		// Check authentication for POST (create)
+		if (request.method === 'POST') {
+			const auth = checkAuth(request, env);
+			if (!auth.authenticated) return auth.error!;
+			return createProductHandler.fetch(request, env);
+		}
 		if (request.method === 'GET') return getProductsHandler.fetch(request, env);
 		if (request.method === 'OPTIONS') return createProductHandler.fetch(request, env);
-		return jsonResponse({ error: 'Method not allowed' }, 405);
+		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
 	// Route: /products/:id (Product operations by ID)
 	const productIdMatch = pathname.match(/^\/products\/([^/]+)$/);
 	if (productIdMatch) {
+		// Check authentication for PUT and DELETE
+		if (request.method === 'PUT' || request.method === 'DELETE') {
+			const auth = checkAuth(request, env);
+			if (!auth.authenticated) return auth.error!;
+		}
 		if (request.method === 'PUT') return updateProductHandler.fetch(request, env);
 		if (request.method === 'DELETE') return deleteProductHandler.fetch(request, env);
 		if (request.method === 'GET') return getProductsHandler.fetch(request, env);
@@ -33,10 +44,10 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 			response.headers.set('Access-Control-Allow-Methods', 'PUT, DELETE, GET, OPTIONS');
 			return response;
 		}
-		return jsonResponse({ error: 'Method not allowed' }, 405);
+		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
-	return jsonResponse({ error: 'Not found' }, 404);
+	return jsonResponse({ error: 'Not found' }, 404, origin, env);
 };
 
 export default router;
