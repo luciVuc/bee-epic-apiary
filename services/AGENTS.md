@@ -58,7 +58,7 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
   - `index.spec.ts`: Integration tests for routing, checkout, and products endpoints
   - `stripe/`: Unit tests for Stripe handlers
   - `utils/`: Unit tests for utility functions
-- All 55 tests currently passing.
+- All 65 tests currently passing (includes new auth.ts tests).
 - Run tests:
   ```bash
   npm run test
