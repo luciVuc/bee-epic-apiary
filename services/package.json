@@ -9,6 +9,7 @@
 		"cf-typegen": "wrangler types",
 		"format": "prettier --write .",
 		"format:staged": "pretty-quick --staged --no-restage --verbose",
+		"postinstall": "npm run cf-typegen",
 		"test": "vitest"
 	},
 	"devDependencies": {
