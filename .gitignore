@@ -2,3 +2,5 @@ node_modules
 services/node_modules
 web/node_modules
 .code-review
+services/coverage
+.playwright-mcp

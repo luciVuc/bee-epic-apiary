@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "stripe-checkout",
+	"name": "epic-bee-apiary",
 	"main": "src/index.ts",
 	"compatibility_date": "2026-03-10",
 	"observability": {
