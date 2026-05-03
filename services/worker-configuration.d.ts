@@ -11,9 +11,7 @@ declare namespace Cloudflare {
 		ALLOWED_ORIGINS: string;
 	}
 }
-interface Env extends Cloudflare.Env {
-	API_SECRET_KEY?: string;
-}
+interface Env extends Cloudflare.Env {}
 type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
