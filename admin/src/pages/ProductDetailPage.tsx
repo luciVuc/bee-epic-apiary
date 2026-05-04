@@ -89,7 +89,7 @@ export function ProductDetailPage() {
               {product.imageUrls.map((url, index) => (
                 <img
                   key={index}
-                  src={url || "/images/products/default.png"}
+                  src={url || "/images/products/default.svg"}
                   alt={`${product.name} ${index + 1}`}
                   className="w-full h-48 object-cover rounded-lg"
                 />

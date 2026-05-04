@@ -1,7 +1,11 @@
 import { NavLink } from "react-router-dom";
-import { LayoutDashboard, Package, Settings, Hexagon } from "lucide-react";
+import { LayoutDashboard, Package, Settings, Hexagon, X } from "lucide-react";
 
-export function Sidebar() {
+interface SidebarProps {
+  onClose?: () => void;
+}
+
+export function Sidebar({ onClose }: SidebarProps) {
   const navItems = [
     {
       to: "/dashboard",
@@ -22,19 +26,31 @@ export function Sidebar() {
 
   return (
     <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
-      <div className="p-6 border-b border-gray-200">
-        <NavLink to="/dashboard" className="flex items-center gap-2">
+      <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+        <NavLink
+          to="/dashboard"
+          className="flex items-center gap-2"
+          onClick={onClose}
+        >
           <Hexagon className="w-8 h-8 text-primary-500" />
           <span className="font-heading text-xl font-bold text-dark-900">
             Admin Panel
           </span>
         </NavLink>
+        {/* Mobile close button */}
+        <button
+          onClick={onClose}
+          className="lg:hidden p-1 hover:bg-gray-100 rounded"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
       <nav className="flex-1 p-4 space-y-2">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
+            onClick={onClose}
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive

@@ -1,6 +1,9 @@
 import type { IProduct, IProductInput } from "../types";
 import { EProductCategory } from "../types";
 
+const DEFAULT_IMAGE = "/images/products/default.svg";
+const DEFAULT_THUMBNAIL = "/images/products/default-thumbnail.svg";
+
 /**
  * Transform Stripe product to admin product format
  * Stripe products don't have category, inStock, featured, etc.
@@ -8,6 +11,12 @@ import { EProductCategory } from "../types";
  */
 export function transformStripeProduct(stripeProduct: any): IProduct {
   const metadata = stripeProduct.metadata || {};
+
+  // Use Stripe images or default placeholder
+  const stripeImages = stripeProduct.images || [];
+  const imageUrls = stripeImages.length > 0 ? stripeImages : [DEFAULT_IMAGE];
+  const thumbnailUrls =
+    stripeImages.length > 0 ? stripeImages : [DEFAULT_THUMBNAIL];
 
   return {
     id: stripeProduct.id,
@@ -19,8 +28,8 @@ export function transformStripeProduct(stripeProduct: any): IProduct {
     stripePriceId: stripeProduct.default_price || undefined,
     stripePaymentLinkId: metadata.stripePaymentLinkId || undefined,
     category: (metadata.category as EProductCategory) || EProductCategory.HONEY,
-    imageUrls: stripeProduct.images || [],
-    thumbnailUrls: stripeProduct.images || [],
+    imageUrls: imageUrls,
+    thumbnailUrls: thumbnailUrls,
     inStock: metadata.inStock !== "false",
     featured: metadata.featured === "true",
     weight: metadata.weight || "",

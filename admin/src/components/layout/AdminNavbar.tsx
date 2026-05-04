@@ -1,14 +1,33 @@
-import { Bell, User } from "lucide-react";
+import { Bell, User, Menu } from "lucide-react";
 
-export function AdminNavbar() {
+interface AdminNavbarProps {
+  onMenuClick?: () => void;
+}
+
+export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
   return (
-    <header className="bg-white border-b border-gray-200 px-6 py-4">
+    <header className="bg-white border-b border-gray-200 px-4 md:px-6 py-4">
       <div className="flex items-center justify-between">
-        <div>
+        {/* Mobile menu button */}
+        <button
+          onClick={onMenuClick}
+          className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="lg:hidden">
+          <h1 className="font-heading text-xl font-bold text-dark-900">
+            Bee Epic Apiary Admin
+          </h1>
+        </div>
+
+        <div className="hidden lg:block">
           <h1 className="font-heading text-2xl font-bold text-dark-900">
             Bee Epic Apiary Admin
           </h1>
         </div>
+
         <div className="flex items-center gap-4">
           <button className="relative p-2 text-dark-600 hover:bg-gray-100 rounded-lg">
             <Bell className="w-5 h-5" />

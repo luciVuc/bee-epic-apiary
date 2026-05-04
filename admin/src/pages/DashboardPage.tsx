@@ -186,7 +186,10 @@ export function DashboardPage() {
               className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <img
-                src={product.thumbnailUrls[0] || "/images/products/default.png"}
+                src={
+                  product.thumbnailUrls[0] ||
+                  "/images/products/default-thumbnail.svg"
+                }
                 alt={product.name}
                 className="w-12 h-12 rounded-lg object-cover"
               />
