@@ -30,7 +30,7 @@ export function handleCORS(request: Request, env: Env, allowedMethod: HttpMethod
 			headers: {
 				'Access-Control-Allow-Origin': '*',
 				'Access-Control-Allow-Methods': allowedMethod === 'OPTIONS' ? 'OPTIONS' : `${allowedMethod}, OPTIONS`,
-				'Access-Control-Allow-Headers': 'Content-Type',
+				'Access-Control-Allow-Headers': 'Content-Type, authorization',
 				'Access-Control-Max-Age': CORS_MAX_AGE.toString(),
 			},
 		});
@@ -45,7 +45,7 @@ export function handleCORS(request: Request, env: Env, allowedMethod: HttpMethod
 		headers: {
 			'Access-Control-Allow-Origin': origin!,
 			'Access-Control-Allow-Methods': allowedMethod === 'OPTIONS' ? 'OPTIONS' : `${allowedMethod}, OPTIONS`,
-			'Access-Control-Allow-Headers': 'Content-Type',
+			'Access-Control-Allow-Headers': 'Content-Type, authorization',
 			'Access-Control-Max-Age': CORS_MAX_AGE.toString(),
 		},
 	});

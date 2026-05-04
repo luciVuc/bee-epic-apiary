@@ -73,9 +73,11 @@ export function SettingsPage() {
 
   return (
     <div>
-      <h2 className="font-heading text-3xl font-bold text-dark-900 mb-6">
-        Settings
-      </h2>
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6">
+        <h2 className="font-heading text-3xl font-bold text-dark-900">
+          Settings
+        </h2>
+      </div>
 
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">

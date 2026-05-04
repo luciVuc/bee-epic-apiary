@@ -60,7 +60,7 @@ export function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between">
         <h2 className="font-heading text-3xl font-bold text-dark-900">
           Dashboard
         </h2>

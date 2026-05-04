@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, Edit, Trash2, Star } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
@@ -8,14 +8,18 @@ import {
   deleteProduct,
   setSelectedProduct,
 } from "../store/productsSlice";
+import { ProductFormDialog } from "../components/products/ProductFormDialog";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
   const { selectedProduct: product, loading } = useSelector(
     (state: RootState) => state.products,
   );
+
+  const isEditMode = location.pathname.endsWith("/edit");
 
   useEffect(() => {
     if (id) {
@@ -37,6 +41,10 @@ export function ProductDetailPage() {
     }
   };
 
+  const handleCloseDialog = () => {
+    navigate(`/products/${id}`);
+  };
+
   if (loading || !product) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -45,9 +53,13 @@ export function ProductDetailPage() {
     );
   }
 
+  if (isEditMode) {
+    return <ProductFormDialog productId={id} onClose={handleCloseDialog} />;
+  }
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/products")}

@@ -41,7 +41,7 @@ export function ProductFormDialog({
   const [tagInput, setTagInput] = useState("");
 
   useEffect(() => {
-    if (productId) {
+    if (productId && (!selectedProduct || selectedProduct.id !== productId)) {
       dispatch(fetchProductById(productId));
     }
   }, [dispatch, productId]);

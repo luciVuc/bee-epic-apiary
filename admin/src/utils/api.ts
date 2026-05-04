@@ -87,11 +87,10 @@ export const api = {
 
     // Step 2: If price changed, create a new price and update default_price
     if (product.price !== undefined) {
-      const productSnapshot = await api.getProductById(id);
       const priceData = await createStripePrice(
         id,
         product.price,
-        product.slug || productSnapshot.slug,
+        undefined, // Don't set lookup_key to avoid conflicts
       );
 
       // Update the product to set the new default_price

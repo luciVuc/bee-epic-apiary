@@ -27,8 +27,10 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		const productId = productIdMatch ? productIdMatch[1] : null;
 
 		// Parse expand parameter from query string
-		const expandParam = url.searchParams.get('expand');
-		const expand = expandParam ? expandParam.split(',').map((e) => e.trim()) : undefined;
+		// Stripe API expects expand[]=field format, Axios sends expand[]=field
+		// Use getAll to capture all expand[] parameters
+		const expandParams = url.searchParams.getAll('expand[]');
+		const expand = expandParams.length > 0 ? expandParams : undefined;
 
 		// Try to get from cache first (only for GET all products, not individual products)
 		if (!productId) {

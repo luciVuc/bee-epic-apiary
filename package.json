@@ -22,7 +22,7 @@
     "admin:lint": "npm run lint --prefix admin",
     "admin:preview": "npm run preview --prefix admin",
     "admin:install": "npm install --prefix admin",
-    "dev": "concurrently \"npm run services:dev\" \"npm run web:dev\"",
+    "dev": "concurrently \"npm run services:dev\" \"npm run admin:dev\" \"npm run web:dev\"",
     "dev:all": "concurrently \"npm run services:dev\" \"npm run web:dev\" \"npm run admin:dev\"",
     "build": "npm run services:deploy && npm run web:build && npm run admin:build",
     "lint": "npm run web:lint && npm run admin:lint",

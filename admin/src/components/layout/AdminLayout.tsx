@@ -16,18 +16,21 @@ export function AdminLayout() {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - fixed on all screen sizes */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:block`}
+        } lg:translate-x-0`}
       >
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
-        <main className="flex-1 p-4 md:p-6 overflow-auto">
+        <main
+          className="flex-1 overflow-y-auto p-4 md:p-6"
+          style={{ paddingTop: "93px" }}
+        >
           <Outlet />
         </main>
       </div>

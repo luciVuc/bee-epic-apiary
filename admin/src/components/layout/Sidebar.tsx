@@ -25,12 +25,13 @@ export function Sidebar({ onClose }: SidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 min-h-screen flex flex-col">
-      <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+    <aside className="fixed inset-y-0 left-0 w-64 z-50 bg-white border-r border-gray-200 flex flex-col">
+      <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
         <NavLink
           to="/dashboard"
           className="flex items-center gap-2"
           onClick={onClose}
+          style={{ margin: "0.125rem 0" }}
         >
           <Hexagon className="w-8 h-8 text-primary-500" />
           <span className="font-heading text-xl font-bold text-dark-900">
@@ -45,7 +46,7 @@ export function Sidebar({ onClose }: SidebarProps) {
           <X className="w-5 h-5" />
         </button>
       </div>
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
