@@ -59,6 +59,11 @@ export const api = {
     };
   },
 
+  getProductsCount: async () => {
+    const response = await apiClient.get("/products/count");
+    return response.data.total;
+  },
+
   getProductById: async (id: string) => {
     const response = await apiClient.get(`/products/${id}`, {
       params: { expand: ["default_price"] },

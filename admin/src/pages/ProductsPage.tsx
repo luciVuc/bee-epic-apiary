@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -11,27 +11,30 @@ import {
   AlertCircle,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
-import { fetchProducts, deleteProduct } from "../store/productsSlice";
+import {
+  fetchProducts,
+  deleteProduct,
+  fetchProductsCount,
+} from "../store/productsSlice";
 import { CATEGORIES } from "../utils/constants";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
 
 export function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation();
   const {
     items: products,
     loading,
     error,
     hasMore,
     lastId,
+    totalCount,
   } = useSelector((state: RootState) => state.products);
-  const [totalProducts, setTotalProducts] = useState(0);
 
-  // Update total when products change
   useEffect(() => {
-    if (products.length > totalProducts) {
-      setTotalProducts(products.length);
-    }
-  }, [products, totalProducts]);
+    dispatch(fetchProducts());
+    dispatch(fetchProductsCount());
+  }, [dispatch]);
 
   const handleLoadMore = () => {
     if (lastId) {
@@ -42,10 +45,23 @@ export function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [showFormDialog, setShowFormDialog] = useState(false);
-  const [editingProductId, setEditingProductId] = useState<
-    string | undefined
-  >();
+  const [showFormDialog, setShowFormDialog] = useState(
+    location.pathname === "/products/new",
+  );
+  const [editingProductId, setEditingProductId] = useState<string | undefined>(
+    location.pathname === "/products/new" ? undefined : undefined,
+  );
+
+  // Open form dialog if URL is /products/new
+  useEffect(() => {
+    if (location.pathname === "/products/new") {
+      setShowFormDialog(true);
+      setEditingProductId(undefined);
+    } else {
+      setShowFormDialog(false);
+      setEditingProductId(undefined);
+    }
+  }, [location.pathname]);
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -147,7 +163,8 @@ export function ProductsPage() {
 
         {/* Results count */}
         <div className="mt-3 text-sm text-dark-500">
-          Showing {filteredProducts.length} of {totalProducts} products
+          Showing {filteredProducts.length} of {totalCount || products.length}{" "}
+          products
         </div>
       </div>
 
@@ -174,10 +191,7 @@ export function ProductsPage() {
       ) : (
         <>
           {/* Desktop table view */}
-          <div
-            className="hidden md:flex flex-col"
-            style={{ height: "calc(100vh - 400px)" }}
-          >
+          <div className="hidden md:flex flex-col">
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
@@ -204,7 +218,7 @@ export function ProductsPage() {
                 </thead>
               </table>
             </div>
-            <div className="flex-1 overflow-y-auto overflow-x-auto">
+            <div className="flex-1">
               <table className="w-full">
                 <tbody className="divide-y divide-gray-200">
                   {filteredProducts.map((product) => (

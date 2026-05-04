@@ -9,6 +9,7 @@ interface IProductsState {
   selectedProduct: IProduct | null;
   hasMore: boolean;
   lastId: string | null;
+  totalCount: number;
 }
 
 const initialState: IProductsState = {
@@ -18,6 +19,7 @@ const initialState: IProductsState = {
   selectedProduct: null,
   hasMore: false,
   lastId: null,
+  totalCount: 0,
 };
 
 export const fetchProducts = createAsyncThunk(
@@ -25,6 +27,14 @@ export const fetchProducts = createAsyncThunk(
   async (params?: { limit?: number; starting_after?: string }) => {
     const result = await api.api.getProducts(params);
     return result;
+  },
+);
+
+export const fetchProductsCount = createAsyncThunk(
+  "products/fetchCount",
+  async () => {
+    const total = await api.api.getProductsCount();
+    return total;
   },
 );
 
@@ -97,6 +107,9 @@ const productsSlice = createSlice({
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || "Failed to fetch products";
+      })
+      .addCase(fetchProductsCount.fulfilled, (state, action) => {
+        state.totalCount = action.payload;
       })
       .addCase(fetchProductById.pending, (state) => {
         state.loading = true;

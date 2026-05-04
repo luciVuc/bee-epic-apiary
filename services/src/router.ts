@@ -1,6 +1,7 @@
 import checkoutHandler from './stripe/checkout/stripe-checkout';
 import createProductHandler from './stripe/product/create-product';
 import getProductsHandler from './stripe/product/get-products';
+import getProductsCountHandler from './stripe/product/get-products-count';
 import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
 import createPriceHandler from './stripe/price/create-price';
@@ -50,6 +51,13 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 		}
 		if (request.method === 'GET') return getProductsHandler.fetch(request, env);
 		if (request.method === 'OPTIONS') return createProductHandler.fetch(request, env);
+		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
+	}
+
+	// Route: /products/count (Product count)
+	if (pathname === '/products/count' || pathname === '/products/count/') {
+		if (request.method === 'GET') return getProductsCountHandler.fetch(request, env);
+		if (request.method === 'OPTIONS') return getProductsCountHandler.fetch(request, env);
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 

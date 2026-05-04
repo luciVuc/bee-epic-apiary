@@ -10,18 +10,21 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
-import { fetchProducts } from "../store/productsSlice";
+import { fetchProducts, fetchProductsCount } from "../store/productsSlice";
 import type { IDashboardStats } from "../types";
 import { EProductCategory } from "../types";
 
 export function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const { items: products, loading } = useSelector(
-    (state: RootState) => state.products,
-  );
+  const {
+    items: products,
+    loading,
+    totalCount,
+  } = useSelector((state: RootState) => state.products);
 
   useEffect(() => {
     dispatch(fetchProducts());
+    dispatch(fetchProductsCount());
   }, [dispatch]);
 
   const stats: IDashboardStats = useMemo(() => {
@@ -39,7 +42,7 @@ export function DashboardPage() {
     ).length;
 
     return {
-      totalProducts: products.length,
+      totalProducts: totalCount || products.length,
       inStockProducts: products.filter((p) => p.inStock).length,
       featuredProducts: products.filter((p) => p.featured).length,
       totalCategories: 4,
@@ -48,7 +51,7 @@ export function DashboardPage() {
       giftProducts,
       subscriptionProducts,
     };
-  }, [products]);
+  }, [products, totalCount]);
 
   if (loading) {
     return (
