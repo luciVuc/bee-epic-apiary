@@ -10,6 +10,7 @@ const CACHE_TTL = 300; // 5 minutes in seconds
  *
  * Handles GET /products (list all) and GET /products/:id (get single) requests.
  * GET /products responses are cached for 5 minutes.
+ * Supports `expand` query parameter for expanding related objects (e.g., default_price).
  *
  * @module get-products
  */
@@ -25,6 +26,10 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		const productIdMatch = url.pathname.match(/\/products\/([^/]+)/);
 		const productId = productIdMatch ? productIdMatch[1] : null;
 
+		// Parse expand parameter from query string
+		const expandParam = url.searchParams.get('expand');
+		const expand = expandParam ? expandParam.split(',').map((e) => e.trim()) : undefined;
+
 		// Try to get from cache first (only for GET all products, not individual products)
 		if (!productId) {
 			const cache = caches.default;
@@ -36,12 +41,21 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		}
 
 		let result;
+		const listParams: Stripe.ProductListParams = {};
+		if (expand) {
+			listParams.expand = expand;
+		}
+
 		if (productId) {
 			// Get single product
-			result = (await stripe.products.retrieve(productId)) as Stripe.Response<Stripe.Product>;
+			const retrieveParams: Stripe.ProductRetrieveParams = {};
+			if (expand) {
+				retrieveParams.expand = expand;
+			}
+			result = (await stripe.products.retrieve(productId, retrieveParams)) as Stripe.Response<Stripe.Product>;
 		} else {
 			// Get all products
-			result = (await stripe.products.list()) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+			result = (await stripe.products.list(listParams)) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
 		}
 
 		const response = jsonResponse(result, 200, origin, env);

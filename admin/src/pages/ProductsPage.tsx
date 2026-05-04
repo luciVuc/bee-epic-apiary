@@ -80,13 +80,13 @@ export function ProductsPage() {
         <h2 className="font-heading text-3xl font-bold text-dark-900">
           Products Management
         </h2>
-        <Link
-          to="/products/new"
+        <button
+          onClick={handleAddProduct}
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           <Plus className="w-4 h-4" />
           Add Product
-        </Link>
+        </button>
       </div>
 
       {error && (
@@ -147,13 +147,13 @@ export function ProductsPage() {
               ? "Try adjusting your search or filter"
               : "Get started by adding your first product"}
           </p>
-          <Link
-            to="/products/new"
+          <button
+            onClick={handleAddProduct}
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
           >
             <Plus className="w-4 h-4" />
             Add Product
-          </Link>
+          </button>
         </div>
       ) : (
         <>

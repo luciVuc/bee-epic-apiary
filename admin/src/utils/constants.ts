@@ -1,5 +1,4 @@
 export const CATEGORIES = [
-  { id: "ALL", label: "All Products" },
   { id: "HONEY", label: "Honey" },
   { id: "BEESWAX", label: "Beeswax" },
   { id: "GIFTS", label: "Gift Sets" },

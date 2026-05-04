@@ -78,13 +78,25 @@ const productsSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || "Failed to fetch products";
       })
+      .addCase(fetchProductById.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(fetchProductById.fulfilled, (state, action) => {
+        state.loading = false;
         state.selectedProduct = action.payload;
       })
+      .addCase(createProduct.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(createProduct.fulfilled, (state, action) => {
+        state.loading = false;
         state.items.push(action.payload);
       })
+      .addCase(updateProduct.pending, (state) => {
+        state.loading = true;
+      })
       .addCase(updateProduct.fulfilled, (state, action) => {
+        state.loading = false;
         const index = state.items.findIndex((p) => p.id === action.payload.id);
         if (index !== -1) {
           state.items[index] = action.payload;

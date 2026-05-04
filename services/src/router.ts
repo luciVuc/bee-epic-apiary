@@ -3,6 +3,7 @@ import createProductHandler from './stripe/product/create-product';
 import getProductsHandler from './stripe/product/get-products';
 import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
+import createPriceHandler from './stripe/price/create-price';
 import { jsonResponse, handleCORS, checkAuth } from './utils';
 
 /**
@@ -26,6 +27,17 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 	// Route: /checkout (Stripe checkout session creation)
 	if (pathname === '/checkout' || pathname === '/checkout/') {
 		return checkoutHandler.fetch(request, env);
+	}
+
+	// Route: /prices (Price creation)
+	if (pathname === '/prices' || pathname === '/prices/') {
+		if (request.method === 'POST') {
+			const auth = checkAuth(request, env);
+			if (!auth.authenticated) return auth.error!;
+			return createPriceHandler.fetch(request, env);
+		}
+		if (request.method === 'OPTIONS') return createPriceHandler.fetch(request, env);
+		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
 	// Route: /products (Product CRUD operations)

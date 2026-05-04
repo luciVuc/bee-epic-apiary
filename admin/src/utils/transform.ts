@@ -7,7 +7,8 @@ const DEFAULT_THUMBNAIL = "/images/products/default-thumbnail.svg";
 /**
  * Transform Stripe product to admin product format
  * Stripe products don't have category, inStock, featured, etc.
- * We store these in metadata or use defaults
+ * We store these in metadata or use defaults.
+ * Price is retrieved from the expanded default_price object.
  */
 export function transformStripeProduct(stripeProduct: any): IProduct {
   const metadata = stripeProduct.metadata || {};
@@ -18,14 +19,31 @@ export function transformStripeProduct(stripeProduct: any): IProduct {
   const thumbnailUrls =
     stripeImages.length > 0 ? stripeImages : [DEFAULT_THUMBNAIL];
 
+  // Get price from expanded default_price (Stripe returns unit_amount in cents)
+  let price = 0;
+  let stripePriceId: string | undefined = undefined;
+  if (
+    stripeProduct.default_price &&
+    typeof stripeProduct.default_price === "object"
+  ) {
+    const defaultPrice = stripeProduct.default_price as any;
+    price = defaultPrice.unit_amount || 0;
+    stripePriceId = defaultPrice.id;
+  } else if (
+    stripeProduct.default_price &&
+    typeof stripeProduct.default_price === "string"
+  ) {
+    stripePriceId = stripeProduct.default_price;
+  }
+
   return {
     id: stripeProduct.id,
     name: stripeProduct.name,
     slug: metadata.slug || stripeProduct.id,
     description: stripeProduct.description || "",
     longDescription: metadata.longDescription || "",
-    price: metadata.price ? parseInt(metadata.price) : 0,
-    stripePriceId: stripeProduct.default_price || undefined,
+    price: price,
+    stripePriceId: stripePriceId,
     stripePaymentLinkId: metadata.stripePaymentLinkId || undefined,
     category: (metadata.category as EProductCategory) || EProductCategory.HONEY,
     imageUrls: imageUrls,
@@ -39,6 +57,7 @@ export function transformStripeProduct(stripeProduct: any): IProduct {
 
 /**
  * Transform admin product to Stripe product create/update params
+ * Note: Price is NOT included in metadata - it's created as a separate Stripe Price object
  */
 export function transformToStripeParams(product: Partial<IProductInput>) {
   const params: any = {
@@ -48,7 +67,6 @@ export function transformToStripeParams(product: Partial<IProductInput>) {
     metadata: {
       slug: product.slug || "",
       longDescription: product.longDescription || "",
-      price: product.price?.toString() || "0",
       category: product.category || EProductCategory.HONEY,
       inStock: product.inStock?.toString() || "true",
       featured: product.featured?.toString() || "false",
@@ -62,6 +80,23 @@ export function transformToStripeParams(product: Partial<IProductInput>) {
   if (!params.images || params.images.length === 0) delete params.images;
 
   return params;
+}
+
+/**
+ * Create params for Stripe Price creation
+ */
+export function transformToStripePriceParams(
+  productId: string,
+  price: number,
+  currency: string = "usd",
+  lookupKey?: string,
+): any {
+  return {
+    product: productId,
+    unit_amount: price,
+    currency: currency,
+    lookup_key: lookupKey || undefined,
+  };
 }
 
 /**

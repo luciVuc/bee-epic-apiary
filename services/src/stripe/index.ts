@@ -1,3 +1,3 @@
 export * from './checkout';
 export * from './product';
-// export * from '.';
+export * from './price';
