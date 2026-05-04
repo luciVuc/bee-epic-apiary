@@ -21,7 +21,23 @@ export function ProductsPage() {
     items: products,
     loading,
     error,
+    hasMore,
+    lastId,
   } = useSelector((state: RootState) => state.products);
+  const [totalProducts, setTotalProducts] = useState(0);
+
+  // Update total when products change
+  useEffect(() => {
+    if (products.length > totalProducts) {
+      setTotalProducts(products.length);
+    }
+  }, [products, totalProducts]);
+
+  const handleLoadMore = () => {
+    if (lastId) {
+      dispatch(fetchProducts({ starting_after: lastId, limit: 10 }));
+    }
+  };
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -131,7 +147,7 @@ export function ProductsPage() {
 
         {/* Results count */}
         <div className="mt-3 text-sm text-dark-500">
-          Showing {filteredProducts.length} of {products.length} products
+          Showing {filteredProducts.length} of {totalProducts} products
         </div>
       </div>
 
@@ -409,6 +425,18 @@ export function ProductsPage() {
               </div>
             ))}
           </div>
+          {/* Load More Button */}
+          {hasMore && (
+            <div className="mt-6 text-center">
+              <button
+                onClick={handleLoadMore}
+                disabled={loading}
+                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? "Loading..." : "Load More Products"}
+              </button>
+            </div>
+          )}
         </>
       )}
 

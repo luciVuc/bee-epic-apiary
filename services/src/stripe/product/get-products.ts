@@ -48,6 +48,17 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 			listParams.expand = expand;
 		}
 
+		// Pagination support
+		const limit = url.searchParams.get('limit');
+		const startingAfter = url.searchParams.get('starting_after');
+
+		if (limit) {
+			listParams.limit = parseInt(limit, 10);
+		}
+		if (startingAfter) {
+			listParams.starting_after = startingAfter;
+		}
+
 		if (productId) {
 			// Get single product
 			const retrieveParams: Stripe.ProductRetrieveParams = {};

@@ -42,13 +42,21 @@ async function createStripePrice(
 
 export const api = {
   // Products
-  getProducts: async () => {
+  getProducts: async (params?: { limit?: number; starting_after?: string }) => {
     // Expand default_price to get price details
     const response = await apiClient.get("/products", {
-      params: { expand: ["data.default_price"] },
+      params: {
+        expand: ["data.default_price"],
+        limit: params?.limit || 10,
+        starting_after: params?.starting_after || undefined,
+      },
     });
     // Transform Stripe list response to admin product format
-    return transformStripeProductsList(response.data);
+    return {
+      products: transformStripeProductsList(response.data),
+      hasMore: response.data.has_more,
+      lastId: response.data.data[response.data.data.length - 1]?.id,
+    };
   },
 
   getProductById: async (id: string) => {

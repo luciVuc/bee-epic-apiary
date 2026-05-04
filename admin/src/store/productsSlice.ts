@@ -7,6 +7,8 @@ interface IProductsState {
   loading: boolean;
   error: string | null;
   selectedProduct: IProduct | null;
+  hasMore: boolean;
+  lastId: string | null;
 }
 
 const initialState: IProductsState = {
@@ -14,12 +16,17 @@ const initialState: IProductsState = {
   loading: false,
   error: null,
   selectedProduct: null,
+  hasMore: false,
+  lastId: null,
 };
 
-export const fetchProducts = createAsyncThunk("products/fetchAll", async () => {
-  const products = await api.api.getProducts();
-  return products; // Already transformed to IProduct[]
-});
+export const fetchProducts = createAsyncThunk(
+  "products/fetchAll",
+  async (params?: { limit?: number; starting_after?: string }) => {
+    const result = await api.api.getProducts(params);
+    return result;
+  },
+);
 
 export const fetchProductById = createAsyncThunk(
   "products/fetchById",
@@ -72,7 +79,20 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        state.items = action.payload;
+        const isLoadMore = action.meta.arg?.starting_after;
+        if (isLoadMore) {
+          // Append with deduplication for "load more"
+          const existingIds = new Set(state.items.map((p) => p.id));
+          const newProducts = action.payload.products.filter(
+            (p) => !existingIds.has(p.id),
+          );
+          state.items = [...state.items, ...newProducts];
+        } else {
+          // Replace items for initial load
+          state.items = action.payload.products;
+        }
+        state.hasMore = action.payload.hasMore;
+        state.lastId = action.payload.lastId;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
