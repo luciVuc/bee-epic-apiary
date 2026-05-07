@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation } from "react-router-dom";
 import {
@@ -31,6 +31,9 @@ export function ProductsPage() {
     totalCount,
   } = useSelector((state: RootState) => state.products);
 
+  const isLoadingMore = useRef(false);
+  const scrollPositionRef = useRef(0);
+
   useEffect(() => {
     dispatch(fetchProducts());
     dispatch(fetchProductsCount());
@@ -38,9 +41,20 @@ export function ProductsPage() {
 
   const handleLoadMore = () => {
     if (lastId) {
+      scrollPositionRef.current = window.scrollY;
+      isLoadingMore.current = true;
       dispatch(fetchProducts({ starting_after: lastId, limit: 10 }));
     }
   };
+
+  useEffect(() => {
+    if (!loading && isLoadingMore.current) {
+      isLoadingMore.current = false;
+      requestAnimationFrame(() => {
+        window.scrollTo(0, scrollPositionRef.current);
+      });
+    }
+  }, [loading]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
@@ -189,7 +203,12 @@ export function ProductsPage() {
           </button>
         </div>
       ) : (
-        <>
+        <div className="relative">
+          {loading && isLoadingMore.current && (
+            <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            </div>
+          )}
           {/* Desktop table view */}
           <div className="hidden md:flex flex-col">
             <div className="overflow-x-auto">
@@ -462,7 +481,7 @@ export function ProductsPage() {
               </button>
             </div>
           )}
-        </>
+        </div>
       )}
 
       {/* Product Form Dialog */}
