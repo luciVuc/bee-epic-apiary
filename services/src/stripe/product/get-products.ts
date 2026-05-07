@@ -43,7 +43,7 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		}
 
 		let result;
-		const listParams: Stripe.ProductListParams = {};
+		const listParams: Stripe.ProductListParams = { active: true };
 		if (expand) {
 			listParams.expand = expand;
 		}
@@ -65,9 +65,16 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 			if (expand) {
 				retrieveParams.expand = expand;
 			}
-			result = (await stripe.products.retrieve(productId, retrieveParams)) as Stripe.Response<Stripe.Product>;
+			const product = (await stripe.products.retrieve(productId, retrieveParams)) as Stripe.Response<Stripe.Product>;
+
+			// Only return active products
+			if (!product.active) {
+				return jsonResponse({ error: 'Product not found' }, 404, origin, env);
+			}
+
+			result = product;
 		} else {
-			// Get all products
+			// Get all active products
 			result = (await stripe.products.list(listParams)) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
 		}
 

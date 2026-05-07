@@ -48,7 +48,7 @@ describe('handleCORS', () => {
 		const request = createOptionsRequest('https://example.com');
 		const env = { ALLOWED_ORIGINS: 'https://example.com' } as Env;
 		const response = handleCORS(request, env, 'POST' as HttpMethod);
-		expect(response.headers.get('Access-Control-Allow-Headers')).toBe('Content-Type');
+		expect(response.headers.get('Access-Control-Allow-Headers')).toBe('Content-Type, authorization');
 	});
 
 	it('sets correct Access-Control-Allow-Methods for OPTIONS method', () => {

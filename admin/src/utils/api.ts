@@ -118,7 +118,7 @@ export const api = {
 
   deleteProduct: async (id: string) => {
     await apiClient.delete(`/products/${id}`);
-    return id;
+    return id; // The productsSlice expects the ID to be returned
   },
 };
 export default api;

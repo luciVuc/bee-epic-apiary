@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, Edit, Trash2, Star } from "lucide-react";
@@ -18,6 +18,7 @@ export function ProductDetailPage() {
   const { selectedProduct: product, loading } = useSelector(
     (state: RootState) => state.products,
   );
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
 
   const isEditMode = location.pathname.endsWith("/edit");
 
@@ -32,13 +33,8 @@ export function ProductDetailPage() {
 
   const handleDelete = async () => {
     if (!product) return;
-    const confirmed = window.confirm(
-      `Are you sure you want to delete "${product.name}"? This action cannot be undone.`,
-    );
-    if (confirmed) {
-      await dispatch(deleteProduct(product.id));
-      navigate("/products");
-    }
+    await dispatch(deleteProduct(product.id));
+    navigate("/products");
   };
 
   const handleCloseDialog = () => {
@@ -80,7 +76,7 @@ export function ProductDetailPage() {
             Edit
           </Link>
           <button
-            onClick={handleDelete}
+            onClick={() => setDeleteConfirm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
@@ -225,6 +221,38 @@ export function ProductDetailPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      {deleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
+            <h3 className="font-heading text-xl font-semibold mb-4">
+              Confirm Delete
+            </h3>
+            <p className="text-dark-600 mb-6">
+              Are you sure you want to delete "{product?.name}"? This action
+              cannot be undone.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setDeleteConfirm(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  setDeleteConfirm(false);
+                  handleDelete();
+                }}
+                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

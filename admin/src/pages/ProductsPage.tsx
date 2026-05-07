@@ -301,10 +301,21 @@ export function ProductsPage() {
                         {deleteConfirm === product.id && (
                           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
                             <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                              <h3 className="font-heading text-xl font-semibold mb-4">
+                              <h3
+                                className="font-heading text-xl font-semibold mb-4"
+                                style={{
+                                  textAlign: "justify",
+                                }}
+                              >
                                 Confirm Delete
                               </h3>
-                              <p className="text-dark-600 mb-6">
+                              <p
+                                className="text-dark-600 mb-6"
+                                style={{
+                                  whiteSpace: "initial",
+                                  textAlign: "justify",
+                                }}
+                              >
                                 Are you sure you want to delete "{product.name}
                                 "? This action cannot be undone.
                               </p>

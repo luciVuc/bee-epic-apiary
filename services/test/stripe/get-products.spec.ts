@@ -18,8 +18,8 @@ describe('get-products handler', () => {
 	});
 
 	// Tests for business logic (using exported handler function with mocked Stripe)
-	it('retrieves single product successfully', async () => {
-		const mockProduct = { id: 'prod_123', name: 'Test Product' };
+	it('retrieves single active product successfully', async () => {
+		const mockProduct = { id: 'prod_123', name: 'Test Product', active: true };
 		mockStripe.products.retrieve.mockResolvedValue(mockProduct);
 
 		const request = new Request('http://example.com/products/prod_123', {
@@ -33,11 +33,26 @@ describe('get-products handler', () => {
 		expect(body.id).toBe('prod_123');
 	});
 
-	it('lists all products successfully', async () => {
+	it('returns 404 for inactive product', async () => {
+		const mockProduct = { id: 'prod_123', name: 'Test Product', active: false };
+		mockStripe.products.retrieve.mockResolvedValue(mockProduct);
+
+		const request = new Request('http://example.com/products/prod_123', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(404);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('Product not found');
+	});
+
+	it('lists only active products', async () => {
 		const mockProducts = {
 			data: [
-				{ id: 'prod_1', name: 'Product 1' },
-				{ id: 'prod_2', name: 'Product 2' },
+				{ id: 'prod_1', name: 'Product 1', active: true },
+				{ id: 'prod_2', name: 'Product 2', active: true },
 			],
 		};
 		mockStripe.products.list.mockResolvedValue(mockProducts);
@@ -51,6 +66,8 @@ describe('get-products handler', () => {
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
 		expect(body.data).toHaveLength(2);
+		// Verify that active: true was passed to stripe.products.list
+		expect(mockStripe.products.list).toHaveBeenCalledWith(expect.objectContaining({ active: true }));
 	});
 
 	it('handles Stripe errors gracefully', async () => {
