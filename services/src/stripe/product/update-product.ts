@@ -2,6 +2,7 @@
 import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse, isValidUrl } from '../../utils';
+import { invalidateProductCaches } from './cache';
 
 /**
  * Stripe Product Update Handler
@@ -47,6 +48,7 @@ export async function handleUpdateProduct(stripe: Stripe, request: Request, env:
 		}
 
 		const product = await stripe.products.update(productId, updates);
+		await invalidateProductCaches(request);
 
 		return jsonResponse(product, 200, origin, env);
 	} catch (error: any) {

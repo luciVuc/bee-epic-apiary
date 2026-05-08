@@ -2,6 +2,7 @@
 import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse } from '../../utils';
+import { invalidateProductCaches } from './cache';
 
 /**
  * Stripe Product Delete Handler
@@ -40,6 +41,7 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 
 		// Step 2: Check if product is already archived
 		if (!product.active) {
+			await invalidateProductCaches(request);
 			return jsonResponse(
 				{
 					message: 'Product was already archived',
@@ -87,6 +89,8 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 		const archivedProduct = await stripe.products.update(productId, {
 			active: false,
 		});
+
+		await invalidateProductCaches(request);
 
 		return jsonResponse(
 			{

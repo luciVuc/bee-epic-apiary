@@ -2,6 +2,7 @@
 import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse, isValidUrl } from '../../utils';
+import { invalidateProductCaches } from './cache';
 
 /**
  * Stripe Product Create Handler
@@ -40,6 +41,7 @@ export async function handleCreateProduct(stripe: Stripe, request: Request, env:
 		}
 
 		const product = await stripe.products.create(productData);
+		await invalidateProductCaches(request);
 		return jsonResponse(product, 200, origin, env);
 	} catch (error: any) {
 		console.error('Create product error:', error);

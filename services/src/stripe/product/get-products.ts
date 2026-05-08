@@ -3,7 +3,7 @@ import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse } from '../../utils';
 
-const CACHE_TTL = 300; // 5 minutes in seconds
+const CACHE_TTL = 1; // 300; // 5 minutes in seconds
 
 /**
  * Stripe Product Retrieve Handler
