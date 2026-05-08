@@ -73,7 +73,7 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 
 The dashboard provides:
 
-- Total products count
+- Total active products count
 - In stock products count
 - Featured products count
 - Category breakdown with visual bars
