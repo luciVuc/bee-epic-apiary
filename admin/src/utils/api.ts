@@ -1,5 +1,6 @@
 import axios from "axios";
 import type { IProductInput } from "../types";
+import { EProductCategory } from "../types";
 import {
   transformStripeProduct,
   transformStripeProductsList,
@@ -29,12 +30,16 @@ async function createStripePrice(
   productId: string,
   price: number,
   slug?: string,
+  recurringInterval?: string,
+  recurringIntervalCount?: number,
 ) {
   const priceParams = transformToStripePriceParams(
     productId,
     price,
     "usd",
     slug ? `price_${slug}` : undefined,
+    recurringInterval,
+    recurringIntervalCount,
   );
   const priceResponse = await apiClient.post("/prices", priceParams);
   return priceResponse.data;
@@ -78,10 +83,13 @@ export const api = {
     const createdProduct = productResponse.data;
 
     // Step 2: Create a price for the product in Stripe
+    const isSubscription = product.category === EProductCategory.SUBSCRIPTIONS;
     const priceData = await createStripePrice(
       createdProduct.id,
       product.price,
       product.slug,
+      isSubscription ? product.recurringInterval : undefined,
+      isSubscription ? product.recurringIntervalCount : undefined,
     );
 
     // Step 3: Update the product to set the default_price
@@ -100,10 +108,13 @@ export const api = {
 
     // Step 2: If price changed, create a new price and update default_price
     if (product.price !== undefined) {
+      const isSubscription = product.category === EProductCategory.SUBSCRIPTIONS;
       const priceData = await createStripePrice(
         id,
         product.price,
         undefined, // Don't set lookup_key to avoid conflicts
+        isSubscription ? product.recurringInterval : undefined,
+        isSubscription ? product.recurringIntervalCount : undefined,
       );
 
       // Update the product to set the new default_price

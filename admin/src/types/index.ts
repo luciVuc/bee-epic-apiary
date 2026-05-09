@@ -23,6 +23,8 @@ export interface IProduct {
   featured: boolean;
   weight: string;
   tags: string[];
+  recurringInterval?: string;
+  recurringIntervalCount?: number;
 }
 
 export interface IProductInput {
@@ -38,6 +40,8 @@ export interface IProductInput {
   featured: boolean;
   weight: string;
   tags: string[];
+  recurringInterval?: string;
+  recurringIntervalCount?: number;
 }
 
 export interface IDashboardStats {

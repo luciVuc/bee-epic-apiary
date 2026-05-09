@@ -165,6 +165,14 @@ export function ProductDetailPage() {
                   <span className="text-dark-400">No</span>
                 )}
               </div>
+              {product.category === "SUBSCRIPTIONS" && (
+                <div className="flex items-center justify-between">
+                  <span className="text-dark-600">Type</span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                    Subscription
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -177,6 +185,13 @@ export function ProductDetailPage() {
                 <p className="text-2xl font-bold text-dark-900">
                   ${(product.price / 100).toFixed(2)}
                 </p>
+                {product.recurringInterval && (
+                  <p className="text-sm text-blue-600 mt-1">
+                    every {product.recurringIntervalCount || 1}{" "}
+                    {product.recurringInterval}
+                    {(product.recurringIntervalCount || 1) > 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
               <div>
                 <span className="text-sm text-dark-500">Category</span>

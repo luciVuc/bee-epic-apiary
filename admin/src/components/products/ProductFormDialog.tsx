@@ -37,6 +37,8 @@ export function ProductFormDialog({
     featured: false,
     weight: "",
     tags: [],
+    recurringInterval: "",
+    recurringIntervalCount: 1,
   });
   const [tagInput, setTagInput] = useState("");
 
@@ -67,6 +69,8 @@ export function ProductFormDialog({
         featured: selectedProduct.featured,
         weight: selectedProduct.weight,
         tags: selectedProduct.tags || [],
+        recurringInterval: (selectedProduct as any).recurringInterval || "",
+        recurringIntervalCount: (selectedProduct as any).recurringIntervalCount || 1,
       });
     }
   }, [isEditMode, selectedProduct]);
@@ -256,6 +260,48 @@ export function ProductFormDialog({
               />
             </div>
           </div>
+
+          {/* Recurring (Subscription) */}
+          {formData.category === "SUBSCRIPTIONS" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-2">
+                  Interval
+                </label>
+                <select
+                  value={formData.recurringInterval || ""}
+                  onChange={(e) =>
+                    handleInputChange("recurringInterval", e.target.value)
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                >
+                  <option value="">Select interval...</option>
+                  <option value="day">Day</option>
+                  <option value="week">Week</option>
+                  <option value="month">Month</option>
+                  <option value="year">Year</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-2">
+                  Every
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.recurringIntervalCount || 1}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "recurringIntervalCount",
+                      parseInt(e.target.value) || 1,
+                    )
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  placeholder="1"
+                />
+              </div>
+            </div>
+          )}
 
           {/* Stock and Featured */}
           <div className="flex gap-6">

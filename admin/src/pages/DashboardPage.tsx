@@ -16,14 +16,12 @@ import { EProductCategory } from "../types";
 
 export function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
-  const {
-    items: products,
-    loading,
-    totalCount,
-  } = useSelector((state: RootState) => state.products);
+  const { items: products, loading } = useSelector(
+    (state: RootState) => state.products,
+  );
 
   useEffect(() => {
-    dispatch(fetchProducts());
+    dispatch(fetchProducts({ limit: 100 }));
     dispatch(fetchProductsCount());
   }, [dispatch]);
 
@@ -42,7 +40,7 @@ export function DashboardPage() {
     ).length;
 
     return {
-      totalProducts: totalCount || products.length,
+      totalProducts: products.length,
       inStockProducts: products.filter((p) => p.inStock).length,
       featuredProducts: products.filter((p) => p.featured).length,
       totalCategories: 4,
@@ -51,7 +49,7 @@ export function DashboardPage() {
       giftProducts,
       subscriptionProducts,
     };
-  }, [products, totalCount]);
+  }, [products]);
 
   if (loading) {
     return (
@@ -201,16 +199,30 @@ export function DashboardPage() {
                 <p className="text-sm text-dark-500">
                   ${(product.price / 100).toFixed(2)} • {product.category}
                 </p>
+                {product.recurringInterval && (
+                  <p className="text-xs text-blue-600">
+                    every {product.recurringIntervalCount || 1}{" "}
+                    {product.recurringInterval}
+                    {(product.recurringIntervalCount || 1) > 1 ? "s" : ""}
+                  </p>
+                )}
               </div>
-              <span
-                className={`px-2 py-1 text-xs rounded-full ${
-                  product.inStock
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {product.inStock ? "In Stock" : "Out of Stock"}
-              </span>
+              <div className="flex items-center gap-2">
+                {product.category === "SUBSCRIPTIONS" && (
+                  <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                    Subscription
+                  </span>
+                )}
+                <span
+                  className={`px-2 py-1 text-xs rounded-full ${
+                    product.inStock
+                      ? "bg-green-100 text-green-700"
+                      : "bg-red-100 text-red-700"
+                  }`}
+                >
+                  {product.inStock ? "In Stock" : "Out of Stock"}
+                </span>
+              </div>
             </Link>
           ))}
         </div>

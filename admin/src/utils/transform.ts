@@ -22,6 +22,8 @@ export function transformStripeProduct(stripeProduct: any): IProduct {
   // Get price from expanded default_price (Stripe returns unit_amount in cents)
   let price = 0;
   let stripePriceId: string | undefined = undefined;
+  let recurringInterval: string | undefined = undefined;
+  let recurringIntervalCount: number | undefined = undefined;
   if (
     stripeProduct.default_price &&
     typeof stripeProduct.default_price === "object"
@@ -29,6 +31,10 @@ export function transformStripeProduct(stripeProduct: any): IProduct {
     const defaultPrice = stripeProduct.default_price as any;
     price = defaultPrice.unit_amount || 0;
     stripePriceId = defaultPrice.id;
+    if (defaultPrice.recurring) {
+      recurringInterval = defaultPrice.recurring.interval;
+      recurringIntervalCount = defaultPrice.recurring.interval_count || 1;
+    }
   } else if (
     stripeProduct.default_price &&
     typeof stripeProduct.default_price === "string"
@@ -52,6 +58,8 @@ export function transformStripeProduct(stripeProduct: any): IProduct {
     featured: metadata.featured === "true",
     weight: metadata.weight || "",
     tags: metadata.tags ? metadata.tags.split(",") : [],
+    recurringInterval,
+    recurringIntervalCount,
   };
 }
 
@@ -90,13 +98,22 @@ export function transformToStripePriceParams(
   price: number,
   currency: string = "usd",
   lookupKey?: string,
+  recurringInterval?: string,
+  recurringIntervalCount?: number,
 ): any {
-  return {
+  const params: any = {
     product: productId,
     unit_amount: price,
     currency: currency,
     lookup_key: lookupKey || undefined,
   };
+  if (recurringInterval) {
+    params.recurring = {
+      interval: recurringInterval,
+      interval_count: recurringIntervalCount || 1,
+    };
+  }
+  return params;
 }
 
 /**

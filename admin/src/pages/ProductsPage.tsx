@@ -264,12 +264,29 @@ export function ProductsPage() {
                       </Link>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-primary-50 text-primary-700">
-                        {product.category}
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          product.category === "SUBSCRIPTIONS"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-primary-50 text-primary-700"
+                        }`}
+                      >
+                        {product.category === "SUBSCRIPTIONS"
+                          ? "Subscription"
+                          : product.category}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-dark-700">
-                      ${(product.price / 100).toFixed(2)}
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="text-dark-700">
+                        ${(product.price / 100).toFixed(2)}
+                      </span>
+                      {product.recurringInterval && (
+                        <p className="text-xs text-blue-600 mt-0.5">
+                          / {product.recurringIntervalCount || 1}{" "}
+                          {product.recurringInterval}
+                          {(product.recurringIntervalCount || 1) > 1 ? "s" : ""}
+                        </p>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
@@ -383,8 +400,16 @@ export function ProductsPage() {
                 <div className="grid grid-cols-2 gap-2 text-sm">
                   <div>
                     <span className="text-dark-500">Category:</span>
-                    <span className="ml-1 px-2 py-1 text-xs font-medium rounded-full bg-primary-50 text-primary-700">
-                      {product.category}
+                    <span
+                      className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${
+                        product.category === "SUBSCRIPTIONS"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-primary-50 text-primary-700"
+                      }`}
+                    >
+                      {product.category === "SUBSCRIPTIONS"
+                        ? "Subscription"
+                        : product.category}
                     </span>
                   </div>
                   <div>
@@ -392,6 +417,13 @@ export function ProductsPage() {
                     <span className="ml-1 text-dark-700">
                       ${(product.price / 100).toFixed(2)}
                     </span>
+                    {product.recurringInterval && (
+                      <span className="ml-1 text-xs text-blue-600">
+                        / {product.recurringIntervalCount || 1}{" "}
+                        {product.recurringInterval}
+                        {(product.recurringIntervalCount || 1) > 1 ? "s" : ""}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <span className="text-dark-500">Status:</span>
