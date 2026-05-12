@@ -5,7 +5,7 @@ import getProductsCountHandler from './stripe/product/get-products-count';
 import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
 import createPriceHandler from './stripe/price/create-price';
-import { jsonResponse, handleCORS, checkAuth } from './utils';
+import { jsonResponse, handleCORS, checkAuth, isAllowedOrigin } from './utils';
 
 /**
  * Routes incoming HTTP requests to the appropriate handler based on pathname and HTTP method.
@@ -33,6 +33,9 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 	// Route: /prices (Price creation)
 	if (pathname === '/prices' || pathname === '/prices/') {
 		if (request.method === 'POST') {
+			if (!isAllowedOrigin(origin, env)) {
+				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
+			}
 			const auth = checkAuth(request, env);
 			if (!auth.authenticated) return auth.error!;
 			return createPriceHandler.fetch(request, env);
@@ -45,6 +48,9 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 	if (pathname === '/products' || pathname === '/products/') {
 		// Check authentication for POST (create)
 		if (request.method === 'POST') {
+			if (!isAllowedOrigin(origin, env)) {
+				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
+			}
 			const auth = checkAuth(request, env);
 			if (!auth.authenticated) return auth.error!;
 			return createProductHandler.fetch(request, env);
@@ -66,6 +72,9 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 	if (productIdMatch) {
 		// Check authentication for PUT and DELETE
 		if (request.method === 'PUT' || request.method === 'DELETE') {
+			if (!isAllowedOrigin(origin, env)) {
+				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
+			}
 			const auth = checkAuth(request, env);
 			if (!auth.authenticated) return auth.error!;
 		}

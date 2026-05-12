@@ -1,19 +1,22 @@
-/**
- * Authentication middleware for protected endpoints
- * If API_SECRET_KEY is set in env, requires Bearer token authentication
- */
+import { isAllowedOrigin } from '.';
 
 export interface AuthResult {
 	authenticated: boolean;
 	error?: Response;
 }
 
-/**
- * Check if request is authenticated
- * Returns AuthResult with authenticated status or error response
- */
+function authErrorResponse(message: string, status: number, request: Request, env: Env): Response {
+	const origin = request.headers.get('Origin');
+	const headers: Record<string, string> = {
+		'Content-Type': 'application/json',
+	};
+	if (origin && isAllowedOrigin(origin, env)) {
+		headers['Access-Control-Allow-Origin'] = origin;
+	}
+	return new Response(JSON.stringify({ error: message }), { status, headers });
+}
+
 export function checkAuth(request: Request, env: Env): AuthResult {
-	// If API_SECRET_KEY is not set, authentication is disabled (development mode)
 	if (!env.API_SECRET_KEY) {
 		return { authenticated: true };
 	}
@@ -22,10 +25,7 @@ export function checkAuth(request: Request, env: Env): AuthResult {
 	if (!authHeader) {
 		return {
 			authenticated: false,
-			error: new Response(JSON.stringify({ error: 'Missing authorization header' }), {
-				status: 401,
-				headers: { 'Content-Type': 'application/json' },
-			}),
+			error: authErrorResponse('Missing authorization header', 401, request, env),
 		};
 	}
 
@@ -33,20 +33,14 @@ export function checkAuth(request: Request, env: Env): AuthResult {
 	if (scheme !== 'Bearer' || !token) {
 		return {
 			authenticated: false,
-			error: new Response(JSON.stringify({ error: 'Invalid authorization header format. Use: Bearer <token>' }), {
-				status: 401,
-				headers: { 'Content-Type': 'application/json' },
-			}),
+			error: authErrorResponse('Invalid authorization header format. Use: Bearer <token>', 401, request, env),
 		};
 	}
 
 	if (token !== env.API_SECRET_KEY) {
 		return {
 			authenticated: false,
-			error: new Response(JSON.stringify({ error: 'Invalid API key' }), {
-				status: 403,
-				headers: { 'Content-Type': 'application/json' },
-			}),
+			error: authErrorResponse('Invalid API key', 403, request, env),
 		};
 	}
 
