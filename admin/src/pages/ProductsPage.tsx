@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   Plus,
   Search,
@@ -22,6 +22,7 @@ import { ProductFormDialog } from "../components/products/ProductFormDialog";
 export function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
+  const navigate = useNavigate();
   const {
     items: products,
     loading,
@@ -59,23 +60,6 @@ export function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const [showFormDialog, setShowFormDialog] = useState(
-    location.pathname === "/products/new",
-  );
-  const [editingProductId, setEditingProductId] = useState<string | undefined>(
-    location.pathname === "/products/new" ? undefined : undefined,
-  );
-
-  // Open form dialog if URL is /products/new
-  useEffect(() => {
-    if (location.pathname === "/products/new") {
-      setShowFormDialog(true);
-      setEditingProductId(undefined);
-    } else {
-      setShowFormDialog(false);
-      setEditingProductId(undefined);
-    }
-  }, [location.pathname]);
 
   useEffect(() => {
     dispatch(fetchProducts());
@@ -98,18 +82,15 @@ export function ProductsPage() {
   };
 
   const handleAddProduct = () => {
-    setEditingProductId(undefined);
-    setShowFormDialog(true);
+    navigate("/products/new", { replace: true });
   };
 
   const handleEditProduct = (id: string) => {
-    setEditingProductId(id);
-    setShowFormDialog(true);
+    navigate(`/products/${id}/edit`, { replace: true });
   };
 
   const handleCloseDialog = () => {
-    setShowFormDialog(false);
-    setEditingProductId(undefined);
+    navigate("/products", { replace: true });
   };
 
   if (loading && products.length === 0) {
@@ -511,11 +492,8 @@ export function ProductsPage() {
       )}
 
       {/* Product Form Dialog */}
-      {showFormDialog && (
-        <ProductFormDialog
-          productId={editingProductId}
-          onClose={handleCloseDialog}
-        />
+      {location.pathname === "/products/new" && (
+        <ProductFormDialog onClose={handleCloseDialog} />
       )}
     </div>
   );

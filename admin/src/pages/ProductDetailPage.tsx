@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams, useNavigate, Link, useLocation } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, Edit, Trash2, Star } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
@@ -38,7 +38,11 @@ export function ProductDetailPage() {
   };
 
   const handleCloseDialog = () => {
-    navigate(`/products/${id}`);
+    navigate(`/products/${id}`, { replace: true });
+  };
+
+  const handleEdit = () => {
+    navigate(`/products/${id}/edit`, { replace: true });
   };
 
   if (loading || !product) {
@@ -68,13 +72,13 @@ export function ProductDetailPage() {
           </h2>
         </div>
         <div className="flex gap-3">
-          <Link
-            to={`/products/${product.id}/edit`}
+          <button
+            onClick={handleEdit}
             className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
           >
             <Edit className="w-4 h-4" />
             Edit
-          </Link>
+          </button>
           <button
             onClick={() => setDeleteConfirm(true)}
             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
