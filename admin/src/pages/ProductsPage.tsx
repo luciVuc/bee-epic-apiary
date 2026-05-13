@@ -158,7 +158,10 @@ export function ProductsPage() {
 
         {/* Results count */}
         <div className="mt-3 text-sm text-dark-500">
-          Showing {filteredProducts.length} of {totalCount || products.length}{" "}
+          Showing {filteredProducts.length}
+          {searchTerm || selectedCategory !== "ALL"
+            ? ` of ${filteredProducts.length}`
+            : ` of ${totalCount || products.length}`}{" "}
           products
         </div>
       </div>
