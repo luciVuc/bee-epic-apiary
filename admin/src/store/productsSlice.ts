@@ -48,24 +48,45 @@ export const fetchProductById = createAsyncThunk(
 
 export const createProduct = createAsyncThunk(
   "products/create",
-  async (product: IProductInput) => {
+  async (product: IProductInput, { dispatch, getState }) => {
     const newProduct = await api.api.createProduct(product);
-    return newProduct; // Already transformed to IProduct
+    const state = getState() as { products: IProductsState };
+    const totalLoaded = state.products.items.length;
+    if (totalLoaded > 0) {
+      dispatch(fetchProducts({ limit: totalLoaded }));
+    }
+    dispatch(fetchProductsCount());
+    return newProduct;
   },
 );
 
 export const updateProduct = createAsyncThunk(
   "products/update",
-  async ({ id, product }: { id: string; product: Partial<IProductInput> }) => {
+  async (
+    { id, product }: { id: string; product: Partial<IProductInput> },
+    { dispatch, getState },
+  ) => {
     const updatedProduct = await api.api.updateProduct(id, product);
-    return updatedProduct; // Already transformed to IProduct
+    const state = getState() as { products: IProductsState };
+    const totalLoaded = state.products.items.length;
+    if (totalLoaded > 0) {
+      dispatch(fetchProducts({ limit: totalLoaded }));
+    }
+    dispatch(fetchProductsCount());
+    return updatedProduct;
   },
 );
 
 export const deleteProduct = createAsyncThunk(
   "products/delete",
-  async (id: string) => {
+  async (id: string, { dispatch, getState }) => {
     await api.api.deleteProduct(id);
+    const state = getState() as { products: IProductsState };
+    const totalLoaded = state.products.items.length;
+    if (totalLoaded > 0) {
+      dispatch(fetchProducts({ limit: totalLoaded }));
+    }
+    dispatch(fetchProductsCount());
     return id;
   },
 );
