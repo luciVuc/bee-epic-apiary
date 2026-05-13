@@ -10,6 +10,8 @@ declare namespace Cloudflare {
 		STRIPE_WEBHOOK_SECRET: string;
 		ALLOWED_ORIGINS: string;
 		API_SECRET_KEY: string;
+		CONTENT_KV: KVNamespace;
+		RATE_LIMIT_KV?: KVNamespace;
 	}
 }
 interface Env extends Cloudflare.Env {}

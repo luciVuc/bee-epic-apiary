@@ -5,6 +5,7 @@ import getProductsCountHandler from './stripe/product/get-products-count';
 import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
 import createPriceHandler from './stripe/price/create-price';
+import settingsHandler from './settings/settings-handler';
 import { jsonResponse, handleCORS, checkAuth, isAllowedOrigin } from './utils';
 
 /**
@@ -84,6 +85,26 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 		if (request.method === 'OPTIONS') {
 			const response = handleCORS(request, env, 'OPTIONS');
 			response.headers.set('Access-Control-Allow-Methods', 'PUT, DELETE, GET, OPTIONS');
+			return response;
+		}
+		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
+	}
+
+	// Route: /settings/:type (Content settings)
+	const settingsMatch = pathname.match(/^\/settings\/(site|process|testimonials)$/);
+	if (settingsMatch) {
+		if (request.method === 'GET') return settingsHandler.fetch(request, env);
+		if (request.method === 'PUT') {
+			if (!isAllowedOrigin(origin, env)) {
+				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
+			}
+			const auth = checkAuth(request, env);
+			if (!auth.authenticated) return auth.error!;
+			return settingsHandler.fetch(request, env);
+		}
+		if (request.method === 'OPTIONS') {
+			const response = handleCORS(request, env, 'OPTIONS');
+			response.headers.set('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
 			return response;
 		}
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);

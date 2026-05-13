@@ -44,13 +44,14 @@
 	 * KV Namespaces (for rate limiting)
 	 * https://developers.cloudflare.com/workers/runtime-apis/kv/
 	 */
-	// Rate limiting disabled for local development
-	// To enable, create a KV namespace: npx wrangler kv namespace create "RATE_LIMIT_KV"
-	// Then uncomment and replace the ID below
-	// "kv_namespaces": [
-	// 	{
-	// 		"binding": "RATE_LIMIT_KV",
-	// 		"id": "d0a3f2e1b4c5d6e7f8a9b0c1d2e3f4a",
-	// 	},
-	// ],
+	// KV Namespaces
+	// Create: npx wrangler kv namespace create "CONTENT_KV"
+	// For local dev, Wrangler creates a local KV store automatically
+	"kv_namespaces": [
+		{
+			"binding": "CONTENT_KV",
+			"id": "CONTENT_KV_ID",
+			"preview_id": "CONTENT_KV_PREVIEW_ID",
+		},
+	],
 }

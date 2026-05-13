@@ -108,7 +108,8 @@ export const api = {
 
     // Step 2: If price changed, create a new price and update default_price
     if (product.price !== undefined) {
-      const isSubscription = product.category === EProductCategory.SUBSCRIPTIONS;
+      const isSubscription =
+        product.category === EProductCategory.SUBSCRIPTIONS;
       const priceData = await createStripePrice(
         id,
         product.price,
@@ -130,6 +131,16 @@ export const api = {
   deleteProduct: async (id: string) => {
     await apiClient.delete(`/products/${id}`);
     return id; // The productsSlice expects the ID to be returned
+  },
+
+  // Content Settings
+  getSettings: async <T>(type: string): Promise<T> => {
+    const response = await apiClient.get(`/settings/${type}`);
+    return response.data;
+  },
+
+  saveSettings: async <T>(type: string, data: T): Promise<void> => {
+    await apiClient.put(`/settings/${type}`, data);
   },
 };
 export default api;
