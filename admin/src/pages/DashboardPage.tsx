@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, type ComponentType } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -13,6 +13,7 @@ import type { RootState, AppDispatch } from "../store";
 import { fetchProducts, fetchProductsCount } from "../store/productsSlice";
 import type { IDashboardStats } from "../types";
 import { EProductCategory } from "../types";
+import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
 
 export function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -187,10 +188,7 @@ export function DashboardPage() {
               className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
             >
               <img
-                src={
-                  product.thumbnailUrls[0] ||
-                  "/images/products/default-thumbnail.svg"
-                }
+                src={product.thumbnailUrls[0] || DEFAULT_PRODUCT_THUMBNAIL}
                 alt={product.name}
                 className="w-12 h-12 rounded-lg object-cover"
               />
@@ -208,7 +206,7 @@ export function DashboardPage() {
                 )}
               </div>
               <div className="flex items-center gap-2">
-                {product.category === "SUBSCRIPTIONS" && (
+                {product.category === EProductCategory.SUBSCRIPTIONS && (
                   <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
                     Subscription
                   </span>
@@ -239,7 +237,7 @@ function StatCard({
 }: {
   title: string;
   value: number;
-  icon: any;
+  icon: ComponentType<{ className?: string }>;
   color: string;
 }) {
   const colorClasses = {

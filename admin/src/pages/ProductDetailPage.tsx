@@ -9,6 +9,8 @@ import {
   setSelectedProduct,
 } from "../store/productsSlice";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
+import { EProductCategory } from "../types";
+import { DEFAULT_PRODUCT_IMAGE } from "../utils/constants";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -101,7 +103,7 @@ export function ProductDetailPage() {
               {product.imageUrls.map((url, index) => (
                 <img
                   key={index}
-                  src={url || "/images/products/default.svg"}
+                  src={url || DEFAULT_PRODUCT_IMAGE}
                   alt={`${product.name} ${index + 1}`}
                   className="w-full h-48 object-cover rounded-lg"
                 />
@@ -169,7 +171,7 @@ export function ProductDetailPage() {
                   <span className="text-dark-400">No</span>
                 )}
               </div>
-              {product.category === "SUBSCRIPTIONS" && (
+              {product.category === EProductCategory.SUBSCRIPTIONS && (
                 <div className="flex items-center justify-between">
                   <span className="text-dark-600">Type</span>
                   <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">

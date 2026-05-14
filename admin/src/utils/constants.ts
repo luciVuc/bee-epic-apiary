@@ -5,6 +5,9 @@ export const CATEGORIES = [
   { id: "SUBSCRIPTIONS", label: "Subscriptions" },
 ];
 
-export const DEFAULT_PRODUCT_IMAGE = "/images/products/default-product.png";
+export const DEFAULT_PRODUCT_IMAGE =
+  "https://img.icons8.com/color/96/beehive.png";
+export const DEFAULT_PRODUCT_THUMBNAIL =
+  "https://img.icons8.com/color/48/beehive.png";
 
 export const SETTINGS_STORAGE_KEY = "beeEpicAdminSettings";

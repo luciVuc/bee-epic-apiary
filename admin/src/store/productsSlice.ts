@@ -48,13 +48,8 @@ export const fetchProductById = createAsyncThunk(
 
 export const createProduct = createAsyncThunk(
   "products/create",
-  async (product: IProductInput, { dispatch, getState }) => {
+  async (product: IProductInput, { dispatch }) => {
     const newProduct = await api.api.createProduct(product);
-    const state = getState() as { products: IProductsState };
-    const totalLoaded = state.products.items.length;
-    if (totalLoaded > 0) {
-      dispatch(fetchProducts({ limit: totalLoaded }));
-    }
     dispatch(fetchProductsCount());
     return newProduct;
   },
@@ -64,14 +59,9 @@ export const updateProduct = createAsyncThunk(
   "products/update",
   async (
     { id, product }: { id: string; product: Partial<IProductInput> },
-    { dispatch, getState },
+    { dispatch },
   ) => {
     const updatedProduct = await api.api.updateProduct(id, product);
-    const state = getState() as { products: IProductsState };
-    const totalLoaded = state.products.items.length;
-    if (totalLoaded > 0) {
-      dispatch(fetchProducts({ limit: totalLoaded }));
-    }
     dispatch(fetchProductsCount());
     return updatedProduct;
   },
@@ -79,13 +69,8 @@ export const updateProduct = createAsyncThunk(
 
 export const deleteProduct = createAsyncThunk(
   "products/delete",
-  async (id: string, { dispatch, getState }) => {
+  async (id: string, { dispatch }) => {
     await api.api.deleteProduct(id);
-    const state = getState() as { products: IProductsState };
-    const totalLoaded = state.products.items.length;
-    if (totalLoaded > 0) {
-      dispatch(fetchProducts({ limit: totalLoaded }));
-    }
     dispatch(fetchProductsCount());
     return id;
   },
@@ -145,6 +130,7 @@ const productsSlice = createSlice({
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false;
         state.items.push(action.payload);
+        state.selectedProduct = action.payload;
       })
       .addCase(updateProduct.pending, (state) => {
         state.loading = true;

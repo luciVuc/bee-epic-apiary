@@ -4,3 +4,9 @@ web/node_modules
 .code-review
 services/coverage
 .playwright-mcp
+services/.dev.vars
+admin/.env
+admin/.env.example
+services/.env
+web/.env
+web/.env.example

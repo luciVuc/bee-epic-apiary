@@ -1,8 +1,10 @@
 import type { IProduct, IProductInput } from "../types";
 import { EProductCategory } from "../types";
-
-const DEFAULT_IMAGE = "/images/products/default.svg";
-const DEFAULT_THUMBNAIL = "/images/products/default-thumbnail.svg";
+import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL } from "./constants";
+import type {
+  StripeProductResponse,
+  StripePriceResponse,
+} from "../types/stripe";
 
 /**
  * Transform Stripe product to admin product format
@@ -10,36 +12,32 @@ const DEFAULT_THUMBNAIL = "/images/products/default-thumbnail.svg";
  * We store these in metadata or use defaults.
  * Price is retrieved from the expanded default_price object.
  */
-export function transformStripeProduct(stripeProduct: any): IProduct {
+export function transformStripeProduct(
+  stripeProduct: StripeProductResponse,
+): IProduct {
   const metadata = stripeProduct.metadata || {};
 
-  // Use Stripe images or default placeholder
   const stripeImages = stripeProduct.images || [];
-  const imageUrls = stripeImages.length > 0 ? stripeImages : [DEFAULT_IMAGE];
+  const imageUrls =
+    stripeImages.length > 0 ? stripeImages : [DEFAULT_PRODUCT_IMAGE];
   const thumbnailUrls =
-    stripeImages.length > 0 ? stripeImages : [DEFAULT_THUMBNAIL];
+    stripeImages.length > 0 ? stripeImages : [DEFAULT_PRODUCT_THUMBNAIL];
 
-  // Get price from expanded default_price (Stripe returns unit_amount in cents)
   let price = 0;
   let stripePriceId: string | undefined = undefined;
   let recurringInterval: string | undefined = undefined;
   let recurringIntervalCount: number | undefined = undefined;
-  if (
-    stripeProduct.default_price &&
-    typeof stripeProduct.default_price === "object"
-  ) {
-    const defaultPrice = stripeProduct.default_price as any;
-    price = defaultPrice.unit_amount || 0;
-    stripePriceId = defaultPrice.id;
-    if (defaultPrice.recurring) {
-      recurringInterval = defaultPrice.recurring.interval;
-      recurringIntervalCount = defaultPrice.recurring.interval_count || 1;
+  const defaultPrice = stripeProduct.default_price;
+  if (defaultPrice && typeof defaultPrice === "object") {
+    const priceObj = defaultPrice as StripePriceResponse;
+    price = priceObj.unit_amount || 0;
+    stripePriceId = priceObj.id;
+    if (priceObj.recurring) {
+      recurringInterval = priceObj.recurring.interval;
+      recurringIntervalCount = priceObj.recurring.interval_count || 1;
     }
-  } else if (
-    stripeProduct.default_price &&
-    typeof stripeProduct.default_price === "string"
-  ) {
-    stripePriceId = stripeProduct.default_price;
+  } else if (defaultPrice && typeof defaultPrice === "string") {
+    stripePriceId = defaultPrice;
   }
 
   return {
@@ -67,8 +65,10 @@ export function transformStripeProduct(stripeProduct: any): IProduct {
  * Transform admin product to Stripe product create/update params
  * Note: Price is NOT included in metadata - it's created as a separate Stripe Price object
  */
-export function transformToStripeParams(product: Partial<IProductInput>) {
-  const params: any = {
+export function transformToStripeParams(
+  product: Partial<IProductInput>,
+): Record<string, unknown> {
+  const params: Record<string, unknown> = {
     name: product.name,
     description: product.description,
     images: product.imageUrls || [],
@@ -80,12 +80,14 @@ export function transformToStripeParams(product: Partial<IProductInput>) {
       featured: product.featured?.toString() || "false",
       weight: product.weight || "",
       tags: product.tags?.join(",") || "",
+      stripePaymentLinkId: product.stripePaymentLinkId || "",
     },
   };
 
   // Clean up empty values
   if (!params.description) delete params.description;
-  if (!params.images || params.images.length === 0) delete params.images;
+  const images = params.images as string[] | undefined;
+  if (!images || images.length === 0) delete params.images;
 
   return params;
 }
@@ -100,8 +102,8 @@ export function transformToStripePriceParams(
   lookupKey?: string,
   recurringInterval?: string,
   recurringIntervalCount?: number,
-): any {
-  const params: any = {
+): Record<string, unknown> {
+  const params: Record<string, unknown> = {
     product: productId,
     unit_amount: price,
     currency: currency,
@@ -119,8 +121,10 @@ export function transformToStripePriceParams(
 /**
  * Transform Stripe products list response
  */
-export function transformStripeProductsList(response: any): IProduct[] {
-  if (!response || !response.data || !Array.isArray(response.data)) {
+export function transformStripeProductsList(
+  response: { data?: StripeProductResponse[] } | null,
+): IProduct[] {
+  if (!response?.data || !Array.isArray(response.data)) {
     return [];
   }
   return response.data.map(transformStripeProduct);

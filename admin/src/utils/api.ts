@@ -8,7 +8,7 @@ import {
   transformToStripePriceParams,
 } from "./transform";
 
-const API_BASE_URL = (import.meta as any).env.VITE_API_URL || "/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -19,7 +19,7 @@ const apiClient = axios.create({
 
 // Add auth interceptor if API key is set
 apiClient.interceptors.request.use((config) => {
-  const apiKey = (import.meta as any).env.VITE_API_SECRET_KEY;
+  const apiKey = import.meta.env.VITE_API_SECRET_KEY;
   if (apiKey) {
     config.headers.Authorization = `Bearer ${apiKey}`;
   }
@@ -43,6 +43,10 @@ async function createStripePrice(
   );
   const priceResponse = await apiClient.post("/prices", priceParams);
   return priceResponse.data;
+}
+
+export function updateApiBaseUrl(url: string) {
+  apiClient.defaults.baseURL = url;
 }
 
 export const api = {

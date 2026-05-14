@@ -7,7 +7,8 @@ import {
   updateProduct,
   fetchProductById,
 } from "../../store/productsSlice";
-import type { IProductInput, EProductCategory } from "../../types";
+import type { IProductInput } from "../../types";
+import { EProductCategory } from "../../types";
 
 interface ProductFormDialogProps {
   productId?: string;
@@ -30,7 +31,8 @@ export function ProductFormDialog({
     description: "",
     longDescription: "",
     price: 0,
-    category: "HONEY" as EProductCategory,
+    stripePaymentLinkId: "",
+    category: EProductCategory.HONEY,
     imageUrls: [""],
     thumbnailUrls: [""],
     inStock: true,
@@ -41,6 +43,10 @@ export function ProductFormDialog({
     recurringIntervalCount: 1,
   });
   const [tagInput, setTagInput] = useState("");
+
+  useEffect(() => {
+    setTagInput("");
+  }, [productId]);
 
   useEffect(() => {
     if (productId && (!selectedProduct || selectedProduct.id !== productId)) {
@@ -56,6 +62,7 @@ export function ProductFormDialog({
         description: selectedProduct.description,
         longDescription: selectedProduct.longDescription || "",
         price: selectedProduct.price,
+        stripePaymentLinkId: selectedProduct.stripePaymentLinkId || "",
         category: selectedProduct.category as EProductCategory,
         imageUrls:
           selectedProduct.imageUrls.length > 0
@@ -69,14 +76,16 @@ export function ProductFormDialog({
         featured: selectedProduct.featured,
         weight: selectedProduct.weight,
         tags: selectedProduct.tags || [],
-        recurringInterval: (selectedProduct as any).recurringInterval || "",
-        recurringIntervalCount:
-          (selectedProduct as any).recurringIntervalCount || 1,
+        recurringInterval: selectedProduct.recurringInterval || "",
+        recurringIntervalCount: selectedProduct.recurringIntervalCount || 1,
       });
     }
   }, [isEditMode, selectedProduct]);
 
-  const handleInputChange = (field: keyof IProductInput, value: any) => {
+  const handleInputChange = <K extends keyof IProductInput>(
+    field: K,
+    value: IProductInput[K],
+  ) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -263,7 +272,7 @@ export function ProductFormDialog({
           </div>
 
           {/* Recurring (Subscription) */}
-          {formData.category === "SUBSCRIPTIONS" && (
+          {formData.category === EProductCategory.SUBSCRIPTIONS && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
               <div>
                 <label className="block text-sm font-medium text-dark-700 mb-2">
@@ -396,6 +405,22 @@ export function ProductFormDialog({
               <Plus className="w-4 h-4" />
               Add Thumbnail URL
             </button>
+          </div>
+
+          {/* Stripe Payment Link ID */}
+          <div>
+            <label className="block text-sm font-medium text-dark-700 mb-2">
+              Stripe Payment Link ID
+            </label>
+            <input
+              type="text"
+              value={formData.stripePaymentLinkId || ""}
+              onChange={(e) =>
+                handleInputChange("stripePaymentLinkId", e.target.value)
+              }
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              placeholder="plink_..."
+            />
           </div>
 
           {/* Tags */}

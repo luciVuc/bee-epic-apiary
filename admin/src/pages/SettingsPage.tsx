@@ -199,7 +199,9 @@ export function SettingsPage() {
   useEffect(() => {
     const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (saved) {
-      setAdminSettings(JSON.parse(saved));
+      const parsed = JSON.parse(saved);
+      delete parsed.stripeSecretKey;
+      setAdminSettings(parsed);
     } else {
       setAdminSettings((prev) => ({
         ...prev,
@@ -207,10 +209,9 @@ export function SettingsPage() {
         email: "hello@beeepicapiary.com",
         phone: "(510) 555-APIARY",
         location: "Union City, California",
-        apiUrl:
-          (import.meta as any).env.VITE_API_URL || "http://localhost:8787",
+        apiUrl: import.meta.env.VITE_API_URL || "http://localhost:8787",
         allowedOrigins:
-          (import.meta as any).env.VITE_ALLOWED_ORIGINS ||
+          import.meta.env.VITE_ALLOWED_ORIGINS ||
           "http://localhost:5173,http://localhost:5174",
       }));
     }
@@ -254,7 +255,9 @@ export function SettingsPage() {
       setAdminError("API URL must be a valid URL");
       return;
     }
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(adminSettings));
+    const { stripeSecretKey: _secret, ...settingsToSave } = adminSettings;
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsToSave));
+    api.updateApiBaseUrl(adminSettings.apiUrl);
     setAdminSaved(true);
     setAdminError("");
     setTimeout(() => setAdminSaved(false), 3000);
@@ -269,9 +272,15 @@ export function SettingsPage() {
       await api.api.saveSettings("testimonials", testimonialsContent);
       setContentStatus("success");
       setTimeout(() => setContentStatus("idle"), 3000);
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const axiosErr = err as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
       setContentError(
-        err?.response?.data?.error || err?.message || "Failed to save content",
+        axiosErr?.response?.data?.error ||
+          axiosErr?.message ||
+          "Failed to save content",
       );
       setContentStatus("error");
     }

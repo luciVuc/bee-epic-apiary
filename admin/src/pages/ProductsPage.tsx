@@ -16,7 +16,8 @@ import {
   deleteProduct,
   fetchProductsCount,
 } from "../store/productsSlice";
-import { CATEGORIES } from "../utils/constants";
+import { CATEGORIES, DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
+import { EProductCategory } from "../types";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
 
 export function ProductsPage() {
@@ -51,19 +52,15 @@ export function ProductsPage() {
   useEffect(() => {
     if (!loading && isLoadingMore.current) {
       isLoadingMore.current = false;
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         window.scrollTo(0, scrollPositionRef.current);
-      });
+      }, 0);
     }
   }, [loading]);
 
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-
-  useEffect(() => {
-    dispatch(fetchProducts());
-  }, [dispatch]);
 
   const filteredProducts = useMemo(() => {
     return products.filter((product) => {
@@ -93,7 +90,11 @@ export function ProductsPage() {
     navigate("/products", { replace: true });
   };
 
-  if (loading && products.length === 0) {
+  if (
+    loading &&
+    products.length === 0 &&
+    location.pathname !== "/products/new"
+  ) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
@@ -232,7 +233,7 @@ export function ProductsPage() {
                         <img
                           src={
                             product.thumbnailUrls[0] ||
-                            "/images/products/default-thumbnail.svg"
+                            DEFAULT_PRODUCT_THUMBNAIL
                           }
                           alt={product.name}
                           className="w-10 h-10 rounded-lg object-cover"
@@ -250,12 +251,12 @@ export function ProductsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.category === "SUBSCRIPTIONS"
+                          product.category === EProductCategory.SUBSCRIPTIONS
                             ? "bg-blue-100 text-blue-700"
                             : "bg-primary-50 text-primary-700"
                         }`}
                       >
-                        {product.category === "SUBSCRIPTIONS"
+                        {product.category === EProductCategory.SUBSCRIPTIONS
                           ? "Subscription"
                           : product.category}
                       </span>
@@ -367,10 +368,7 @@ export function ProductsPage() {
               >
                 <div className="flex items-center gap-3 mb-3">
                   <img
-                    src={
-                      product.thumbnailUrls[0] ||
-                      "/golden-hive-apiary/admin/images/products/default-thumbnail.svg"
-                    }
+                    src={product.thumbnailUrls[0] || DEFAULT_PRODUCT_THUMBNAIL}
                     alt={product.name}
                     className="w-12 h-12 rounded-lg object-cover"
                   />
@@ -386,12 +384,12 @@ export function ProductsPage() {
                     <span className="text-dark-500">Category:</span>
                     <span
                       className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${
-                        product.category === "SUBSCRIPTIONS"
+                        product.category === EProductCategory.SUBSCRIPTIONS
                           ? "bg-blue-100 text-blue-700"
                           : "bg-primary-50 text-primary-700"
                       }`}
                     >
-                      {product.category === "SUBSCRIPTIONS"
+                      {product.category === EProductCategory.SUBSCRIPTIONS
                         ? "Subscription"
                         : product.category}
                     </span>

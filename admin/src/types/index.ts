@@ -33,6 +33,7 @@ export interface IProductInput {
   description: string;
   longDescription?: string;
   price: number;
+  stripePaymentLinkId?: string;
   category: EProductCategory;
   imageUrls: string[];
   thumbnailUrls: string[];
