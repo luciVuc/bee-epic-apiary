@@ -545,6 +545,7 @@ export function SettingsPage() {
                       {siteContent.aboutText.map((paragraph, i) => (
                         <div key={i} className="flex gap-2">
                           <TextAreaField
+                            name={`about-paragraph-${i}`}
                             label={`Paragraph ${i + 1}`}
                             value={paragraph}
                             onChange={(v) => updateAboutParagraph(i, v)}
@@ -1083,21 +1084,27 @@ function TextField({
   onChange,
   placeholder,
   type,
+  name,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   placeholder?: string;
   type?: string;
+  name?: string;
 }) {
   return (
     <div>
-      <label className="block text-sm font-medium text-dark-700 mb-2">
+      <label
+        htmlFor={name}
+        className="block text-sm font-medium text-dark-700 mb-2"
+      >
         {label}
       </label>
       <input
         type={type || "text"}
         value={value}
+        name={name}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
@@ -1111,20 +1118,26 @@ function TextAreaField({
   value,
   onChange,
   hideLabel,
+  name,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   hideLabel?: boolean;
+  name?: string;
 }) {
   return (
-    <div>
+    <div className="w-full">
       {!hideLabel && (
-        <label className="block text-sm font-medium text-dark-700 mb-2">
+        <label
+          htmlFor={name}
+          className="block text-sm font-medium text-dark-700 mb-2"
+        >
           {label}
         </label>
       )}
       <textarea
+        name={name}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         rows={3}

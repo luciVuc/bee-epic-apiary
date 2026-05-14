@@ -70,7 +70,8 @@ export function ProductFormDialog({
         weight: selectedProduct.weight,
         tags: selectedProduct.tags || [],
         recurringInterval: (selectedProduct as any).recurringInterval || "",
-        recurringIntervalCount: (selectedProduct as any).recurringIntervalCount || 1,
+        recurringIntervalCount:
+          (selectedProduct as any).recurringIntervalCount || 1,
       });
     }
   }, [isEditMode, selectedProduct]);
