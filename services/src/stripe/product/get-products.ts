@@ -1,95 +1,154 @@
-// workers/get-products.ts
 import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse } from '../../utils';
 
-const CACHE_TTL = 1; // 300; // 5 minutes in seconds
+const CACHE_TTL = 1;
 
-/**
- * Stripe Product Retrieve Handler
- *
- * Handles GET /products (list all) and GET /products/:id (get single) requests.
- * GET /products responses are cached for 5 minutes.
- * Supports `expand` query parameter for expanding related objects (e.g., default_price).
- *
- * @module get-products
- */
+async function fetchAllActiveProducts(stripe: Stripe, expand?: string[]): Promise<Stripe.Product[]> {
+	const allProducts: Stripe.Product[] = [];
+	let hasMore = true;
+	let startingAfter: string | undefined;
 
-/**
- * Inner handler for getting products.
- * Exported for testing with mocked Stripe instances.
- */
+	while (hasMore) {
+		const params: Stripe.ProductListParams = {
+			active: true,
+			limit: 100,
+			expand,
+		};
+		if (startingAfter) {
+			params.starting_after = startingAfter;
+		}
+		const page = (await stripe.products.list(params)) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+		allProducts.push(...page.data);
+		hasMore = page.has_more;
+		startingAfter = page.data[page.data.length - 1]?.id;
+	}
+
+	return allProducts;
+}
+
+function matchesSearch(product: Stripe.Product, search: string): boolean {
+	if (!search) return true;
+	const q = search.toLowerCase();
+	return product.name.toLowerCase().includes(q) || (product.description || '').toLowerCase().includes(q);
+}
+
+function matchesCategory(product: Stripe.Product, category: string): boolean {
+	if (!category || category === 'ALL') return true;
+	return (product.metadata?.category || '') === category;
+}
+
+function paginateArray<T extends { id: string }>(
+	items: T[],
+	limit: number,
+	startingAfter?: string,
+): { data: T[]; hasMore: boolean; lastId: string | null } {
+	if (startingAfter) {
+		const startIndex = items.findIndex((item) => item.id === startingAfter);
+		if (startIndex !== -1) {
+			const sliced = items.slice(startIndex + 1, startIndex + 1 + limit);
+			return {
+				data: sliced,
+				hasMore: startIndex + 1 + limit < items.length,
+				lastId: sliced[sliced.length - 1]?.id || null,
+			};
+		}
+	}
+	const sliced = items.slice(0, limit);
+	return {
+		data: sliced,
+		hasMore: limit < items.length,
+		lastId: sliced[sliced.length - 1]?.id || null,
+	};
+}
+
 export async function handleGetProducts(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
-		// Extract product ID from URL using regex
 		const url = new URL(request.url);
 		const productIdMatch = url.pathname.match(/\/products\/([^/]+)/);
 		const productId = productIdMatch ? productIdMatch[1] : null;
 
-		// Parse expand parameter from query string
-		// Stripe API expects expand[]=field format, Axios sends expand[]=field
-		// Use getAll to capture all expand[] parameters
 		const expandParams = url.searchParams.getAll('expand[]');
 		const expand = expandParams.length > 0 ? expandParams : undefined;
 
-		// Try to get from cache first (only for GET all products, not individual products)
+		const search = url.searchParams.get('search') || '';
+		const category = url.searchParams.get('category') || '';
+
+		const cache = caches.default;
+		const cacheKey = new Request(url.toString(), { method: 'GET' });
+
+		// Try cache for list requests
 		if (!productId) {
-			const cache = caches.default;
-			const cacheKey = new Request(url.toString(), { method: 'GET' });
 			const cachedResponse = await cache.match(cacheKey);
 			if (cachedResponse) {
 				return cachedResponse;
 			}
 		}
 
-		let result;
-		const listParams: Stripe.ProductListParams = { active: true };
-		if (expand) {
-			listParams.expand = expand;
-		}
-
-		// Pagination support
-		const limit = url.searchParams.get('limit');
-		const startingAfter = url.searchParams.get('starting_after');
-
-		if (limit) {
-			listParams.limit = parseInt(limit, 10);
-		}
-		if (startingAfter) {
-			listParams.starting_after = startingAfter;
-		}
-
+		// Single product
 		if (productId) {
-			// Get single product
 			const retrieveParams: Stripe.ProductRetrieveParams = {};
 			if (expand) {
 				retrieveParams.expand = expand;
 			}
 			const product = (await stripe.products.retrieve(productId, retrieveParams)) as Stripe.Response<Stripe.Product>;
 
-			// Only return active products
 			if (!product.active) {
 				return jsonResponse({ error: 'Product not found' }, 404, origin, env);
 			}
 
-			result = product;
+			return jsonResponse(product, 200, origin, env);
+		}
+
+		// List products
+		const limit = parseInt(url.searchParams.get('limit') || '10', 10);
+		const startingAfter = url.searchParams.get('starting_after') || undefined;
+
+		let resultData: any;
+
+		if (search || (category && category !== 'ALL')) {
+			// Filtered: fetch all from Stripe, filter, then paginate
+			const allProducts = await fetchAllActiveProducts(stripe, expand);
+			const filtered = allProducts.filter((p) => {
+				return matchesSearch(p, search) && matchesCategory(p, category);
+			});
+			const paginated = paginateArray(filtered, limit, startingAfter);
+			resultData = {
+				data: paginated.data,
+				has_more: paginated.hasMore,
+				total_count: filtered.length,
+			};
 		} else {
-			// Get all active products
-			result = (await stripe.products.list(listParams)) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+			// No filters: use Stripe pagination directly
+			const listParams: Stripe.ProductListParams = { active: true, limit };
+			if (expand) {
+				listParams.expand = expand;
+			}
+			if (startingAfter) {
+				listParams.starting_after = startingAfter;
+			}
+
+			const stripeResult = (await stripe.products.list(listParams)) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+
+			// Get total count of all active products
+			let totalCount = stripeResult.data.length;
+			try {
+				const allProducts = await fetchAllActiveProducts(stripe, expand);
+				totalCount = allProducts.length;
+			} catch {
+				// Fallback: just show what we loaded
+			}
+
+			resultData = {
+				...stripeResult,
+				total_count: totalCount,
+			};
 		}
 
-		const response = jsonResponse(result, 200, origin, env);
-
-		// Cache the response for GET all products
-		if (!productId) {
-			const cache = caches.default;
-			const cacheKey = new Request(url.toString(), { method: 'GET' });
-			// Add cache headers to response
-			response.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
-			// Clone the response before caching
-			const responseToCache = response.clone();
-			await cache.put(cacheKey, responseToCache);
-		}
+		const response = jsonResponse(resultData, 200, origin, env);
+		response.headers.set('Cache-Control', `public, max-age=${CACHE_TTL}`);
+		const responseToCache = response.clone();
+		await cache.put(cacheKey, responseToCache);
 
 		return response;
 	} catch (error: any) {
@@ -100,17 +159,6 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 	}
 }
 
-/**
- * Export default fetch handler for GET /products and GET /products/:id endpoints
- * Retrieves product(s) from Stripe with optional caching for list endpoint
- *
- * @type {ExportedHandler<Env>}
- * @param {Stripe} stripe - Initialized Stripe client
- * @param {Request} request - Incoming HTTP request
- * @param {Env} env - Cloudflare Worker environment variables
- * @param {string | null} origin - Request origin for CORS headers
- * @returns {Promise<Response>} JSON response with product(s)
- */
 export default {
 	fetch: withStripeHandler('GET', handleGetProducts),
 } satisfies ExportedHandler<Env>;

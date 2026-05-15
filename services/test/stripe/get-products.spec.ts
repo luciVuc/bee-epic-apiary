@@ -198,7 +198,10 @@ describe('get-products handler', () => {
 	});
 
 	it('returns cached response for list products', async () => {
-		const mockProducts = { data: [{ id: 'prod_1', name: 'Product 1' }] };
+		const mockProducts: any = {
+			data: [{ id: 'prod_1', name: 'Product 1', active: true, metadata: {} }],
+			has_more: false,
+		};
 		mockStripe.products.list.mockResolvedValue(mockProducts);
 
 		// First call to prime the cache
@@ -209,6 +212,9 @@ describe('get-products handler', () => {
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
 		await handleGetProducts(mockStripe as Stripe, request1, env, 'https://example.com');
 
+		// Reset call count to verify second request hits cache (no new Stripe calls)
+		const callsBeforeSecondRequest = mockStripe.products.list.mock.calls.length;
+
 		// Second call should hit cache
 		const request2 = new Request('http://example.com/products', {
 			method: 'GET',
@@ -217,6 +223,6 @@ describe('get-products handler', () => {
 		const response = await handleGetProducts(mockStripe as Stripe, request2, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		// Should not call stripe.products.list again due to cache
-		expect(mockStripe.products.list).toHaveBeenCalledTimes(1);
+		expect(mockStripe.products.list.mock.calls.length).toBe(callsBeforeSecondRequest);
 	});
 });

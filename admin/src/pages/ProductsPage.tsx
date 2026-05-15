@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -29,60 +29,78 @@ export function ProductsPage() {
     loading,
     error,
     hasMore,
-    lastId,
     totalCount,
   } = useSelector((state: RootState) => state.products);
 
   const isLoadingMore = useRef(false);
-  const scrollPositionRef = useRef(0);
-
-  useEffect(() => {
-    dispatch(fetchProducts());
-    dispatch(fetchProductsCount());
-  }, [dispatch]);
-
-  const handleLoadMore = () => {
-    if (lastId) {
-      scrollPositionRef.current = window.scrollY;
-      isLoadingMore.current = true;
-      dispatch(fetchProducts({ starting_after: lastId, limit: 10 }));
-    }
-  };
-
-  useEffect(() => {
-    if (!loading && isLoadingMore.current) {
-      isLoadingMore.current = false;
-      setTimeout(() => {
-        window.scrollTo(0, scrollPositionRef.current);
-      }, 0);
-    }
-  }, [loading]);
-
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("ALL");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const isInitialMount = useRef(true);
 
-  const filteredProducts = useMemo(() => {
-    return products.filter((product) => {
-      const matchesSearch =
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory =
-        selectedCategory === "ALL" || product.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    });
-  }, [products, searchTerm, selectedCategory]);
+  useEffect(() => {
+    if (products.length === 0) {
+      dispatch(fetchProducts());
+      dispatch(fetchProductsCount());
+    } else {
+      const saved = sessionStorage.getItem("adminProductsScrollY");
+      if (saved) {
+        requestAnimationFrame(() => {
+          window.scrollTo(0, parseInt(saved, 10));
+          sessionStorage.removeItem("adminProductsScrollY");
+        });
+      }
+    }
+    isInitialMount.current = false;
+  }, [dispatch, products.length]);
+
+  useEffect(() => {
+    if (isInitialMount.current) return;
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+    searchTimer.current = setTimeout(() => {
+      dispatch(
+        fetchProducts({ search: searchTerm, category: selectedCategory }),
+      );
+      dispatch(
+        fetchProductsCount({ search: searchTerm, category: selectedCategory }),
+      );
+    }, 300);
+    return () => {
+      if (searchTimer.current) clearTimeout(searchTimer.current);
+    };
+  }, [searchTerm, selectedCategory, dispatch]);
+
+  const saveScroll = useCallback(() => {
+    sessionStorage.setItem("adminProductsScrollY", String(window.scrollY));
+  }, []);
+
+  const handleLoadMore = () => {
+    isLoadingMore.current = true;
+    saveScroll();
+    dispatch(
+      fetchProducts({
+        starting_after: products[products.length - 1]?.id,
+        limit: 10,
+        search: searchTerm,
+        category: selectedCategory,
+      }),
+    );
+  };
 
   const handleDelete = async (id: string) => {
+    saveScroll();
     await dispatch(deleteProduct(id));
     setDeleteConfirm(null);
   };
 
   const handleAddProduct = () => {
+    saveScroll();
     navigate("/products/new", { replace: true });
   };
 
   const handleEditProduct = (id: string) => {
+    saveScroll();
     navigate(`/products/${id}/edit`, { replace: true });
   };
 
@@ -101,6 +119,8 @@ export function ProductsPage() {
       </div>
     );
   }
+
+  const showingCount = products.length;
 
   return (
     <div>
@@ -159,16 +179,12 @@ export function ProductsPage() {
 
         {/* Results count */}
         <div className="mt-3 text-sm text-dark-500">
-          Showing {filteredProducts.length}
-          {searchTerm || selectedCategory !== "ALL"
-            ? ` of ${filteredProducts.length}`
-            : ` of ${totalCount || products.length}`}{" "}
-          products
+          Showing {showingCount} of {totalCount} products
         </div>
       </div>
 
       {/* Products Display */}
-      {filteredProducts.length === 0 ? (
+      {products.length === 0 && !loading ? (
         <div className="text-center py-12">
           <Package className="w-16 h-16 text-dark-300 mx-auto mb-4" />
           <h3 className="font-heading text-xl font-semibold text-dark-700 mb-2">
@@ -220,7 +236,7 @@ export function ProductsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <tr
                     key={product.id}
                     className="hover:bg-gray-50 transition-colors"
@@ -228,6 +244,7 @@ export function ProductsPage() {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link
                         to={`/products/${product.id}`}
+                        onClick={saveScroll}
                         className="flex items-center gap-3"
                       >
                         <img
@@ -361,7 +378,7 @@ export function ProductsPage() {
 
           {/* Mobile card view */}
           <div className="md:hidden space-y-4">
-            {filteredProducts.map((product) => (
+            {products.map((product) => (
               <div
                 key={product.id}
                 className="bg-white p-4 rounded-xl shadow-sm border border-gray-200"
@@ -430,6 +447,7 @@ export function ProductsPage() {
                 <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
                   <Link
                     to={`/products/${product.id}`}
+                    onClick={saveScroll}
                     className="flex-1 text-center px-3 py-2 text-sm bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     View

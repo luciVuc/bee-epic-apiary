@@ -51,25 +51,36 @@ export function updateApiBaseUrl(url: string) {
 
 export const api = {
   // Products
-  getProducts: async (params?: { limit?: number; starting_after?: string }) => {
-    // Expand default_price to get price details
+  getProducts: async (params?: {
+    limit?: number;
+    starting_after?: string;
+    search?: string;
+    category?: string;
+  }) => {
     const response = await apiClient.get("/products", {
       params: {
         expand: ["data.default_price"],
         limit: params?.limit || 10,
         starting_after: params?.starting_after || undefined,
+        search: params?.search || undefined,
+        category: params?.category || undefined,
       },
     });
-    // Transform Stripe list response to admin product format
     return {
       products: transformStripeProductsList(response.data),
       hasMore: response.data.has_more,
-      lastId: response.data.data[response.data.data.length - 1]?.id,
+      lastId: response.data.data?.[response.data.data.length - 1]?.id,
+      totalCount: response.data.total_count ?? 0,
     };
   },
 
-  getProductsCount: async () => {
-    const response = await apiClient.get("/products/count");
+  getProductsCount: async (params?: { search?: string; category?: string }) => {
+    const response = await apiClient.get("/products/count", {
+      params: {
+        search: params?.search || undefined,
+        category: params?.category || undefined,
+      },
+    });
     return response.data.total;
   },
 

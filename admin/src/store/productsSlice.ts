@@ -2,6 +2,13 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { IProduct, IProductInput } from "../types";
 import * as api from "../utils/api";
 
+interface IFetchParams {
+  limit?: number;
+  starting_after?: string;
+  search?: string;
+  category?: string;
+}
+
 interface IProductsState {
   items: IProduct[];
   loading: boolean;
@@ -10,6 +17,8 @@ interface IProductsState {
   hasMore: boolean;
   lastId: string | null;
   totalCount: number;
+  lastFetchParams: IFetchParams | null;
+  scrollPosition: number;
 }
 
 const initialState: IProductsState = {
@@ -20,20 +29,22 @@ const initialState: IProductsState = {
   hasMore: false,
   lastId: null,
   totalCount: 0,
+  lastFetchParams: null,
+  scrollPosition: 0,
 };
 
 export const fetchProducts = createAsyncThunk(
   "products/fetchAll",
-  async (params?: { limit?: number; starting_after?: string }) => {
+  async (params?: IFetchParams) => {
     const result = await api.api.getProducts(params);
-    return result;
+    return { ...result, params: params || null };
   },
 );
 
 export const fetchProductsCount = createAsyncThunk(
   "products/fetchCount",
-  async () => {
-    const total = await api.api.getProductsCount();
+  async (params?: { search?: string; category?: string }) => {
+    const total = await api.api.getProductsCount(params);
     return total;
   },
 );
@@ -42,15 +53,22 @@ export const fetchProductById = createAsyncThunk(
   "products/fetchById",
   async (id: string) => {
     const product = await api.api.getProductById(id);
-    return product; // Already transformed to IProduct
+    return product;
   },
 );
 
 export const createProduct = createAsyncThunk(
   "products/create",
-  async (product: IProductInput, { dispatch }) => {
+  async (product: IProductInput, { dispatch, getState }) => {
     const newProduct = await api.api.createProduct(product);
-    dispatch(fetchProductsCount());
+    const state = getState() as { products: IProductsState };
+    const lastParams = state.products.lastFetchParams;
+    dispatch(
+      fetchProductsCount({
+        search: lastParams?.search,
+        category: lastParams?.category,
+      }),
+    );
     return newProduct;
   },
 );
@@ -59,19 +77,33 @@ export const updateProduct = createAsyncThunk(
   "products/update",
   async (
     { id, product }: { id: string; product: Partial<IProductInput> },
-    { dispatch },
+    { dispatch, getState },
   ) => {
     const updatedProduct = await api.api.updateProduct(id, product);
-    dispatch(fetchProductsCount());
+    const state = getState() as { products: IProductsState };
+    const lastParams = state.products.lastFetchParams;
+    dispatch(
+      fetchProductsCount({
+        search: lastParams?.search,
+        category: lastParams?.category,
+      }),
+    );
     return updatedProduct;
   },
 );
 
 export const deleteProduct = createAsyncThunk(
   "products/delete",
-  async (id: string, { dispatch }) => {
+  async (id: string, { dispatch, getState }) => {
     await api.api.deleteProduct(id);
-    dispatch(fetchProductsCount());
+    const state = getState() as { products: IProductsState };
+    const lastParams = state.products.lastFetchParams;
+    dispatch(
+      fetchProductsCount({
+        search: lastParams?.search,
+        category: lastParams?.category,
+      }),
+    );
     return id;
   },
 );
@@ -86,6 +118,16 @@ const productsSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setScrollPosition: (state, action: PayloadAction<number>) => {
+      state.scrollPosition = action.payload;
+    },
+    clearProducts: (state) => {
+      state.items = [];
+      state.hasMore = false;
+      state.lastId = null;
+      state.totalCount = 0;
+      state.lastFetchParams = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -95,20 +137,20 @@ const productsSlice = createSlice({
       })
       .addCase(fetchProducts.fulfilled, (state, action) => {
         state.loading = false;
-        const isLoadMore = action.meta.arg?.starting_after;
+        const isLoadMore = !!action.meta.arg?.starting_after;
         if (isLoadMore) {
-          // Append with deduplication for "load more"
           const existingIds = new Set(state.items.map((p) => p.id));
           const newProducts = action.payload.products.filter(
             (p) => !existingIds.has(p.id),
           );
           state.items = [...state.items, ...newProducts];
         } else {
-          // Replace items for initial load
           state.items = action.payload.products;
         }
         state.hasMore = action.payload.hasMore;
         state.lastId = action.payload.lastId;
+        state.totalCount = action.payload.totalCount;
+        state.lastFetchParams = action.payload.params;
       })
       .addCase(fetchProducts.rejected, (state, action) => {
         state.loading = false;
@@ -150,5 +192,10 @@ const productsSlice = createSlice({
   },
 });
 
-export const { setSelectedProduct, clearError } = productsSlice.actions;
+export const {
+  setSelectedProduct,
+  clearError,
+  setScrollPosition,
+  clearProducts,
+} = productsSlice.actions;
 export default productsSlice.reducer;
