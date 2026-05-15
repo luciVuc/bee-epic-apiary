@@ -12,7 +12,7 @@
 | Field              | Value                                   |
 | ------------------ | --------------------------------------- |
 | **Plan ID**        | `admin-v1`                              |
-| **Version**        | `1.1.0`                                 |
+| **Version**        | `2.0.0`                                 |
 | **Date**           | `2026-05-15`                            |
 | **Scope**          | Admin subproject — all workflows        |
 | **Auth Method**    | None (API-level token only, no UI auth) |
@@ -1109,177 +1109,6 @@ No data is modified in this workflow — it is read-only.
 
 ---
 
-### Workflow 7: Sales Reports Page
-
-**Description**: The user navigates to the Sales Reports page and views daily sales data. They select a date range using the date range picker, observe the bar chart update, and verify the summary row (total revenue, order count) reflects the selected period.
-
-**Preconditions**:
-
-- The admin app is running at `http://localhost:5174`
-- The services worker is running at `http://localhost:8787`
-- At least a few orders exist in the system across different dates (so the chart and summary show non-zero data)
-
-#### Happy Path
-
-| Step | Action                                          | Selector Hint                                              | Expected Result                                                                                          |
-| ---- | ----------------------------------------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| 1    | Navigate to `/reports`                          | URL `http://localhost:5174/reports`                        | Page loads with a heading "Sales Reports", date range picker, bar chart area, and summary section        |
-| 2    | Verify the date range picker                    | `input[type="date"]` or date picker inputs                 | Two date inputs visible: Start Date and End Date, defaulting to a reasonable range (e.g., last 30 days)  |
-| 3    | Verify the bar chart renders                    | A chart container or canvas/svg element                    | Bar chart of daily sales renders with date labels on x-axis and revenue on y-axis                        |
-| 4    | Verify the summary row                          | Section or row with "Total Revenue" and "Orders"           | Total revenue (formatted as currency) and total order count are displayed for the selected period        |
-| 5    | Change the start date                           | Click the Start Date input and select an earlier date      | Date input shows the new date, chart re-renders with updated data for the new range, summary row updates |
-| 6    | Change the end date                             | Click the End Date input and select a date closer to today | Date input shows the new date, chart updates, summary row updates                                        |
-| 7    | Verify the "Reports" link exists in the sidebar | `a:has-text("Reports")` within the sidebar navigation      | Sidebar contains a Reports link that navigates to `/reports` and shows active state                      |
-
-#### Detailed Steps
-
-**Step 1: Navigate to Sales Reports Page**
-
-```
-Action:       Navigate to http://localhost:5174/reports
-Selector:     N/A
-Input:        N/A
-Wait for:     The page to fully render — heading, date picker, chart area, and summary section all visible
-Validate:     URL is /reports, page heading contains "Sales Reports"
-Visual check: Page has a clean layout: date range picker at the top, chart in the middle, summary row below or alongside the chart
-Screenshot:   true
-```
-
-**Step 2: Verify Date Range Picker**
-
-```
-Action:       Locate the date range picker inputs
-Selector:     Two adjacent date input fields — typically input[type="date"] or a custom date picker component
-Input:        N/A
-Wait for:     Both date inputs to be visible and populated with default values
-Validate:     Two inputs present: Start Date and End Date. End Date defaults to today (or current date). Start Date defaults to 30 days prior.
-Visual check: Date inputs are properly labeled, display the date in a readable format (YYYY-MM-DD or localized), and are aligned horizontally
-Screenshot:   true
-```
-
-**Step 3: Verify Bar Chart**
-
-```
-Action:       Locate the bar chart area
-Selector:     A chart container element — may be a div, canvas, or SVG element containing bar representations
-Input:        N/A
-Wait for:     Chart to render with visible bars and axis labels
-Validate:     Bars are present (one per day in the selected range), x-axis shows dates, y-axis shows revenue amounts. No "No data" or empty state error visible (assuming data exists).
-Visual check: Bars are evenly spaced, axis labels are readable and not overlapping, bars have consistent styling/colors
-Screenshot:   true
-```
-
-**Step 4: Verify Summary Row**
-
-```
-Action:       Locate the summary row/section below or beside the chart
-Selector:     A section, div, or row containing "Total Revenue" and "Orders" labels and their values
-Input:        N/A
-Wait for:     Summary values to be populated
-Validate:     Total Revenue is displayed as a currency amount (e.g., "$1,234.56"). Orders displays an integer count (e.g., "42"). Both values are greater than 0 if data exists.
-Visual check: Summary values are styled prominently (larger font, perhaps a different background), labels are clear
-Screenshot:   true
-```
-
-**Step 5: Change Start Date**
-
-```
-Action:       Click the Start Date input and select an earlier date (e.g., 60 days ago)
-Selector:     input[type="date"] associated with "Start Date" or the first date input in the date range picker
-Input:        A date string 60 days before the current date (e.g., "2026-03-16" if today is 2026-05-15)
-Wait for:     The chart area to show a loading indicator (brief spinner or skeleton) then re-render with updated bars
-Validate:     The date range now spans ~60 days. The chart shows more bars (one per day). The Total Revenue and Orders values in the summary row have updated to reflect the wider range.
-Visual check: Chart smoothly transitions to the new data, no layout shift, loading indicator appears and disappears
-Screenshot:   true
-```
-
-**Step 6: Change End Date**
-
-```
-Action:       Click the End Date input and select a date closer to the start date (e.g., narrow to a 7-day range)
-Selector:     input[type="date"] associated with "End Date" or the second date input
-Input:        A date string 7 days after the start date (e.g., if start is 2026-03-16, set end to 2026-03-23)
-Wait for:     Chart to re-render with fewer bars
-Validate:     The date range now spans only ~7 days. The chart shows ~7 bars. Summary row values are lower and reflect only that 7-day period.
-Visual check: Chart updates correctly, no console errors, no duplicate or overlapping bars
-Screenshot:   true
-```
-
-**Step 7: Verify "Reports" Sidebar Link**
-
-```
-Action:       Click the "Reports" link in the sidebar navigation
-Selector:     a:has-text("Reports")
-Input:        N/A
-Wait for:     URL to remain at /reports (already there)
-Validate:     The Reports link in the sidebar shows an active/highlighted state (different background or color from inactive links like Dashboard, Products, Settings)
-Visual check: Active link visually distinct, consistent with how other active sidebar links are styled
-Screenshot:   true
-```
-
-#### Edge Cases
-
-**Edge Case 1: No Sales Data in Selected Range**
-
-```
-Reference:  Happy Path Steps 3-4
-Variation:  The selected date range has zero orders
-Action:     Set the date range to a period far in the past (e.g., 2010-01-01 to 2010-01-31) where no orders exist
-Input:      Start: "2010-01-01", End: "2010-01-31"
-Expected:   The chart shows a "No data for this period" or empty state message (no bars). The summary row shows $0.00 total revenue and 0 orders. No console errors or blank page. The page should not be blank.
-Screenshot: true
-```
-
-**Edge Case 2: Invalid Date Range (End Before Start)**
-
-```
-Reference:  Happy Path Steps 5-6
-Variation:  Set the End Date to a date before the Start Date
-Action:     Set Start Date to "2026-05-15", End Date to "2026-05-01"
-Input:      Start: "2026-05-15", End: "2026-05-01"
-Expected:   The UI should show a validation error or automatically swap the dates. Alternatively, the API should return an empty dataset. The page should not crash or show a blank white screen. No console errors.
-Screenshot: true
-```
-
-**Edge Case 3: Single Day Range**
-
-```
-Reference:  Happy Path Steps 5-6
-Variation:  Set both start and end date to the same day
-Action:     Set Start Date and End Date to the same day (e.g., today)
-Input:      Start and End both set to today's date
-Expected:   Chart shows one bar for that single day (or a "no data" state if no orders on that day). Summary shows revenue and orders for that single day. No console errors.
-Screenshot: true
-```
-
-**Edge Case 4: API Failure on Reports Endpoint**
-
-```
-Reference:  Happy Path Step 1
-Variation:  The services worker returns an error from GET /reports/sales
-Action:     Stop the services worker (or simulate API failure), then navigate to /reports
-Input:      N/A
-Expected:   The page shows an error message or banner indicating the report data could not be loaded. The chart area may show an error state. The page should not be completely blank.
-Screenshot: true
-```
-
-**Edge Case 5: Very Long Date Range**
-
-```
-Reference:  Happy Path Steps 5-6
-Variation:  Select a very wide date range spanning multiple years
-Action:     Set Start Date to 5 years ago, End Date to today
-Input:      Start: 5 years before today, End: today
-Expected:   The chart renders with many bars (potentially aggregated by month or week instead of daily to avoid overcrowding). The summary row shows totals for the full range. No performance degradation or page unresponsiveness. No console errors.
-Screenshot: true
-```
-
-#### Cleanup
-
-No data is modified in this workflow — it is read-only.
-
----
-
 ## 5. Issue Reporting
 
 > **Instructions for the testing agent**: When you discover an issue during test execution, you MUST ask the user how to handle it BEFORE taking action.
@@ -1336,7 +1165,7 @@ date: "[YYYY-MM-DD]"
 - Browser: Playwright (Chromium)
 - Viewport: [viewport at time of failure, e.g. 1280x720]
 - URL: [URL where the issue occurred]
-- Plan Version: 1.1.0
+- Plan Version: 2.0.0
 ```
 
 ---
@@ -1358,7 +1187,8 @@ The testing agent MUST ask the user these questions before executing this plan. 
 
 ## 7. Plan Version History
 
-| Version | Date       | Author              | Changes                                                                                                                                                  |
-| ------- | ---------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0.0   | 2026-05-14 | e2e-test-plan skill | Initial plan — 6 workflows covering Dashboard, Products List, Full Product Lifecycle, Settings Content, Settings Admin Config, and Navigation/Responsive |
-| 1.1.0   | 2026-05-15 | e2e-test-plan skill | Added Workflow 7: Sales Reports Page — bar chart, date range picker, summary row, Reports sidebar link, API error and empty data edge cases              |
+| Version | Date       | Author              | Changes                                                                                                                                                               |
+| ------- | ---------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2026-05-14 | e2e-test-plan skill | Initial plan — 6 workflows covering Dashboard, Products List, Full Product Lifecycle, Settings Content, Settings Admin Config, and Navigation/Responsive              |
+| 1.1.0   | 2026-05-15 | e2e-test-plan skill | Added Workflow 7: Sales Reports Page — bar chart, date range picker, summary row, Reports sidebar link, API error and empty data edge cases                           |
+| 2.0.0   | 2026-05-15 | code review         | Removed phantom Workflow 7 (Sales Reports) — `/reports` route, date range picker, charts, and sidebar link do not exist in the codebase. Plan reduced to 6 workflows. |
