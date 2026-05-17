@@ -1,4 +1,10 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useRef,
+  useCallback,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
@@ -30,50 +36,75 @@ export function ProductsPage() {
     error,
     hasMore,
     totalCount,
+    lastFetchParams,
   } = useSelector((state: RootState) => state.products);
 
   const isLoadingMore = useRef(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [searchTerm, setSearchTerm] = useState(
+    () => sessionStorage.getItem("adminProductsSearch") || "",
+  );
+  const [selectedCategory, setSelectedCategory] = useState(
+    () => sessionStorage.getItem("adminProductsCategory") || "ALL",
+  );
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
-  const isInitialMount = useRef(true);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (products.length === 0) {
       dispatch(fetchProducts());
       dispatch(fetchProductsCount());
-    } else {
-      const saved = sessionStorage.getItem("adminProductsScrollY");
-      if (saved) {
-        requestAnimationFrame(() => {
-          window.scrollTo(0, parseInt(saved, 10));
-          sessionStorage.removeItem("adminProductsScrollY");
-        });
-      }
+      return;
     }
-    isInitialMount.current = false;
+    const saved = sessionStorage.getItem("adminProductsScrollY");
+    if (!saved) return;
+    const y = parseInt(saved, 10);
+    window.scrollTo(0, y);
+    const id = requestAnimationFrame(() => {
+      window.scrollTo(0, y);
+      sessionStorage.removeItem("adminProductsScrollY");
+    });
+    return () => cancelAnimationFrame(id);
   }, [dispatch, products.length]);
 
   useEffect(() => {
-    if (isInitialMount.current) return;
     if (searchTimer.current) clearTimeout(searchTimer.current);
+
+    const params: { search?: string; category?: string } = {};
+    if (searchTerm) params.search = searchTerm;
+    if (selectedCategory !== "ALL") params.category = selectedCategory;
+
+    const last = lastFetchParams || {};
+    const sameSearch = (last.search || "") === (params.search || "");
+    const sameCat = (last.category || "ALL") === (params.category || "ALL");
+    if (sameSearch && sameCat && products.length > 0) return;
+
     searchTimer.current = setTimeout(() => {
-      dispatch(
-        fetchProducts({ search: searchTerm, category: selectedCategory }),
-      );
-      dispatch(
-        fetchProductsCount({ search: searchTerm, category: selectedCategory }),
-      );
+      dispatch(fetchProducts(params));
+      dispatch(fetchProductsCount(params));
     }, 300);
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
-  }, [searchTerm, selectedCategory, dispatch]);
+  }, [
+    searchTerm,
+    selectedCategory,
+    dispatch,
+    lastFetchParams,
+    products.length,
+  ]);
 
   const saveScroll = useCallback(() => {
     sessionStorage.setItem("adminProductsScrollY", String(window.scrollY));
-  }, []);
+    sessionStorage.setItem("adminProductsSearch", searchTerm);
+    sessionStorage.setItem("adminProductsCategory", selectedCategory);
+  }, [searchTerm, selectedCategory]);
+
+  useEffect(() => {
+    return () => {
+      sessionStorage.setItem("adminProductsSearch", searchTerm);
+      sessionStorage.setItem("adminProductsCategory", selectedCategory);
+    };
+  }, [searchTerm, selectedCategory]);
 
   const handleLoadMore = () => {
     isLoadingMore.current = true;
