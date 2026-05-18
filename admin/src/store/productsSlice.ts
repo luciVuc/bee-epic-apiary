@@ -128,6 +128,24 @@ const productsSlice = createSlice({
       state.totalCount = 0;
       state.lastFetchParams = null;
     },
+    restoreProducts: (
+      state,
+      action: PayloadAction<{
+        items: IProduct[];
+        hasMore: boolean;
+        lastId: string | null;
+        totalCount: number;
+        lastFetchParams: IFetchParams | null;
+      }>,
+    ) => {
+      state.items = action.payload.items;
+      state.hasMore = action.payload.hasMore;
+      state.lastId = action.payload.lastId;
+      state.totalCount = action.payload.totalCount;
+      state.lastFetchParams = action.payload.lastFetchParams;
+      state.loading = false;
+      state.error = null;
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -197,5 +215,6 @@ export const {
   clearError,
   setScrollPosition,
   clearProducts,
+  restoreProducts,
 } = productsSlice.actions;
 export default productsSlice.reducer;

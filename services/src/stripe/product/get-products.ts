@@ -30,7 +30,12 @@ async function fetchAllActiveProducts(stripe: Stripe, expand?: string[]): Promis
 function matchesSearch(product: Stripe.Product, search: string): boolean {
 	if (!search) return true;
 	const q = search.toLowerCase();
-	return product.name.toLowerCase().includes(q) || (product.description || '').toLowerCase().includes(q);
+	return (
+		product.name.toLowerCase().includes(q) ||
+		(product.description || '').toLowerCase().includes(q) ||
+		(product.metadata?.longDescription || '').toLowerCase().includes(q) ||
+		(product.metadata?.tags || '').toLowerCase().includes(q)
+	);
 }
 
 function matchesCategory(product: Stripe.Product, category: string): boolean {

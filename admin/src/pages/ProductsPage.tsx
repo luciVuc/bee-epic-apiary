@@ -15,12 +15,14 @@ import {
   Trash2,
   Package,
   AlertCircle,
+  X,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
 import {
   fetchProducts,
   deleteProduct,
   fetchProductsCount,
+  restoreProducts,
 } from "../store/productsSlice";
 import { CATEGORIES, DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
 import { EProductCategory } from "../types";
@@ -45,6 +47,13 @@ export function ProductsPage() {
     search?: string;
     category?: string;
   } | null>(null);
+  const savedStateRef = useRef({
+    products,
+    hasMore,
+    totalCount,
+    lastFetchParams,
+  });
+  savedStateRef.current = { products, hasMore, totalCount, lastFetchParams };
   const [searchTerm, setSearchTerm] = useState(
     () => sessionStorage.getItem("adminProductsSearch") || "",
   );
@@ -57,8 +66,20 @@ export function ProductsPage() {
   useLayoutEffect(() => {
     if (!initialLoadDone.current) {
       initialLoadDone.current = true;
-      dispatch(fetchProducts());
-      dispatch(fetchProductsCount());
+      const savedState = sessionStorage.getItem("adminProductsState");
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          dispatch(restoreProducts(parsed));
+          sessionStorage.removeItem("adminProductsState");
+        } catch {
+          dispatch(fetchProducts());
+          dispatch(fetchProductsCount());
+        }
+      } else {
+        dispatch(fetchProducts());
+        dispatch(fetchProductsCount());
+      }
       return;
     }
     const saved = sessionStorage.getItem("adminProductsScrollY");
@@ -118,6 +139,19 @@ export function ProductsPage() {
     return () => {
       sessionStorage.setItem("adminProductsSearch", searchTerm);
       sessionStorage.setItem("adminProductsCategory", selectedCategory);
+      const s = savedStateRef.current;
+      if (s.products.length > 0) {
+        sessionStorage.setItem(
+          "adminProductsState",
+          JSON.stringify({
+            items: s.products,
+            hasMore: s.hasMore,
+            lastId: s.products[s.products.length - 1]?.id || null,
+            totalCount: s.totalCount,
+            lastFetchParams: s.lastFetchParams,
+          }),
+        );
+      }
     };
   }, [searchTerm, selectedCategory]);
 
@@ -201,8 +235,16 @@ export function ProductsPage() {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
+            {searchTerm && (
+              <button
+                onClick={() => setSearchTerm("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
 
           {/* Category Filter */}
