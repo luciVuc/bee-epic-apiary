@@ -40,6 +40,11 @@ export function ProductsPage() {
   } = useSelector((state: RootState) => state.products);
 
   const isLoadingMore = useRef(false);
+  const initialLoadDone = useRef(false);
+  const lastDispatchedParams = useRef<{
+    search?: string;
+    category?: string;
+  } | null>(null);
   const [searchTerm, setSearchTerm] = useState(
     () => sessionStorage.getItem("adminProductsSearch") || "",
   );
@@ -50,7 +55,8 @@ export function ProductsPage() {
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useLayoutEffect(() => {
-    if (products.length === 0) {
+    if (!initialLoadDone.current) {
+      initialLoadDone.current = true;
       dispatch(fetchProducts());
       dispatch(fetchProductsCount());
       return;
@@ -64,7 +70,7 @@ export function ProductsPage() {
       sessionStorage.removeItem("adminProductsScrollY");
     });
     return () => cancelAnimationFrame(id);
-  }, [dispatch, products.length]);
+  }, [dispatch]);
 
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -76,11 +82,20 @@ export function ProductsPage() {
     const last = lastFetchParams || {};
     const sameSearch = (last.search || "") === (params.search || "");
     const sameCat = (last.category || "ALL") === (params.category || "ALL");
-    if (sameSearch && sameCat && products.length > 0) return;
 
-    searchTimer.current = setTimeout(() => {
-      dispatch(fetchProducts(params));
-      dispatch(fetchProductsCount(params));
+    const dispatched = lastDispatchedParams.current || {};
+    const sameDispatchedSearch =
+      (dispatched.search || "") === (params.search || "");
+    const sameDispatchedCat =
+      (dispatched.category || "ALL") === (params.category || "ALL");
+
+    if (sameSearch && sameCat && products.length > 0) return;
+    if (sameDispatchedSearch && sameDispatchedCat) return;
+
+    searchTimer.current = setTimeout(async () => {
+      lastDispatchedParams.current = params;
+      await dispatch(fetchProducts(params));
+      await dispatch(fetchProductsCount(params));
     }, 300);
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -236,8 +251,8 @@ export function ProductsPage() {
         </div>
       ) : (
         <div className="relative">
-          {loading && isLoadingMore.current && (
-            <div className="absolute inset-0 bg-white/70 flex items-center justify-center z-10">
+          {loading && (
+            <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px]">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
             </div>
           )}

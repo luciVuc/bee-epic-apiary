@@ -12,8 +12,8 @@
 | Field              | Value                                   |
 | ------------------ | --------------------------------------- |
 | **Plan ID**        | `admin-v1`                              |
-| **Version**        | `2.0.0`                                 |
-| **Date**           | `2026-05-15`                            |
+| **Version**        | `3.0.0`                                 |
+| **Date**           | `2026-05-17`                            |
 | **Scope**          | Admin subproject — all workflows        |
 | **Auth Method**    | None (API-level token only, no UI auth) |
 | **Target Browser** | Playwright (Chromium)                   |
@@ -68,11 +68,11 @@ The testing agent must ensure these are set in `admin/.env`:
 
 ## 3. Testing Configuration
 
-### Viewport
+### 3.1 Viewport
 
 Default: `1280x720`. The testing agent should set this in Playwright before starting.
 
-### Responsive Viewport Testing
+### 3.2 Responsive Viewport Testing
 
 The happy path of EVERY workflow must be tested at the following breakpoints to verify responsive behavior:
 
@@ -97,7 +97,86 @@ For each breakpoint, the testing agent MUST:
 
 Edge cases (non-happy-path scenarios) can be tested at the default desktop viewport only, unless the edge case is specifically about responsive behavior.
 
-### Authentication Detail
+### 3.3 data-testid Convention
+
+This plan prefers `data-testid` selectors for reliable element targeting. However, the admin codebase currently does **not** use `data-testid` attributes. Use text-based and role-based selectors as fallbacks.
+
+Selector priority (use first available): `data-testid` > ARIA role > text content > CSS class.
+
+If `data-testid` attributes are added in the future, use this convention:
+
+| Pattern                          | Example               | Purpose               |
+| -------------------------------- | --------------------- | --------------------- |
+| `[data-testid="page-{name}"]`    | `page-product-detail` | Page-level container  |
+| `[data-testid="btn-{action}"]`   | `btn-add-product`     | Buttons and actions   |
+| `[data-testid="input-{field}"]`  | `input-product-name`  | Form input fields     |
+| `[data-testid="form-{name}"]`    | `form-product`        | Form containers       |
+| `[data-testid="nav-{name}"]`     | `nav-sidebar`         | Navigation elements   |
+| `[data-testid="msg-{type}"]`     | `msg-success`         | Messages and alerts   |
+| `[data-testid="list-{name}"]`    | `list-products`       | List/table containers |
+| `[data-testid="heading-{page}"]` | `heading-dashboard`   | Page headings         |
+
+### 3.4 Timeout Conventions
+
+The testing agent MUST use these default timeout values:
+
+| Context            | Timeout | Notes                                          |
+| ------------------ | ------- | ---------------------------------------------- |
+| Element visibility | 5s      | `page.waitForSelector` with `state: "visible"` |
+| Page navigation    | 10s     | `page.waitForURL`, `page.goto`                 |
+| Network idle       | 15s     | `page.waitForLoadState("networkidle")`         |
+| DOM content loaded | 30s     | `page.waitForLoadState("domcontentloaded")`    |
+| Retry base delay   | 1s      | Doubles on each retry (1s, 2s, 4s)             |
+
+Per-step timeouts may override these defaults in the Detailed Steps section.
+
+### 3.5 Retry Strategy
+
+When a step fails during execution, the testing agent MUST follow this policy:
+
+- **Max retries per step**: 3
+- **Backoff**: Exponential (1s, 2s, 4s)
+- **Retry condition**: Only on `TimeoutError`, `NoSuchElementError`, or transient network failures
+- **Do NOT retry**: Assertion failures (wrong text, wrong URL, wrong state — these are real bugs)
+
+**Abort execution when**:
+
+- A step fails after exhausting all retries
+- A P0 (critical) workflow step fails
+- The application shows a fatal error (HTTP 500, blank page, crash overlay)
+- The testing environment becomes unreachable
+
+**Continue despite failure when**:
+
+- A non-critical check fails (visual diff, responsive layout at non-default breakpoint)
+- An edge case fails — log the issue, continue the happy path
+- Cleanup fails — log and continue (the test has already run)
+
+**Flaky detection**: Log any step that passes only after retries. A pattern of retry-dependent passes may indicate a timing issue in the test rather than a real bug.
+
+### 3.6 Accessibility Checks
+
+At every step where `a11y check: true` is specified, the testing agent MUST:
+
+1. **Automated scan**: Inject and run `axe-core` (or equivalent). Check for:
+   - Color contrast violations
+   - Missing ARIA labels on interactive elements
+   - Missing form label associations
+   - Improper heading hierarchy (h1→h2→h3 — no skips)
+   - Missing alt text on informative images
+   - Insufficient focus indicators
+
+2. **Keyboard navigation**: Tab through all interactive elements:
+   - All form fields, buttons, and links reachable via Tab
+   - Focus order follows visual/logical order
+   - Focus indicator visible at all times
+   - No focus traps (modal must be closable via Escape or close button)
+
+3. **Screen reader hints**: Verify ARIA roles are appropriate, `aria-expanded` reflects current state, `aria-live` regions are used for dynamic content updates.
+
+Report a11y violations using the issue report format in this plan.
+
+### 3.7 Authentication Detail
 
 **No UI authentication required.** The admin subproject does not have a login page. API authentication is handled automatically by the Axios client interceptor which reads `VITE_API_SECRET_KEY` from environment variables and attaches it as a Bearer token on every request. The testing agent does not need to perform any authentication steps.
 
@@ -109,28 +188,43 @@ Edge cases (non-happy-path scenarios) can be tested at the default desktop viewp
 
 ### Workflow 1: Dashboard Page
 
-**Description**: The user lands on the dashboard after navigating to `/`. They see summary statistics, a category chart, recent products, and quick action links. This workflow verifies all dashboard elements render correctly.
+**Metadata**:
+
+| Field            | Value                                |
+| ---------------- | ------------------------------------ |
+| **Priority**     | P0 (critical)                        |
+| **Tags**         | smoke                                |
+| **Duration**     | ~45s                                 |
+| **Dependencies** | Requires at least 1 product to exist |
+
+**Description**: The user lands on the dashboard after navigating to `/`. They see summary statistics (4 stat cards), a category breakdown bar chart, recent products list (up to 5), and quick action links. This workflow verifies all dashboard elements render correctly.
 
 **Preconditions**:
 
 - The admin app is running at `http://localhost:5174`
 - The services worker is running at `http://localhost:8787`
-- At least one product exists in the database (the testing agent should verify this during the "Create Product" workflow first, or ask the user)
+- At least one product exists in the database
+
+**Test Data**:
+
+| Record                         | Creation Method                          | Identifier | Cleanup        |
+| ------------------------------ | ---------------------------------------- | ---------- | -------------- |
+| At least 1 product in database | API (pre-seeded) or run Workflow 3 first | N/A        | Self-contained |
 
 #### Happy Path
 
-| Step | Action                                | Selector Hint                                                             | Expected Result                                                                     |
-| ---- | ------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| 1    | Navigate to `http://localhost:5174`   | URL `http://localhost:5174`                                               | Page loads, URL redirects to `/dashboard`                                           |
-| 2    | Wait for stat cards to load           | `text=Total Active Products` or similar stat card heading                 | 4 stat cards visible: Total Active Products, In Stock, Featured, Categories         |
-| 3    | Verify "Quick Actions" section        | `text=Quick Actions` or a section heading                                 | Three action links visible: "Manage Products", "Add New Product", "Update Settings" |
-| 4    | Verify category breakdown chart       | A bar chart heading or chart container                                    | Category breakdown (Honey, Beeswax, Gift Sets, Subscriptions) chart renders         |
-| 5    | Verify "Recent Products" list         | `text=Recent Products` or similar heading                                 | Up to 5 product cards/rows visible with name and thumbnail                          |
-| 6    | Click the first recent product        | `a:has(>> text=<first product name>)` or `.recent-products a:first-child` | Navigates to `/products/:id`                                                        |
-| 7    | Go back to dashboard                  | Click browser back or sidebar Dashboard link                              | Dashboard loads correctly                                                           |
-| 8    | Click "Add New Product" quick action  | `a:has-text("Add New Product")`                                           | Navigates to `/products/new`, the ProductFormDialog modal opens                     |
-| 9    | Close the dialog                      | Click the dialog close button or press Escape                             | Dialog closes, back at dashboard                                                    |
-| 10   | Verify "Add Product" button in navbar | `button:has-text("Add Product")` or navbar element                        | Button visible in the top navbar                                                    |
+| Step | Action                                | Selector Hint                                                             | a11y | Expected Result                                                                     |
+| ---- | ------------------------------------- | ------------------------------------------------------------------------- | ---- | ----------------------------------------------------------------------------------- |
+| 1    | Navigate to `http://localhost:5174`   | URL `http://localhost:5174`                                               | Y    | Page loads, URL redirects to `/dashboard`                                           |
+| 2    | Wait for stat cards to load           | `text=Total Active Products` or similar stat card heading                 | N    | 4 stat cards visible: Total Active Products, In Stock, Featured, Categories         |
+| 3    | Verify "Quick Actions" section        | `text=Quick Actions` or a section heading                                 | N    | Three action links visible: "Manage Products", "Add New Product", "Update Settings" |
+| 4    | Verify category breakdown chart       | A bar chart heading or chart container                                    | N    | Category breakdown (Honey, Beeswax, Gift Sets, Subscriptions) chart renders         |
+| 5    | Verify "Recent Products" list         | `text=Recent Products` or similar heading                                 | N    | Up to 5 product cards/rows visible with name and thumbnail                          |
+| 6    | Click the first recent product        | `a:has(>> text=<first product name>)` or `.recent-products a:first-child` | Y    | Navigates to `/products/:id`                                                        |
+| 7    | Go back to dashboard                  | Click browser back or sidebar Dashboard link                              | N    | Dashboard loads correctly                                                           |
+| 8    | Click "Add New Product" quick action  | `a:has-text("Add New Product")`                                           | Y    | Navigates to `/products/new`, the ProductFormDialog modal opens                     |
+| 9    | Close the dialog                      | Click the dialog close button or press Escape                             | N    | Dialog closes, URL reverts to `/products`                                           |
+| 10   | Verify "Add Product" button in navbar | `button:has-text("Add Product")` or navbar element                        | N    | Button visible in the top navbar                                                    |
 
 #### Detailed Steps
 
@@ -143,6 +237,7 @@ Input:        N/A
 Wait for:     URL to change to /dashboard (automatic redirect)
 Validate:     URL is http://localhost:5174/dashboard
 Visual check: Page renders without console errors, no broken layout
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -155,6 +250,7 @@ Input:        N/A
 Wait for:     Each stat card's numeric value to be visible (may briefly show 0 before API responds)
 Validate:     Four stat cards are present each with a label and a numeric count
 Visual check: Cards are evenly spaced in a grid, text is readable, no overlapping elements
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -167,6 +263,7 @@ Input:        N/A
 Wait for:     Three action links to appear
 Validate:     Links exist: "Manage Products" (href=/products), "Add New Product" (href=/products/new), "Update Settings" (href=/settings)
 Visual check: Links display as styled cards or buttons, evenly spaced
+a11y check:   false
 Screenshot:   false
 ```
 
@@ -179,6 +276,7 @@ Input:        N/A
 Wait for:     Chart container to render
 Validate:     Category labels (Honey, Beeswax, Gift Sets, Subscriptions) are present
 Visual check: Chart renders without visual defects, bars/labels are not overlapping
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -191,6 +289,7 @@ Input:        N/A
 Wait for:     At least one product to appear in the list (or an empty state message if none exist)
 Validate:     1-5 product entries visible with name and thumbnail image
 Visual check: Product thumbnails load without broken image icons, names are readable
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -203,6 +302,7 @@ Input:        N/A
 Wait for:     URL to change to /products/<id>
 Validate:     Product detail page loads with the product's name as heading
 Visual check: Product images, description, and metadata display correctly
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -215,6 +315,7 @@ Input:        N/A
 Wait for:     URL to be /dashboard
 Validate:     Dashboard loads, stat cards re-render
 Visual check: Dashboard is fully rendered
+a11y check:   false
 Screenshot:   false
 ```
 
@@ -227,6 +328,7 @@ Input:        N/A
 Wait for:     URL to change to /products/new AND the ProductFormDialog modal to open
 Validate:     Modal dialog with form fields (Product Name, Slug, Short Description, Price, Category, etc.) is visible
 Visual check: Modal overlay with form, proper z-index, fields properly labeled
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -236,9 +338,10 @@ Screenshot:   true
 Action:       Close the modal without saving
 Selector:     Modal close button (X icon) or press Escape key
 Input:        N/A
-Wait for:     Modal to disappear, URL to revert to /dashboard (or /products)
-Validate:     Modal is no longer visible, dashboard content is accessible beneath
+Wait for:     Modal to disappear, URL to revert to /products
+Validate:     Modal is no longer visible, page content is accessible beneath
 Visual check: Page returns to normal state, no remnant overlay
+a11y check:   false
 Screenshot:   false
 ```
 
@@ -251,6 +354,7 @@ Input:        N/A
 Wait for:     Button to be visible in the navbar
 Validate:     Button text reads "Add Product"
 Visual check: Button is properly styled, visible in the navbar
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -282,27 +386,48 @@ Screenshot: true
 
 No data is modified in this workflow — it is read-only.
 
+**Cleanup strategy**: Idempotent state
+
 ---
 
 ### Workflow 2: Products List — Browse, Search, Filter, and Paginate
 
-**Description**: The user browses the full product catalog, searches by name/description, filters by category, and loads more products via pagination.
+**Metadata**:
+
+| Field            | Value                                  |
+| ---------------- | -------------------------------------- |
+| **Priority**     | P0 (critical)                          |
+| **Tags**         | smoke, regression                      |
+| **Duration**     | ~90s                                   |
+| **Dependencies** | Requires at least 11 products to exist |
+
+**Description**: The user browses the full product catalog, searches by name/description, filters by category, combines both filters, verifies the results count display, and loads more products via pagination. This workflow validates the search and filter system works independently and in combination.
 
 **Preconditions**:
 
 - At least 11 products exist in the database (to verify pagination)
+- Products span at least 2 categories (to verify category filtering)
 - The user is on the products page at `/products`
+
+**Test Data**:
+
+| Record                           | Creation Method                                    | Identifier | Cleanup        |
+| -------------------------------- | -------------------------------------------------- | ---------- | -------------- |
+| At least 11 products in database | Run Workflow 3 multiple times, or pre-seed via API | N/A        | Self-contained |
+| Products in 2+ categories        | Pre-seed with mixed categories                     | N/A        | Self-contained |
 
 #### Happy Path
 
-| Step | Action                            | Selector Hint                                  | Expected Result                                                                                      |
-| ---- | --------------------------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| 1    | Navigate to `/products`           | URL `http://localhost:5174/products`           | Product list renders (table on desktop, cards on mobile)                                             |
-| 2    | Verify product table/card columns | Table or card elements                         | Product name, slug, category badge, price, status badge, featured badge, Edit/Delete actions visible |
-| 3    | Search by product name            | `input[placeholder*="Search"]` or search input | List filters to matching products                                                                    |
-| 4    | Clear search, filter by category  | `select` or category dropdown                  | List filters to products in that category                                                            |
-| 5    | Reset filter, scroll down         | Scroll to bottom of list                       | "Load More Products" button visible                                                                  |
-| 6    | Click "Load More Products"        | `button:has-text("Load More Products")`        | Additional 10 products appended to the list                                                          |
+| Step | Action                                          | Selector Hint                                        | a11y | Expected Result                                                                                               |
+| ---- | ----------------------------------------------- | ---------------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------- |
+| 1    | Navigate to `/products`                         | URL `http://localhost:5174/products`                 | Y    | Product list renders (table on desktop, cards on mobile)                                                      |
+| 2    | Verify product table/card columns               | Table or card elements                               | N    | Product name, slug, category badge, price, status badge, featured badge, Edit/Delete actions visible          |
+| 3    | Search by product name, verify results count    | `input[placeholder*="Search"]`                       | N    | List narrows; "Showing X of Y products" count reflects filtered total                                         |
+| 4    | Clear search, filter by category, verify count  | `select` category dropdown                           | N    | List shows only products in that category; count updates                                                      |
+| 5    | Add search on top of category filter (combined) | Keep category selected, type search term             | N    | List narrows further — both filters apply simultaneously. All visible products match BOTH category AND search |
+| 6    | Clear all filters, verify full count restored   | Clear search input, set category to "All"            | N    | Count returns to original total; all products visible                                                         |
+| 7    | Scroll to bottom, click "Load More Products"    | Scroll until `button:has-text("Load More Products")` | N    | "Load More Products" button visible and clickable                                                             |
+| 8    | Verify pagination appended products             | Product list after clicking "Load More"              | N    | Additional 10 products appended; list grows; no duplicates                                                    |
 
 #### Detailed Steps
 
@@ -313,8 +438,9 @@ Action:       Navigate to http://localhost:5174/products
 Selector:     N/A
 Input:        N/A
 Wait for:     Product table (desktop) or product cards (mobile) to render
-Validate:     URL is /products, page title or heading contains "Products"
+Validate:     URL is /products, page heading contains "Products Management"
 Visual check: The product listing renders without layout shift
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -325,133 +451,204 @@ Action:       Inspect the first product row in the table/card layout
 Selector:     Table row (`tr`) or card element containing product data
 Input:        N/A
 Wait for:     At least one product row to be fully rendered
-Validate:     Each row contains: product thumbnail + name, category badge (styled colored pill), price formatted as currency, status badge (In Stock/Out of Stock), featured badge (Yes/No or star), Edit and Delete action buttons
+Validate:     Each row contains: product thumbnail + name + slug, category badge (styled colored pill), price formatted as currency, status badge (In Stock/Out of Stock), featured badge (yes or no), Edit (pencil icon) and Delete (trash icon) action buttons
 Visual check: Badges are properly colored and styled, thumbnails load, text is not truncated
+a11y check:   false
 Screenshot:   true
 ```
 
-**Step 3: Search by Product Name**
+**Step 3: Search by Product Name — Verify Results Count**
 
 ```
 Action:       Type a search term into the search input
-Selector:     input[type="text"][placeholder*="Search"] or input[placeholder*="product"]
-Input:        Type the name of a known product (e.g., first product's name)
-Wait for:     500ms debounce delay, then list updates
-Validate:     The list filters to show only products matching the search term. If only one matches, only that row appears.
-Visual check: Search input shows the typed term, list smoothly transitions to filtered results
+Selector:     input[type="text"][placeholder*="Search products"]
+Input:        Type a term likely to match multiple products (e.g., "Honey" or the first word of a known product name)
+Wait for:     300ms debounce delay, then list updates
+Validate:     The list filters to show only products matching the search term. The "Showing X of Y products" count text updates — Y (total) reflects the count of matching products, X equals Y (all matching products shown on first page). At least one product visible.
+Visual check: Search input shows the typed term, list smoothly transitions to filtered results, count text updates
+a11y check:   false
 Screenshot:   true
 ```
 
-**Step 4: Filter by Category**
+**Step 4: Clear Search, Filter by Category — Verify Results Count**
 
 ```
 Action:       Clear the search input, then select a category from the filter dropdown
-Selector:     select element or dropdown labelled "Category" or containing category options
-Input:        Select "Honey" (or another category that has products)
-Wait for:     List to update after selection
-Validate:     Only products in the selected category appear (check category badge on each visible product)
-Visual check: Dropdown shows the selected category, list filters correctly
+Selector:     Clear the search input first. Then select from the `<select>` dropdown labelled "All Categories"
+Input:        Select a specific category (e.g., "Honey" or "Beeswax" — any category that has products)
+Wait for:     List to update after category selection
+Validate:     Every visible product has a category badge matching the selected category. The "Showing X of Y products" count reflects the total products in this category. No products from other categories appear.
+Visual check: Dropdown shows the selected category name, category badges on all visible rows match the filter
+a11y check:   false
 Screenshot:   true
 ```
 
-**Step 5: Verify "Load More" Button**
+**Step 5: Combined Search + Category Filter**
 
 ```
-Action:       Reset the filter to "All", then scroll to the bottom of the product list
-Selector:     Scroll until button:has-text("Load More Products") is visible
+Action:       Keep the category filter selected. Type a search term into the search input.
+Selector:     Leave category dropdown at its current value. Type into the search input.
+Input:        Type a search term that is narrower than the full category — e.g., if category is "Honey", search for a specific honey product name or a keyword like "Raw" or "Wildflower"
+Wait for:     300ms debounce delay, then list updates
+Validate:     The product count drops further than the category filter alone. Every visible product: (a) belongs to the selected category AND (b) matches the search term. Verify that both filters are visually active — category dropdown shows the selected value, search input shows the typed term.
+Visual check: Both filter indicators visible (dropdown selection + search text). List correctly shows intersection of both filters.
+a11y check:   false
+Screenshot:   true
+```
+
+**Step 6: Clear All Filters — Verify Full Count Restored**
+
+```
+Action:       Clear the search input AND reset the category dropdown to "All Categories"
+Selector:     Clear search input text. Set category `<select>` value to "ALL" (the first option "All Categories")
+Input:        N/A
+Wait for:     300ms debounce delay, then list resets
+Validate:     The "Showing X of Y products" count returns to the original total count (matching Step 1). All products visible again regardless of category.
+Visual check: Search input is empty, dropdown shows "All Categories", full product list restored
+a11y check:   false
+Screenshot:   true
+```
+
+**Step 7: Verify "Load More" Button**
+
+```
+Action:       Scroll to the bottom of the product list
+Selector:     Scroll until button:has-text("Load More Products") is visible in the viewport
 Input:        N/A
 Wait for:     The "Load More Products" button to be in the viewport
-Validate:     Button text reads "Load More Products", it is clickable
-Visual check: Button is styled consistently, visible at the bottom of the list
+Validate:     Button text reads "Load More Products", it is not disabled, it is clickable
+Visual check: Button is styled consistently, centered at the bottom of the list
+a11y check:   false
 Screenshot:   true
 ```
 
-**Step 6: Load More Products**
+**Step 8: Load More Products — Verify Pagination**
 
 ```
 Action:       Click the "Load More Products" button
 Selector:     button:has-text("Load More Products")
 Input:        N/A
-Wait for:     New product rows to append to the existing list (usually ~10 new items)
-Validate:     The total number of products in the list increases by ~10, the button remains at the bottom (unless fewer than 10 remain)
-Visual check: New products smoothly appear, no layout jump, no duplicate entries
+Wait for:     New product rows to append to the existing list (~10 new items)
+Validate:     The number of products in the list increases by ~10. No duplicate products appear (check the first new product's name — it should not match any previously visible product). The "Load More Products" button remains at the bottom (unless fewer than 10 remain).
+Visual check: New products smoothly appear, no layout jump, no duplicate entries, loading overlay appears briefly then disappears
+a11y check:   false
 Screenshot:   true
 ```
 
 #### Edge Cases
 
-**Edge Case 1: Empty Search Results**
+**Edge Case 1: Empty Search Results (No Filters)**
 
 ```
 Reference:  Happy Path Step 3
-Variation:  Search term matches no products
-Action:     Type an impossible search term like "xyznonexistentproduct12345"
+Variation:  Search term matches no products, with no category filter active
+Action:     Set category to "All Categories", type an impossible search term into the search input
 Input:      "xyznonexistentproduct12345"
-Expected:   A "No products found" or empty state message appears. The "Load More Products" button should also be hidden. No console errors.
+Expected:   A "No products found" empty state message appears with a package illustration and "Try adjusting your search or filter" subtitle text. The "Load More Products" button should be hidden. An "Add Product" button should appear to let the user create a new product. No console errors.
 Screenshot: true
 ```
 
-**Edge Case 2: Empty Category Filter**
+**Edge Case 2: Empty Category Filter (No Search)**
 
 ```
 Reference:  Happy Path Step 4
-Variation:  Selected category has no products
-Action:     (If possible) Select a category with no products, or remove all products from a category first, then select it
-Input:      N/A
-Expected:   Same empty state as Edge Case 1 — empty state message, no errors
+Variation:  Selected category has no products, no search term
+Action:     Select a category that has zero products (e.g., "Subscriptions" if none exist). If all categories have products, this edge case may require pre-condition data setup.
+Input:      Select the empty category from the dropdown
+Expected:   Same contextual empty message: "No products found" + "Try adjusting your search or filter". The "Add Product" button should appear. No console errors.
 Screenshot: true
 ```
 
-**Edge Case 3: Single Product Left After Filter**
+**Edge Case 3: Combined Filter Yields No Results**
 
 ```
-Reference:  Happy Path Step 4
+Reference:  Happy Path Step 5
+Variation:  Search + category combination that matches nothing
+Action:     Select a real category (e.g., "Honey"), then type an impossible search term
+Input:      Category: "Honey", Search: "xyznonexistentproduct12345"
+Expected:   Empty state appears with "No products found" and "Try adjusting your search or filter" text — same as single-filter empty state. Both filter indicators remain visible (dropdown shows "Honey", search shows the typed term). The "Add Product" button is visible. No console errors.
+Screenshot: true
+```
+
+**Edge Case 4: Single Product After Filter**
+
+```
+Reference:  Happy Path Steps 3-5
 Variation:  Filter returns exactly one product
-Action:     Search for a term that matches exactly one product
+Action:     Search for a term that matches exactly one known product (use a unique product name from the test data)
 Input:      A unique product name
-Expected:   Single product shown, "Load More Products" button should be hidden (no more pages)
-Screenshot: false
+Expected:   Single product shown, "Showing 1 of 1 products" in the results count. "Load More Products" button should be hidden (no more pages). Category badge and details for that single product display correctly.
+Screenshot: true
 ```
 
-**Edge Case 4: Rapid Search Typing**
+**Edge Case 5: Rapid Search Typing (Debounce)**
 
 ```
 Reference:  Happy Path Step 3
-Variation:  Type rapidly to test debounce behavior
-Action:     Type a multi-character search term quickly (e.g., "hon") and then backspace to clear within <500ms
-Input:      Type "h", "o", "n", backspace, backspace, backspace rapidly
-Expected:   The list should only update after the debounce period (300ms) on the final input value. No flickering or rapid re-renders on each keystroke.
+Variation:  Type rapidly to test 300ms debounce behavior
+Action:     Type a multi-character search term quickly (e.g., "hon") and then backspace to clear within <300ms
+Input:      Type "h", "o", "n", backspace, backspace, backspace rapidly — all within 500ms total
+Expected:   The list should only update once after the debounce period (300ms) on the final empty input value. No flickering or rapid re-renders on each keystroke. The list should return to the full unfiltered state after the debounce completes.
 Screenshot: false
+```
+
+**Edge Case 6: Contextual Empty State — No Filters vs With Filters**
+
+```
+Reference:  Happy Path Steps 3-5
+Variation:  Compare empty state message text when filters are active vs inactive
+Action:     Temporarily ensure no filters are active (category = "All", search = empty). Clear all filters and verify the "true empty" state message. Then apply filters and verify the "filtered empty" message. This edge case can be observed while testing Edge Cases 1-3.
+Input:      N/A
+Expected:   When no filters are active: empty state shows "Get started by adding your first product". When filters ARE active: empty state shows "Try adjusting your search or filter". The component code at ProductsPage.tsx:222-228 distinguishes these cases.
+Screenshot: true
 ```
 
 #### Cleanup
 
 No data is modified in this workflow — it is read-only.
 
+**Cleanup strategy**: Idempotent state
+
 ---
 
 ### Workflow 3: Full Product Lifecycle (Create → View → Edit → Delete)
 
-**Description**: A self-contained workflow that creates a new product with a unique test name, verifies it appears in the list, views its detail, edits its name and price, verifies the changes, then deletes the product. This is a self-contained workflow — it cleans up after itself.
+**Metadata**:
+
+| Field            | Value                 |
+| ---------------- | --------------------- |
+| **Priority**     | P0 (critical)         |
+| **Tags**         | regression, slow      |
+| **Duration**     | ~120s                 |
+| **Dependencies** | None (self-contained) |
+
+**Description**: A self-contained workflow that creates a new product with a unique test name, verifies it appears in the list, views its detail, edits its name and price, verifies the changes, then deletes the product. This workflow cleans up after itself.
 
 **Preconditions**:
 
 - The user is on the products page at `/products`
 
+**Test Data**:
+
+| Record                     | Creation Method    | Identifier                              | Cleanup             |
+| -------------------------- | ------------------ | --------------------------------------- | ------------------- |
+| E2E Test Product (created) | UI (this workflow) | `E2E Test Product [timestamp]`          | Deleted in workflow |
+| E2E Test Product (edited)  | UI (this workflow) | `E2E Test Product [timestamp] (edited)` | Deleted in workflow |
+
 #### Happy Path
 
-| Step | Action                                | Selector Hint                                     | Expected Result                                                      |
-| ---- | ------------------------------------- | ------------------------------------------------- | -------------------------------------------------------------------- |
-| 1    | Navigate to `/products/new`           | URL or click "Add Product" button                 | ProductFormDialog modal opens                                        |
-| 2    | Fill the product form with valid data | form fields                                       | All required fields populated                                        |
-| 3    | Submit the form                       | `button:has-text("Create")` or submit button      | Modal closes, success notification, product appears in list          |
-| 4    | Click the new product in the list     | link containing the product name                  | Navigates to `/products/:id`, detail page shows all fields correctly |
-| 5    | Navigate to edit page                 | `button:has-text("Edit")` or `a:has-text("Edit")` | ProductFormDialog opens prefilled with existing data                 |
-| 6    | Change the product name and price     | Name and price fields                             | Fields update with new values                                        |
-| 7    | Submit the edit                       | `button:has-text("Save")` or submit button        | Modal closes, detail page shows updated name and price               |
-| 8    | Navigate back to products list        | Click "Back" link or sidebar Products             | Product list shows the updated name                                  |
-| 9    | Delete the product                    | Click Delete button for this product              | Confirmation modal appears                                           |
-| 10   | Confirm deletion                      | `button:has-text("Delete")` or confirm button     | Modal closes, product removed from list                              |
+| Step | Action                                | Selector Hint                                    | a11y | Expected Result                                                      |
+| ---- | ------------------------------------- | ------------------------------------------------ | ---- | -------------------------------------------------------------------- |
+| 1    | Navigate to `/products/new`           | URL or click "Add Product" button                | Y    | ProductFormDialog modal opens                                        |
+| 2    | Fill the product form with valid data | form fields                                      | N    | All required fields populated                                        |
+| 3    | Submit the form                       | `button:has-text("Create Product")`              | N    | Modal closes, product appears in list                                |
+| 4    | Click the new product in the list     | link containing the product name                 | Y    | Navigates to `/products/:id`, detail page shows all fields correctly |
+| 5    | Navigate to edit page                 | `button:has-text("Edit")`                        | Y    | ProductFormDialog opens prefilled with existing data                 |
+| 6    | Change the product name and price     | Name and price fields                            | N    | Fields update with new values                                        |
+| 7    | Submit the edit                       | `button:has-text("Update Product")`              | N    | Modal closes, detail page shows updated name and price               |
+| 8    | Navigate back to products list        | Click "Back" link or sidebar Products            | N    | Product list shows the updated name                                  |
+| 9    | Delete the product                    | Click Delete button for this product             | N    | Confirmation modal appears                                           |
+| 10   | Confirm deletion                      | `button:has-text("Delete")` within confirm modal | N    | Modal closes, product removed from list                              |
 
 #### Detailed Steps
 
@@ -462,8 +659,9 @@ Action:       Navigate to http://localhost:5174/products/new
 Selector:     N/A
 Input:        N/A
 Wait for:     The ProductFormDialog modal to appear with form fields visible
-Validate:     Modal heading reads "Add New Product" or similar, form fields for Product Name, Slug, Short Description, Price, Category, Weight, In Stock, Featured, Image URLs, Thumbnail URLs, Tags are visible
+Validate:     Modal heading reads "Add New Product", form fields for Product Name, Slug, Short Description, Price, Category, Weight, In Stock, Featured, Image URLs, Thumbnail URLs, Tags are visible
 Visual check: Modal is centered with overlay behind it, form is properly labeled and spaced
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -477,15 +675,16 @@ Input:
   - Slug: "e2e-test-product-[timestamp]"
   - Short Description: "An automated E2E test product — delete me"
   - Long Description: "This product was created by the E2E test plan for automated testing purposes. It should be deleted after the test completes."
-  - Price in cents: 1999 (for $19.99)
+  - Price (cents): 1999 (for $19.99)
   - Category: "Honey"
   - Weight: "16 oz"
   - In Stock: checked (default)
   - Featured: unchecked (default)
-  - Tags: add tag "e2e-test" (type "e2e-test" and press Enter or click Add button)
+  - Tags: add tag "e2e-test" (type "e2e-test" in the tag input and press Enter or click the + button)
 Wait for:     All fields to be filled and no validation errors visible
 Validate:     Form is complete, all fields show entered values
 Visual check: Form looks properly filled, no overlapping labels or fields, the tag "e2e-test" appears as a removable badge
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -493,11 +692,12 @@ Screenshot:   true
 
 ```
 Action:       Click the submit/create button
-Selector:     button:has-text("Create Product") or button[type="submit"]
+Selector:     button:has-text("Create Product")
 Input:        N/A
 Wait for:     Modal to close AND the product list to update with the new product appearing
-Validate:     No visible error messages, success toast/notification may appear, the new product "E2E Test Product [timestamp]" appears in the product list
-Visual check: Modal closes smoothly, product list shows the new entry with correct category badge and price
+Validate:     No visible error messages. The new product "E2E Test Product [timestamp]" appears in the product list with correct category badge and price.
+Visual check: Modal closes smoothly, product list shows the new entry
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -522,6 +722,7 @@ Validate:     Detail page shows:
   - Edit button visible
   - Delete button visible
 Visual check: Product images section (may be empty), all fields properly laid out, no overlapping text
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -529,11 +730,12 @@ Screenshot:   true
 
 ```
 Action:       Click the "Edit" button on the detail page
-Selector:     button:has-text("Edit") or a:has-text("Edit")
+Selector:     button:has-text("Edit")
 Input:        N/A
 Wait for:     ProductFormDialog modal to open, prefilled with the product's current data
-Validate:     Form fields contain the product's current values, heading reads "Edit Product"
+Validate:     Modal heading reads "Edit Product", form fields contain the product's current values
 Visual check: Prefilled form matches the product data, modal displays correctly
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -544,10 +746,11 @@ Action:       Update the product name and price fields
 Selector:     input corresponding to Product Name and Price
 Input:
   - Product Name: "E2E Test Product [timestamp] (edited)"
-  - Price in cents: 2999 (for $29.99)
+  - Price (cents): 2999 (for $29.99)
 Wait for:     Fields to show updated values
-Validate:     Product name now reads "E2E Test Product [timestamp] (edited)", price shows 29.99
+Validate:     Product name now reads "E2E Test Product [timestamp] (edited)", price shows 2999
 Visual check: Fields update with new values, no validation errors
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -555,23 +758,25 @@ Screenshot:   true
 
 ```
 Action:       Click the save/submit button
-Selector:     button:has-text("Save") or button:has-text("Update Product") or button[type="submit"]
+Selector:     button:has-text("Update Product")
 Input:        N/A
 Wait for:     Modal to close AND the detail page to show updated values
 Validate:     Product name is now "E2E Test Product [timestamp] (edited)", price shows $29.99
 Visual check: Updated values display correctly on the detail page
+a11y check:   false
 Screenshot:   true
 ```
 
 **Step 8: Return to Products List**
 
 ```
-Action:       Click the "Back" link/button or the "Products" sidebar link
-Selector:     a:has-text("Products") in sidebar, or a "Back" link/button on the detail page
+Action:       Click the "Back" link/button (arrow icon) or the "Products" sidebar link
+Selector:     a:has-text("Products") in sidebar, or a "Back" button/arrow on the detail page
 Input:        N/A
 Wait for:     URL to change to /products
 Validate:     Product list shows the updated product name "E2E Test Product [timestamp] (edited)"
 Visual check: Product correctly listed with updated name
+a11y check:   false
 Screenshot:   false
 ```
 
@@ -579,11 +784,12 @@ Screenshot:   false
 
 ```
 Action:       Click the Delete button for the test product
-Selector:     Find the row/card containing "E2E Test Product [timestamp] (edited)", then click the delete button/icon within it
+Selector:     Find the row/card containing "E2E Test Product [timestamp] (edited)", then click the delete button (trash icon) within it
 Input:        N/A
 Wait for:     A confirmation modal/dialog to appear
-Validate:     Confirmation modal asks to confirm deletion, with "Cancel" and "Delete" buttons
+Validate:     Confirmation modal reads "Confirm Delete" with text asking to confirm deletion of the product, and "Cancel" and "Delete" buttons
 Visual check: Modal is styled consistently, properly centered, text is clear about what is being deleted
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -591,11 +797,12 @@ Screenshot:   true
 
 ```
 Action:       Click the confirm "Delete" button in the modal
-Selector:     button:has-text("Delete") within the confirmation modal
+Selector:     button:has-text("Delete") within the confirmation modal (the red button)
 Input:        N/A
 Wait for:     Modal to close AND the product list to update (product should be gone)
-Validate:     "E2E Test Product [timestamp] (edited)" no longer appears in the product list. A success message/toast may appear.
+Validate:     "E2E Test Product [timestamp] (edited)" no longer appears in the product list. The total count ("Showing X of Y products") decreases by 1.
 Visual check: Product smoothly removed from the list, no empty state confusion
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -604,11 +811,11 @@ Screenshot:   true
 **Edge Case 1: Missing Required Fields on Create**
 
 ```
-Reference:  Happy Path Step 2-3
+Reference:  Happy Path Steps 2-3
 Variation:  Attempt to submit the form with an empty Product Name
 Action:     Fill in all fields except Product Name, then click submit
 Input:      Leave Product Name empty, fill everything else
-Expected:   The form should show a validation error on the Product Name field (e.g., "Required" or "Product name is required"). The modal should NOT close. No console errors.
+Expected:   The form should show a native browser validation error on the Product Name field (since it has `required` attribute). The modal should NOT close. No console errors.
 Screenshot: true
 ```
 
@@ -617,9 +824,9 @@ Screenshot: true
 ```
 Reference:  Happy Path Step 2
 Variation:  Enter a non-numeric value in the Price field
-Action:     Type "abc" in the price input
+Action:     Type "abc" in the price input (which is type="number")
 Input:      "abc"
-Expected:   The field should either prevent non-numeric input or show a validation error ("Please enter a valid number"). If the browser's native number input handles it, the field should be empty or show an error.
+Expected:   Since the input is `type="number"`, the browser should prevent non-numeric input. The field should be empty or show no value. No console errors.
 Screenshot: false
 ```
 
@@ -639,7 +846,7 @@ Screenshot: true
 ```
 Reference:  Happy Path Steps 5-7
 Variation:  Open edit modal, change fields, then cancel
-Action:     Click "Edit", change the name, then click the modal close button (X icon) or press Escape
+Action:     Click "Edit", change the name, then click the "Cancel" button or the modal close button (X icon) or press Escape
 Input:      N/A
 Expected:   Modal closes without saving. The product detail page should still show the original (pre-edit) values.
 Screenshot: true
@@ -652,7 +859,7 @@ Reference:  Happy Path Steps 9-10
 Variation:  Open delete confirmation, then cancel
 Action:     Click Delete on the product, then click "Cancel" in the confirmation modal
 Input:      N/A
-Expected:   Modal closes, product still exists in the list and is accessible.
+Expected:   Modal closes, product still exists in the list and is accessible via its detail page.
 Screenshot: false
 ```
 
@@ -663,8 +870,8 @@ Reference:  Happy Path Step 2
 Variation:  Select "Subscriptions" category to reveal recurring fields
 Action:     Select "Subscriptions" from the Category dropdown
 Input:      Category: Subscriptions
-Expected:   Two new fields appear: "Interval" (dropdown: day/week/month/year) and "Every" (number input). These fields are NOT visible for other categories.
-Select:     Interval: "month", Every: "1"
+Expected:   A blue-highlighted section appears with two new fields: "Interval" (dropdown: Day/Week/Month/Year) and "Every" (number input). These fields are NOT visible for other categories.
+Select:     Interval: "Month", Every: "1"
 Validate:   Subscription fields are visible and editable
 Screenshot: true
 ```
@@ -673,9 +880,20 @@ Screenshot: true
 
 This workflow is **self-contained** — the product is deleted at the end. No cleanup needed.
 
+**Cleanup strategy**: Self-contained
+
 ---
 
 ### Workflow 4: Settings — Content Management (Site Content, Process, Testimonials)
+
+**Metadata**:
+
+| Field            | Value                                    |
+| ---------------- | ---------------------------------------- |
+| **Priority**     | P1 (important)                           |
+| **Tags**         | regression                               |
+| **Duration**     | ~90s                                     |
+| **Dependencies** | Requires services worker with CONTENT_KV |
 
 **Description**: The user navigates to the Settings page and edits site content across three tabs (Site Content, Process, Testimonials). They make changes, save, and verify persistence.
 
@@ -684,19 +902,27 @@ This workflow is **self-contained** — the product is deleted at the end. No cl
 - The user is on the settings page at `/settings`
 - The services worker is running with the `CONTENT_KV` binding available
 
+**Test Data**:
+
+| Record                   | Creation Method    | Identifier          | Cleanup         |
+| ------------------------ | ------------------ | ------------------- | --------------- |
+| Hero title (modified)    | UI (this workflow) | `[E2E TEST]` prefix | Paired teardown |
+| E2E Test Step (process)  | UI (this workflow) | "E2E Test Step"     | Paired teardown |
+| E2E Tester (testimonial) | UI (this workflow) | "E2E Tester"        | Paired teardown |
+
 #### Happy Path
 
-| Step | Action                         | Selector Hint                                                                                      | Expected Result                                                                      |
-| ---- | ------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 1    | Navigate to `/settings`        | URL `/settings`                                                                                    | Settings page loads with three tabs                                                  |
-| 2    | Verify three tabs are visible  | `button:has-text("Site Content")`, `button:has-text("Process")`, `button:has-text("Testimonials")` | Three tab buttons visible                                                            |
-| 3    | Click "Site Content" tab       | Tab button                                                                                         | Site Content form loads with fields for business info, hero, about, stats, nav, etc. |
-| 4    | Modify a field in Site Content | e.g., `textarea` or `input` for hero title                                                         | Field updates with new value                                                         |
-| 5    | Click "Process" tab            | Tab button                                                                                         | Process steps list loads (if any exist), with add/remove controls                    |
-| 6    | Add a new process step         | `button:has-text("Add Step")`                                                                      | New step row appears with title, icon, description fields                            |
-| 7    | Click "Testimonials" tab       | Tab button                                                                                         | Testimonials list loads, with add/remove controls                                    |
-| 8    | Add a new testimonial          | `button:has-text("Add Testimonial")`                                                               | New testimonial row appears with name, location, rating, text, date fields           |
-| 9    | Click "Save Content"           | `button:has-text("Save Content")` or save button                                                   | Success notification, data persists on reload                                        |
+| Step | Action                         | Selector Hint                                                                                      | a11y | Expected Result                                                                      |
+| ---- | ------------------------------ | -------------------------------------------------------------------------------------------------- | ---- | ------------------------------------------------------------------------------------ |
+| 1    | Navigate to `/settings`        | URL `/settings`                                                                                    | Y    | Settings page loads with three tabs                                                  |
+| 2    | Verify three tabs are visible  | `button:has-text("Site Content")`, `button:has-text("Process")`, `button:has-text("Testimonials")` | N    | Three tab buttons visible                                                            |
+| 3    | Click "Site Content" tab       | Tab button                                                                                         | N    | Site Content form loads with fields for business info, hero, about, stats, nav, etc. |
+| 4    | Modify a field in Site Content | e.g., `input` for hero headline                                                                    | N    | Field updates with new value                                                         |
+| 5    | Click "Process" tab            | Tab button                                                                                         | N    | Process steps list loads (if any exist), with add/remove controls                    |
+| 6    | Add a new process step         | `button:has-text("Add Step")`                                                                      | N    | New step row appears with title, icon, description fields                            |
+| 7    | Click "Testimonials" tab       | Tab button                                                                                         | N    | Testimonials list loads, with add/remove controls                                    |
+| 8    | Add a new testimonial          | `button:has-text("Add Testimonial")`                                                               | N    | New testimonial row appears with name, location, rating, text, date fields           |
+| 9    | Click "Save Content"           | `button:has-text("Save Content")`                                                                  | N    | Success notification "Content saved successfully!", data persists on reload          |
 
 #### Detailed Steps
 
@@ -707,8 +933,9 @@ Action:       Navigate to http://localhost:5174/settings
 Selector:     N/A
 Input:        N/A
 Wait for:     The settings page to fully render with tabs
-Validate:     Page heading/title references "Settings", tabs are visible
+Validate:     Page heading reads "Settings", three tab buttons visible
 Visual check: Clean layout with tab navigation at top, content area below
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -719,32 +946,35 @@ Action:       Locate the three tab buttons
 Selector:     button:has-text("Site Content"), button:has-text("Process"), button:has-text("Testimonials")
 Input:        N/A
 Wait for:     All three tab buttons to be visible
-Validate:     Three distinct tab buttons present with correct labels
-Visual check: Tabs are styled as a horizontal navigation bar, active tab is highlighted
+Validate:     Three distinct tab buttons present with correct labels. "Site Content" tab should have active/highlighted styling by default.
+Visual check: Tabs are styled as a horizontal navigation bar, active tab is highlighted with primary color underline
+a11y check:   false
 Screenshot:   true
 ```
 
-**Step 3: Open Site Content Tab**
+**Step 3: Open Site Content Tab (active by default)**
 
 ```
-Action:       Click the "Site Content" tab
+Action:       If not already active, click the "Site Content" tab
 Selector:     button:has-text("Site Content")
 Input:        N/A
-Wait for:     The site content form to load with fields populated from API
+Wait for:     The site content form to load with fields populated
 Validate:     Form sections for Business Info, Hero Section, About Section, Section Titles, Stats Bar, Navigation Links, Categories, Social Links, Order Confirmation, Other are visible
-Visual check: Multiple collapsible sections or a scrollable form with labeled fields
+Visual check: Multiple section containers with labeled fields
+a11y check:   false
 Screenshot:   false
 ```
 
 **Step 4: Modify a Field**
 
 ```
-Action:       Change the Hero Title field
-Selector:     input or textarea associated with Hero Title or heroTitle
-Input:        Type "[E2E TEST] " before the existing hero title text (e.g., "[E2E TEST] Original Hero Title")
+Action:       Change the Hero Headline field
+Selector:     input associated with "Hero Headline" label
+Input:        Type "[E2E TEST] " before the existing hero headline text (e.g., "[E2E TEST] Nature's Sweetest Gift, Straight from the Hive")
 Wait for:     Field shows the updated text
-Validate:     Input contains the modified text
+Validate:     Input contains the modified text with "[E2E TEST]" prefix
 Visual check: No visual issues with the field
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -755,8 +985,9 @@ Action:       Click the "Process" tab
 Selector:     button:has-text("Process")
 Input:        N/A
 Wait for:     Process steps to load
-Validate:     Process steps display (existing steps listed, or an empty state "No process steps yet")
-Visual check: Tab content switches smoothly
+Validate:     Process steps display (existing steps listed with step numbers, or an empty state)
+Visual check: Tab content switches smoothly, no layout shift
+a11y check:   false
 Screenshot:   false
 ```
 
@@ -767,9 +998,10 @@ Action:       Click "Add Step" button
 Selector:     button:has-text("Add Step")
 Input:        N/A
 Wait for:     A new step row with input fields to appear
-Validate:     New row appears with: Step number (auto-incremented), Title input, Icon input/select, Description textarea
-Fill:         Title: "E2E Test Step", Icon: "Package" (or leaf/document check), Description: "This is an automated E2E test step"
-Visual check: New step row is properly laid out, fields are editable
+Validate:     New row appears with: Step number (auto-incremented), Title input, Icon input, Description textarea
+Fill:         Title: "E2E Test Step", Icon: "Package", Description: "This is an automated E2E test step"
+Visual check: New step row is properly laid out, fields are editable, remove button (trash icon) visible
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -780,8 +1012,9 @@ Action:       Click the "Testimonials" tab
 Selector:     button:has-text("Testimonials")
 Input:        N/A
 Wait for:     Testimonials list to load
-Validate:     Testimonials appear (existing ones listed, or empty state)
-Visual check: Tab content switches, testimonials display with name, location, rating, text, date
+Validate:     Testimonials appear (existing ones listed with name, location, rating stars, text, date, or an empty state)
+Visual check: Tab content switches, testimonials display with star ratings
+a11y check:   false
 Screenshot:   false
 ```
 
@@ -792,9 +1025,10 @@ Action:       Click "Add Testimonial" button
 Selector:     button:has-text("Add Testimonial")
 Input:        N/A
 Wait for:     New testimonial row to appear
-Validate:     New row with fields: Name, Location, Rating (1-5 dropdown or input), Text (textarea), Date
-Fill:         Name: "E2E Tester", Location: "Automated Tests", Rating: 5, Text: "This is an automated E2E test testimonial.", Date: today's date
-Visual check: Testimonial form fields are editable and properly laid out
+Validate:     New row with fields: Name, Location, Rating (clickable star buttons 1-5), Text (textarea), Date
+Fill:         Name: "E2E Tester", Location: "Automated Tests", Rating: click the 5th star, Text: "This is an automated E2E test testimonial.", Date: today's date (YYYY-MM-DD format)
+Visual check: Testimonial form fields are editable and properly laid out, stars highlight on hover and show selected rating in yellow
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -805,8 +1039,9 @@ Action:       Click the "Save Content" button
 Selector:     button:has-text("Save Content")
 Input:        N/A
 Wait for:     Success notification/toast to appear
-Validate:     A success message like "Content saved successfully" appears. No error messages.
-Visual check: Success toast shows briefly, then fades
+Validate:     A green success banner appears with text "Content saved successfully!" and a checkmark icon. No error messages.
+Visual check: Success banner shows at the top of the content area, then fades after ~3 seconds
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -817,9 +1052,9 @@ Screenshot:   true
 ```
 Reference:  Happy Path Step 9
 Variation:  Click "Save Content" without making any changes
-Action:     Navigate to Settings, immediately click "Save Content"
+Action:     Navigate to Settings, immediately click "Save Content" without modifying any fields
 Input:      N/A
-Expected:   Should save successfully (idempotent save) — success notification appears. No errors.
+Expected:   Should save successfully (idempotent save) — green success notification "Content saved successfully!" appears. No errors.
 Screenshot: false
 ```
 
@@ -828,9 +1063,9 @@ Screenshot: false
 ```
 Reference:  Happy Path Steps 5-6
 Variation:  Process tab loads with no existing steps
-Action:     Switch to Process tab when no steps exist
+Action:     Switch to Process tab when no steps exist (all previous steps removed)
 Input:      N/A
-Expected:   Shows "No process steps yet" or "Add your first step" empty state. The "Add Step" button should still be available.
+Expected:   Shows the "Add Step" button but no step rows. No error or crash.
 Screenshot: true
 ```
 
@@ -838,10 +1073,10 @@ Screenshot: true
 
 ```
 Reference:  Happy Path Step 8
-Variation:  Enter a rating outside the 1-5 range
-Action:     In the testimonial rating field, try to enter 0 or 6
-Input:      0 or 6
-Expected:   The field should reject values outside 1-5 (either prevent input or show validation error). If it's a dropdown, the option should not exist.
+Variation:  Attempt to set an out-of-range rating
+Action:     The rating is a set of 5 clickable star buttons (values 1-5). Verify there is no way to set a rating outside 1-5.
+Input:      N/A
+Expected:   Only values 1-5 are available as clickable stars. No input field exists for arbitrary numbers.
 Screenshot: false
 ```
 
@@ -849,11 +1084,11 @@ Screenshot: false
 
 This workflow modifies data in KV storage. Cleanup is a **paired teardown**:
 
-| Resource                  | Cleanup Action                                                             | Verification                                    |
-| ------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------- |
-| Hero Title (Site Content) | Open Site Content tab, remove "[E2E TEST] " prefix from hero title, save   | Reload page, hero title is restored to original |
-| E2E Test Step (Process)   | Open Process tab, click Remove/Delete on the "E2E Test Step" entry, save   | Process tab no longer shows "E2E Test Step"     |
-| E2E Test Testimonial      | Open Testimonials tab, click Remove/Delete on the "E2E Tester" entry, save | Testimonials tab no longer shows "E2E Tester"   |
+| Resource                     | Cleanup Action                                                                   | Verification                                       |
+| ---------------------------- | -------------------------------------------------------------------------------- | -------------------------------------------------- |
+| Hero Headline (Site Content) | Open Site Content tab, remove "[E2E TEST] " prefix from hero headline, save      | Reload page, hero headline is restored to original |
+| E2E Test Step (Process)      | Open Process tab, click Remove (trash icon) on the "E2E Test Step" entry, save   | Process tab no longer shows "E2E Test Step"        |
+| E2E Tester (Testimonial)     | Open Testimonials tab, click Remove (trash icon) on the "E2E Tester" entry, save | Testimonials tab no longer shows "E2E Tester"      |
 
 **Cleanup strategy**: Paired teardown
 
@@ -861,20 +1096,35 @@ This workflow modifies data in KV storage. Cleanup is a **paired teardown**:
 
 ### Workflow 5: Settings — Admin Configuration (localStorage)
 
-**Description**: The user opens the "Admin Configuration" section on the Settings page and edits local configuration values stored in `localStorage['beeEpicAdminSettings']`.
+**Metadata**:
+
+| Field            | Value          |
+| ---------------- | -------------- |
+| **Priority**     | P1 (important) |
+| **Tags**         | regression     |
+| **Duration**     | ~45s           |
+| **Dependencies** | None           |
+
+**Description**: The user opens the "Admin Configuration" collapsible section on the Settings page and edits local configuration values stored in `localStorage['beeEpicAdminSettings']`.
 
 **Preconditions**:
 
 - The user is on the settings page at `/settings`
 
+**Test Data**:
+
+| Record                       | Creation Method    | Identifier          | Cleanup         |
+| ---------------------------- | ------------------ | ------------------- | --------------- |
+| Business Name (localStorage) | UI (this workflow) | `[E2E TEST]` suffix | Paired teardown |
+
 #### Happy Path
 
-| Step | Action                                 | Selector Hint                                                          | Expected Result                             |
-| ---- | -------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------- |
-| 1    | Click "Admin Configuration" to expand  | `button:has-text("Admin Configuration")` or collapsible section header | Collapsible section expands to show fields  |
-| 2    | Modify a field                         | e.g., Business Name input                                              | Field updates                               |
-| 3    | Click "Save Admin Settings"            | `button:has-text("Save Admin Settings")`                               | Success message, data saved to localStorage |
-| 4    | Reload the page and verify persistence | Refresh page, re-expand section                                        | Modified field still shows updated value    |
+| Step | Action                                 | Selector Hint                                                           | a11y | Expected Result                             |
+| ---- | -------------------------------------- | ----------------------------------------------------------------------- | ---- | ------------------------------------------- |
+| 1    | Click "Admin Configuration" to expand  | `summary:has-text("Admin Configuration")` or collapsible section header | N    | Collapsible section expands to show fields  |
+| 2    | Modify a field                         | Business Name input                                                     | N    | Field updates                               |
+| 3    | Click "Save Admin Settings"            | `button:has-text("Save Admin Settings")`                                | N    | Success message, data saved to localStorage |
+| 4    | Reload the page and verify persistence | Refresh page, re-expand section                                         | N    | Modified field still shows updated value    |
 
 #### Detailed Steps
 
@@ -882,11 +1132,12 @@ This workflow modifies data in KV storage. Cleanup is a **paired teardown**:
 
 ```
 Action:       Click or toggle the "Admin Configuration" collapsible section
-Selector:     button:has-text("Admin Configuration") or summary/details element or section heading
+Selector:     summary:has-text("Admin Configuration") or the details/summary element
 Input:        N/A
 Wait for:     The collapsible section to expand and reveal form fields
-Validate:     Fields visible: Business Name, Email, Phone, Location, Stripe Publishable Key, Stripe Secret Key (password), API URL, Allowed Origins
-Visual check: Section expands with smooth animation, fields are labeled clearly
+Validate:     Fields visible: Business Name, Email, Phone, Location, Stripe Publishable Key, Stripe Secret Key (password field), API URL, Allowed Origins
+Visual check: Section expands, fields are labeled clearly, three subsections (Business Information, Stripe Configuration, API Configuration) each with their own heading
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -894,11 +1145,12 @@ Screenshot:   true
 
 ```
 Action:       Edit the Business Name field
-Selector:     input associated with Business Name or businessName
-Input:        Append " [E2E TEST]" to the existing business name
+Selector:     input associated with "Business Name" label within the Admin Configuration section
+Input:        Append " [E2E TEST]" to the existing business name value
 Wait for:     Field shows updated text
-Validate:     Input contains the modified business name
+Validate:     Input contains the modified business name with " [E2E TEST]" suffix
 Visual check: No visual issues
+a11y check:   false
 Screenshot:   false
 ```
 
@@ -908,9 +1160,10 @@ Screenshot:   false
 Action:       Click the "Save Admin Settings" button
 Selector:     button:has-text("Save Admin Settings")
 Input:        N/A
-Wait for:     Success message to appear (e.g., "Settings saved")
-Validate:     A success notification/message appears. Check localStorage via browser: localStorage.getItem('beeEpicAdminSettings') should contain the updated business name.
-Visual check: Success message displays, button may briefly disable
+Wait for:     Success message to appear
+Validate:     A green success banner appears with text "Admin settings saved successfully!". Validate via Playwright evaluate: localStorage.getItem('beeEpicAdminSettings') should contain the updated business name with " [E2E TEST]" suffix.
+Visual check: Success message displays at the top of the Admin Configuration section, button may briefly disable
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -921,8 +1174,9 @@ Action:       Reload the page (page.reload())
 Selector:     N/A
 Input:        N/A
 Wait for:     Settings page to reload fully
-Validate:     Expand Admin Configuration again — Business Name field still shows the modified value with "[E2E TEST]" appended
-Visual check: Field shows persisted value after reload
+Validate:     Expand Admin Configuration again — Business Name field still shows the modified value with " [E2E TEST]" appended
+Visual check: Field shows persisted value after reload, confirming localStorage persistence
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -933,9 +1187,9 @@ Screenshot:   true
 ```
 Reference:  Happy Path Step 3
 Variation:  Clear all required fields and attempt to save
-Action:     Clear the Business Name, Email, Phone, Location, and API URL fields, then click Save
-Input:      Empty strings in all fields
-Expected:   Validation errors appear on required fields. The settings are NOT saved. The section should not collapse.
+Action:     Clear the Business Name and API URL fields, then click "Save Admin Settings"
+Input:      Empty strings in Business Name and API URL
+Expected:   Red error text appears: "Business Name and API URL are required". The settings are NOT saved. The section does not collapse.
 Screenshot: true
 ```
 
@@ -944,9 +1198,9 @@ Screenshot: true
 ```
 Reference:  Happy Path Step 3
 Variation:  Enter an invalid URL in the API URL field
-Action:     Type "not-a-url" in the API URL field and click Save
+Action:     Type "not-a-url" in the API URL field and click "Save Admin Settings"
 Input:      "not-a-url"
-Expected:   Validation error on the URL field ("Please enter a valid URL" or similar). Settings not saved.
+Expected:   Red error text appears: "API URL must be a valid URL". Settings not saved.
 Screenshot: true
 ```
 
@@ -964,23 +1218,38 @@ This workflow modifies data in localStorage. Cleanup is a **paired teardown**:
 
 ### Workflow 6: Navigation and Responsive Layout
 
+**Metadata**:
+
+| Field            | Value             |
+| ---------------- | ----------------- |
+| **Priority**     | P0 (critical)     |
+| **Tags**         | smoke, regression |
+| **Duration**     | ~60s              |
+| **Dependencies** | None              |
+
 **Description**: Verify that the sidebar navigation works correctly across all viewports, including the mobile hamburger menu with overlay.
 
 **Preconditions**:
 
 - The user is on any admin page (e.g., `/dashboard`)
 
+**Test Data**:
+
+| Record | Creation Method | Identifier | Cleanup    |
+| ------ | --------------- | ---------- | ---------- |
+| None   | N/A             | N/A        | Idempotent |
+
 #### Happy Path
 
-| Step | Action                                      | Selector Hint                                                                       | Expected Result                                    |
-| ---- | ------------------------------------------- | ----------------------------------------------------------------------------------- | -------------------------------------------------- |
-| 1    | Click "Dashboard" sidebar link              | `a:has-text("Dashboard")`                                                           | Navigates to `/dashboard`, link shows active state |
-| 2    | Click "Products" sidebar link               | `a:has-text("Products")`                                                            | Navigates to `/products`, link shows active state  |
-| 3    | Click "Settings" sidebar link               | `a:has-text("Settings")`                                                            | Navigates to `/settings`, link shows active state  |
-| 4    | Resize to tablet/mobile viewport (768x1024) | `page.setViewportSize({ width: 768, height: 1024 })`                                | Sidebar collapses/hides, hamburger menu appears    |
-| 5    | Click the hamburger menu button             | `button` with hamburger icon (three horizontal lines) or `[aria-label="Open menu"]` | Sidebar slides in from the left                    |
-| 6    | Click an overlay or close button            | Click the overlay area (outside the sidebar)                                        | Sidebar slides back, overlay disappears            |
-| 7    | Resize to desktop viewport (1280x720)       | `page.setViewportSize({ width: 1280, height: 720 })`                                | Sidebar reappears, always visible                  |
+| Step | Action                                      | Selector Hint                                                                       | a11y | Expected Result                                    |
+| ---- | ------------------------------------------- | ----------------------------------------------------------------------------------- | ---- | -------------------------------------------------- |
+| 1    | Click "Dashboard" sidebar link              | `a:has-text("Dashboard")`                                                           | N    | Navigates to `/dashboard`, link shows active state |
+| 2    | Click "Products" sidebar link               | `a:has-text("Products")`                                                            | N    | Navigates to `/products`, link shows active state  |
+| 3    | Click "Settings" sidebar link               | `a:has-text("Settings")`                                                            | N    | Navigates to `/settings`, link shows active state  |
+| 4    | Resize to tablet/mobile viewport (768x1024) | `page.setViewportSize({ width: 768, height: 1024 })`                                | N    | Sidebar collapses/hides, hamburger menu appears    |
+| 5    | Click the hamburger menu button             | `button` with hamburger icon (three horizontal lines) or `[aria-label="Open menu"]` | N    | Sidebar slides in from the left                    |
+| 6    | Click an overlay or close button            | Click the overlay area (outside the sidebar)                                        | N    | Sidebar slides back, overlay disappears            |
+| 7    | Resize to desktop viewport (1280x720)       | `page.setViewportSize({ width: 1280, height: 720 })`                                | N    | Sidebar reappears, always visible                  |
 
 #### Detailed Steps
 
@@ -993,6 +1262,7 @@ Input:        N/A
 Wait for:     URL to change to /dashboard
 Validate:     URL is /dashboard, the Dashboard link in the sidebar has an active/highlighted state (different background color or text style from inactive links)
 Visual check: Active link visually distinct (e.g., highlighted background, different color)
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -1005,6 +1275,7 @@ Input:        N/A
 Wait for:     URL to change to /products
 Validate:     URL is /products, Products link shows active state, Dashboard link no longer active
 Visual check: Active state transitions correctly between links
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -1017,6 +1288,7 @@ Input:        N/A
 Wait for:     URL to change to /settings
 Validate:     URL is /settings, Settings link shows active state, Products link no longer active
 Visual check: Navigation works correctly
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -1027,8 +1299,9 @@ Action:       Resize browser to tablet dimensions: page.setViewportSize({ width:
 Selector:     N/A
 Input:        N/A
 Wait for:     Layout to re-render, sidebar to collapse/hide
-Validate:     Sidebar is now hidden (not visible on screen), a hamburger menu button appears in the navbar or top-left area
-Visual check: Layout adapts — sidebar hidden, hamburger icon visible
+Validate:     Sidebar is now hidden (not visible on screen), a hamburger menu button (Menu icon) appears in the top navbar area
+Visual check: Layout adapts — sidebar hidden, hamburger menu icon visible in the top-left area of the navbar
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -1036,11 +1309,12 @@ Screenshot:   true
 
 ```
 Action:       Click the hamburger menu button
-Selector:     button with three horizontal lines icon, or [aria-label*="menu" i], or a button adjacent to where the sidebar was
+Selector:     button with Menu icon (three horizontal lines) in the navbar, typically the first button in the header
 Input:        N/A
 Wait for:     Sidebar to slide in from the left, overlay to appear behind it
-Validate:     Sidebar is now visible with all three links (Dashboard, Products, Settings), an overlay (semi-transparent backdrop) covers the main content area
+Validate:     Sidebar is now visible with all three links (Dashboard, Products, Settings), an overlay (semi-transparent backdrop) covers the main content area. A close button (X icon) appears in the sidebar header.
 Visual check: Sidebar slides in smoothly, overlay darkens the background content
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -1048,11 +1322,12 @@ Screenshot:   true
 
 ```
 Action:       Click the overlay area (the backdrop behind the sidebar)
-Selector:     The overlay/backdrop element (div with semi-transparent background covering main content)
+Selector:     The overlay/backdrop element (div with semi-transparent black background covering main content)
 Input:        N/A
 Wait for:     Sidebar to slide out, overlay to disappear
 Validate:     Sidebar no longer visible, main content is fully interactive again
 Visual check: Sidebar retracts smoothly, no visual glitches
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -1063,8 +1338,9 @@ Action:       Resize browser back to desktop: page.setViewportSize({ width: 1280
 Selector:     N/A
 Input:        N/A
 Wait for:     Layout to re-render, sidebar to become visible again
-Validate:     Sidebar is permanently visible on the left side, hamburger menu is hidden
-Visual check: Desktop layout restored — sidebar always visible, no hamburger icon
+Validate:     Sidebar is permanently visible on the left side, hamburger menu (Menu icon) is hidden (CSS class `lg:hidden` hides it)
+Visual check: Desktop layout restored — sidebar always visible, no hamburger icon in navbar
+a11y check:   false
 Screenshot:   true
 ```
 
@@ -1086,7 +1362,7 @@ Screenshot: false
 ```
 Reference:  Happy Path Steps 5-6
 Variation:  On mobile, open sidebar and click a navigation link
-Action:     Open sidebar (hamburger), click "Settings" link
+Action:     Open sidebar (hamburger), click "Settings" link in the sidebar
 Input:      N/A
 Expected:   Sidebar closes, page navigates to /settings, no visual issues
 Screenshot: false
@@ -1097,7 +1373,7 @@ Screenshot: false
 ```
 Reference:  Happy Path Step 4
 Variation:  Resize to a very narrow width (320x568 — iPhone SE)
-Action:     Set viewport to 320x568
+Action:     Set viewport to page.setViewportSize({ width: 320, height: 568 })
 Input:      N/A
 Expected:   Same mobile behavior — sidebar hidden, hamburger visible, all content still accessible. No horizontal scrollbar at 320px.
 Screenshot: true
@@ -1106,6 +1382,8 @@ Screenshot: true
 #### Cleanup
 
 No data is modified in this workflow — it is read-only.
+
+**Cleanup strategy**: Idempotent state
 
 ---
 
@@ -1150,11 +1428,8 @@ date: "[YYYY-MM-DD]"
 ![Screenshot](data:image/png;base64,[Base64-encoded Playwright screenshot taken at the moment of failure])
 
 ## Browser Console Errors
-```
 
 [Any console.error or console.warn messages captured during the failing interaction]
-
-```
 
 ## Suggested Fix
 
@@ -1165,7 +1440,7 @@ date: "[YYYY-MM-DD]"
 - Browser: Playwright (Chromium)
 - Viewport: [viewport at time of failure, e.g. 1280x720]
 - URL: [URL where the issue occurred]
-- Plan Version: 2.0.0
+- Plan Version: 3.0.0
 ```
 
 ---
@@ -1183,12 +1458,15 @@ The testing agent MUST ask the user these questions before executing this plan. 
 
 4. **Visual checks**: "Should I capture screenshots at each step for visual verification?"
 
+5. **Accessibility**: "Should I run accessibility checks (aXe scans and keyboard navigation) at each step, or skip them?"
+
 ---
 
 ## 7. Plan Version History
 
-| Version | Date       | Author              | Changes                                                                                                                                                               |
-| ------- | ---------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1.0.0   | 2026-05-14 | e2e-test-plan skill | Initial plan — 6 workflows covering Dashboard, Products List, Full Product Lifecycle, Settings Content, Settings Admin Config, and Navigation/Responsive              |
-| 1.1.0   | 2026-05-15 | e2e-test-plan skill | Added Workflow 7: Sales Reports Page — bar chart, date range picker, summary row, Reports sidebar link, API error and empty data edge cases                           |
-| 2.0.0   | 2026-05-15 | code review         | Removed phantom Workflow 7 (Sales Reports) — `/reports` route, date range picker, charts, and sidebar link do not exist in the codebase. Plan reduced to 6 workflows. |
+| Version | Date       | Author              | Changes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ------- | ---------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1.0.0   | 2026-05-14 | e2e-test-plan skill | Initial plan — 6 workflows covering Dashboard, Products List, Full Product Lifecycle, Settings Content, Settings Admin Config, and Navigation/Responsive                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 1.1.0   | 2026-05-15 | e2e-test-plan skill | Added Workflow 7: Sales Reports Page — bar chart, date range picker, summary row, Reports sidebar link, API error and empty data edge cases                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| 2.0.0   | 2026-05-15 | code review         | Removed phantom Workflow 7 (Sales Reports) — `/reports` route, date range picker, charts, and sidebar link do not exist in the codebase. Plan reduced to 6 workflows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| 3.0.0   | 2026-05-17 | e2e-test-plan skill | Fixed debounce timing 500ms→300ms (ProductsPage.tsx:84). Added workflow metadata (Priority, Tags, Duration, Dependencies). Added Test Data tables per workflow. Added a11y check field to all steps. Added data-testid convention, timeout conventions, retry strategy, and accessibility checks sections to Testing Configuration. Updated button selectors to match actual code (Create Product, Update Product). Added Cleanup strategy field to every workflow. Enhanced Workflow 2 with combined search+category filter step, results count verification at each filter stage, contextual empty state comparison edge case (ProductsPage.tsx:222-228), and combined filter no-results edge case. |
