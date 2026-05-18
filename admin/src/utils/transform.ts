@@ -87,7 +87,7 @@ export function transformToStripeParams(
   // Clean up empty values
   if (!params.description) delete params.description;
   const images = params.images as string[] | undefined;
-  if (!images || images.length === 0) delete params.images;
+  if (!images || images.length === 0) params.images = [];
 
   return params;
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ArrowLeft, Edit, Trash2, Star } from "lucide-react";
@@ -21,11 +21,13 @@ export function ProductDetailPage() {
     (state: RootState) => state.products,
   );
   const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const fetchedId = useRef<string | undefined>(undefined);
 
   const isEditMode = location.pathname.endsWith("/edit");
 
   useEffect(() => {
-    if (id) {
+    if (id && fetchedId.current !== id) {
+      fetchedId.current = id;
       dispatch(fetchProductById(id));
     }
     return () => {
@@ -105,7 +107,7 @@ export function ProductDetailPage() {
                   key={index}
                   src={url || DEFAULT_PRODUCT_IMAGE}
                   alt={`${product.name} ${index + 1}`}
-                  className="w-full h-48 object-cover rounded-lg"
+                  className="w-48 h-48 object-cover rounded-lg"
                 />
               ))}
             </div>
