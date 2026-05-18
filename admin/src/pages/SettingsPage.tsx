@@ -201,7 +201,7 @@ export function SettingsPage() {
     if (saved) {
       const parsed = JSON.parse(saved);
       delete parsed.stripeSecretKey;
-      setAdminSettings(parsed);
+      setAdminSettings((prev) => ({ ...prev, ...parsed }));
     } else {
       setAdminSettings((prev) => ({
         ...prev,
@@ -230,7 +230,7 @@ export function SettingsPage() {
         api.api.getSettings<IProcessStep[]>("process").catch(() => null),
         api.api.getSettings<ITestimonial[]>("testimonials").catch(() => null),
       ]);
-      if (site) setSiteContent(site);
+      if (site) setSiteContent({ ...DEFAULT_SITE, ...site });
       if (process) setProcessContent(process);
       if (testimonials) setTestimonialsContent(testimonials);
       setContentStatus("idle");
@@ -1112,7 +1112,7 @@ function TextField({
       </label>
       <input
         type={type || "text"}
-        value={value}
+        value={value ?? ""}
         name={name}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -1147,7 +1147,7 @@ function TextAreaField({
       )}
       <textarea
         name={name}
-        value={value}
+        value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         rows={3}
         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none resize-y"
