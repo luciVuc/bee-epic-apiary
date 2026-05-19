@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { ArrowLeft, Edit, Trash2, Star } from "lucide-react";
+import { ArrowLeft, Edit, Trash2, Star, AlertCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
 import {
   fetchProductById,
@@ -17,9 +18,11 @@ export function ProductDetailPage() {
   const location = useLocation();
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  const { selectedProduct: product, loading } = useSelector(
-    (state: RootState) => state.products,
-  );
+  const {
+    selectedProduct: product,
+    loading,
+    error,
+  } = useSelector((state: RootState) => state.products);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const fetchedId = useRef<string | undefined>(undefined);
 
@@ -49,6 +52,26 @@ export function ProductDetailPage() {
     navigate(`/products/${id}/edit`, { replace: true });
   };
 
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-red-600 mb-4">
+          Product Not Found
+        </h2>
+        <p className="text-dark-600 mb-6">
+          The requested product could not be loaded.
+        </p>
+        <Link
+          to="/products"
+          className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+        >
+          Back to Products
+        </Link>
+      </div>
+    );
+  }
+
   if (loading || !product) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -67,6 +90,7 @@ export function ProductDetailPage() {
         <div className="flex items-center gap-4">
           <button
             onClick={() => navigate("/products")}
+            aria-label="Back to products"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-dark-600" />

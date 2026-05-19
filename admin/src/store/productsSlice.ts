@@ -59,17 +59,25 @@ export const fetchProductById = createAsyncThunk(
 
 export const createProduct = createAsyncThunk(
   "products/create",
-  async (product: IProductInput, { dispatch, getState }) => {
-    const newProduct = await api.api.createProduct(product);
-    const state = getState() as { products: IProductsState };
-    const lastParams = state.products.lastFetchParams;
-    dispatch(
-      fetchProductsCount({
-        search: lastParams?.search,
-        category: lastParams?.category,
-      }),
-    );
-    return newProduct;
+  async (product: IProductInput, { dispatch, getState, rejectWithValue }) => {
+    try {
+      const newProduct = await api.api.createProduct(product);
+      const state = getState() as { products: IProductsState };
+      const lastParams = state.products.lastFetchParams;
+      dispatch(
+        fetchProductsCount({
+          search: lastParams?.search,
+          category: lastParams?.category,
+        }),
+      );
+      return newProduct;
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to create product";
+      return rejectWithValue(message);
+    }
   },
 );
 
@@ -77,18 +85,26 @@ export const updateProduct = createAsyncThunk(
   "products/update",
   async (
     { id, product }: { id: string; product: Partial<IProductInput> },
-    { dispatch, getState },
+    { dispatch, getState, rejectWithValue },
   ) => {
-    const updatedProduct = await api.api.updateProduct(id, product);
-    const state = getState() as { products: IProductsState };
-    const lastParams = state.products.lastFetchParams;
-    dispatch(
-      fetchProductsCount({
-        search: lastParams?.search,
-        category: lastParams?.category,
-      }),
-    );
-    return updatedProduct;
+    try {
+      const updatedProduct = await api.api.updateProduct(id, product);
+      const state = getState() as { products: IProductsState };
+      const lastParams = state.products.lastFetchParams;
+      dispatch(
+        fetchProductsCount({
+          search: lastParams?.search,
+          category: lastParams?.category,
+        }),
+      );
+      return updatedProduct;
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.error ||
+        err?.message ||
+        "Failed to update product";
+      return rejectWithValue(message);
+    }
   },
 );
 
@@ -184,16 +200,27 @@ const productsSlice = createSlice({
         state.loading = false;
         state.selectedProduct = action.payload;
       })
+      .addCase(fetchProductById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || "Failed to load product";
+        state.selectedProduct = null;
+      })
       .addCase(createProduct.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(createProduct.fulfilled, (state, action) => {
         state.loading = false;
         state.items.push(action.payload);
         state.selectedProduct = action.payload;
       })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = (action.payload as string) || "Failed to create product";
+      })
       .addCase(updateProduct.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(updateProduct.fulfilled, (state, action) => {
         state.loading = false;
@@ -202,6 +229,10 @@ const productsSlice = createSlice({
           state.items[index] = action.payload;
         }
         state.selectedProduct = action.payload;
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
+        state.loading = false;
+        state.error = (action.payload as string) || "Failed to update product";
       })
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.items = state.items.filter((p) => p.id !== action.payload);

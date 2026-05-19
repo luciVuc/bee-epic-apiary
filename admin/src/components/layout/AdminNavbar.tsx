@@ -11,6 +11,7 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
         {/* Mobile menu button */}
         <button
           onClick={onMenuClick}
+          aria-label="Toggle navigation menu"
           className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
         >
           <Menu className="w-5 h-5" />
@@ -29,7 +30,10 @@ export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
         </div>
 
         <div className="flex items-center gap-4">
-          <button className="relative p-2 text-dark-600 hover:bg-gray-100 rounded-lg">
+          <button
+            aria-label="Notifications"
+            className="relative p-2 text-dark-600 hover:bg-gray-100 rounded-lg"
+          >
             <Bell className="w-5 h-5" />
             <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
           </button>

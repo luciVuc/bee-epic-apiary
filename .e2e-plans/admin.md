@@ -12,8 +12,8 @@
 | Field              | Value                                   |
 | ------------------ | --------------------------------------- |
 | **Plan ID**        | `admin-v1`                              |
-| **Version**        | `4.0.0`                                 |
-| **Date**           | `2026-05-18`                            |
+| **Version**        | `7.0.0`                                 |
+| **Date**           | `2026-05-19`                            |
 | **Scope**          | Admin subproject — all workflows        |
 | **Auth Method**    | None (API-level token only, no UI auth) |
 | **Target Browser** | Playwright (Chromium)                   |
@@ -245,14 +245,17 @@ Every workflow that creates test data (products, content, settings) MUST be **se
 
 #### Detailed Steps
 
-**Step 1: Navigate to Admin Home**
+**Step 1: Navigate to Admin Home — Verify Redirect**
 
 ```
 Action:       Navigate to http://localhost:5174
 Selector:     N/A
 Input:        N/A
 Wait for:     URL to change to /dashboard (automatic redirect)
-Validate:     URL is http://localhost:5174/dashboard
+Validate:     URL is http://localhost:5174/dashboard — NOT http://localhost:5174/.
+              If the URL stays at "/" instead of "/dashboard", file an issue report:
+              the root route is missing a <Navigate to="/dashboard"> redirect
+              (admin/src/App.tsx line 12).
 Visual check: Page renders without console errors, no broken layout
 a11y check:   true
 Screenshot:   true
@@ -469,8 +472,14 @@ Selector:     Table row (`tr`) or card element containing product data
 Input:        N/A
 Wait for:     At least one product row to be fully rendered
 Validate:     Each row contains: product thumbnail + name + slug, category badge (styled colored pill), price formatted as currency, status badge (In Stock/Out of Stock), featured badge (yes or no), Edit (pencil icon) and Delete (trash icon) action buttons
+              *** REGRESSION CHECK: Edit and Delete icon buttons in the desktop table
+              MUST have `aria-label` attributes (e.g., `aria-label="Edit product"`,
+              `aria-label="Delete product"`). Use Playwright's
+              `page.locator('button[aria-label="Edit product"]')` to verify.
+              If missing, file an issue report: add aria-label to icon buttons
+              in admin/src/pages/ProductsPage.tsx lines ~402-419. ***
 Visual check: Badges are properly colored and styled, thumbnails load, text is not truncated
-a11y check:   false
+a11y check:   true
 Screenshot:   true
 ```
 
@@ -495,6 +504,11 @@ Selector:     Clear the search input first. Then select from the `<select>` drop
 Input:        Select a specific category (e.g., "Honey" or "Beeswax" — any category that has products)
 Wait for:     List to update after category selection
 Validate:     Every visible product has a category badge matching the selected category. The "Showing X of Y products" count reflects the total products in this category. No products from other categories appear.
+              *** REGRESSION CHECK: The category filter `<select>` element MUST have
+              `aria-label="Filter by category"`. Use Playwright's
+              `page.locator('select[aria-label="Filter by category"]')` to verify.
+              If the locator doesn't match, file an issue report: add aria-label
+              to category filter select in admin/src/pages/ProductsPage.tsx line 258. ***
 Visual check: Dropdown shows the selected category name, category badges on all visible rows match the filter
 a11y check:   false
 Screenshot:   true
@@ -677,6 +691,18 @@ Selector:     N/A
 Input:        N/A
 Wait for:     The ProductFormDialog modal to appear with form fields visible
 Validate:     Modal heading reads "Add New Product", form fields for Product Name, Slug, Short Description, Price, Category, Weight, In Stock, Featured, Image URLs, Thumbnail URLs, Tags are visible
+              *** REGRESSION CHECK: Placeholder text must be GENERIC (e.g., "Enter product
+              name", "product-slug", "Short description of the product"). It must NOT
+              contain specific product data like "Wildflower Raw Honey". Use Playwright's
+              `page.locator('input[placeholder="Wildflower Raw Honey"]').count()` to verify
+              no such specific placeholder exists. If the count is > 0, file an issue report:
+              replace overly-specific placeholders in
+              admin/src/components/products/ProductFormDialog.tsx lines 173, 186, 202. ***
+              *** REGRESSION CHECK: The dialog close button (X icon) MUST have
+              `aria-label="Close dialog"`. Use Playwright's
+              `page.locator('button[aria-label="Close dialog"]')` to verify.
+              If not found, file an issue report: add aria-label to dialog close button
+              in admin/src/components/products/ProductFormDialog.tsx line 177. ***
 Visual check: Modal is centered with overlay behind it, form is properly labeled and spaced
 a11y check:   true
 Screenshot:   true
@@ -700,6 +726,16 @@ Input:
   - Tags: add tag "e2e-test" (type "e2e-test" in the tag input and press Enter or click the + button)
 Wait for:     All fields to be filled and no validation errors visible
 Validate:     Form is complete, all fields show entered values
+              *** REGRESSION CHECK: The "Add tag" button (Plus icon) MUST have
+              `aria-label="Add tag"`. Use Playwright's
+              `page.locator('button[aria-label="Add tag"]')` to verify.
+              If not found, file an issue report: add aria-label to add tag button
+              in admin/src/components/products/ProductFormDialog.tsx line 465. ***
+              *** REGRESSION CHECK: Each tag remove button (×) MUST have
+              `aria-label="Remove tag <tagName>"`. After adding "e2e-test", use Playwright's
+              `page.locator('button[aria-label="Remove tag e2e-test"]')` to verify.
+              If not found, file an issue report: add aria-label to remove tag buttons
+              in admin/src/components/products/ProductFormDialog.tsx line 480. ***
 Visual check: Form looks properly filled, no overlapping labels or fields, the tag "e2e-test" appears as a removable badge
 a11y check:   false
 Screenshot:   true
@@ -738,6 +774,11 @@ Validate:     Detail page shows:
   - Slug: "e2e-test-product-[timestamp]"
   - Edit button visible
   - Delete button visible
+              *** REGRESSION CHECK: The back button (ArrowLeft icon near the product name)
+              MUST have `aria-label="Back to products"`. Use Playwright's
+              `page.locator('button[aria-label="Back to products"]')` to verify.
+              If not found, file an issue report: add aria-label to back button
+              in admin/src/pages/ProductDetailPage.tsx line 94. ***
 Visual check: Product images section (may be empty), all fields properly laid out, no overlapping text
 a11y check:   true
 Screenshot:   true
@@ -836,6 +877,26 @@ Expected:   The form should show a native browser validation error on the Produc
 Screenshot: true
 ```
 
+**Edge Case 1b: Zero Price on Edit**
+
+```
+Reference:  Happy Path Steps 2-3, 5-7
+Variation:  Attempt to update a product with price set to 0 (or submit a new product with price 0)
+Action:     On the edit form, set the Price field to 0, then click submit
+Input:      Price: 0
+Expected:   The form MUST show a visible red error banner: "Price must be greater than 0".
+            The modal must NOT close. No API call should be made.
+            *** REGRESSION CHECK: After clicking submit with price 0, verify the error
+            banner exists: `page.locator('text=Price must be greater than 0')` is visible.
+            Verify the modal is still open (dialog heading still visible).
+            Verify no network requests were made to /prices or /products (check
+            Playwright network log or page console). If the modal closes or no
+            error is shown, file an issue report: the frontend price validation
+            in admin/src/components/products/ProductFormDialog.tsx handleSubmit
+            is missing or broken. ***
+Screenshot: true
+```
+
 **Edge Case 2: Invalid Price**
 
 ```
@@ -890,6 +951,29 @@ Input:      Category: Subscriptions
 Expected:   A blue-highlighted section appears with two new fields: "Interval" (dropdown: Day/Week/Month/Year) and "Every" (number input). These fields are NOT visible for other categories.
 Select:     Interval: "Month", Every: "1"
 Validate:   Subscription fields are visible and editable
+Screenshot: true
+```
+
+**Edge Case 7: Deleted Product Detail Page Shows Error (Not Infinite Spinner)**
+
+```
+Reference:  Happy Path Step 4 & Step 10
+Variation:  Navigate directly to the URL of the deleted product after deletion
+Action:     After deletion confirms and the product list loads, navigate directly
+            to the deleted product's detail URL (captured from Step 4's URL).
+            Wait 5 seconds for the page to settle.
+Input:      Navigate to /products/<deleted-product-id>
+Expected:   The page MUST show a user-facing error state within 5 seconds, NOT an
+            infinite loading spinner. Acceptable error states:
+            - "Product not found" message with a link back to /products
+            - "Failed to load product" error banner
+            - Any generic error UI that indicates the product could not be loaded
+            The loading spinner must disappear, not spin indefinitely.
+            *** If the spinner spins forever (>5s) without resolving, file an issue
+            report: the Redux slice is missing a fetchProductById.rejected handler
+            (admin/src/store/productsSlice.ts lines ~180-186) and the
+            ProductDetailPage has no error state (admin/src/pages/ProductDetailPage.tsx
+            lines ~52-58). ***
 Screenshot: true
 ```
 
@@ -982,6 +1066,20 @@ a11y check:   false
 Screenshot:   false
 ```
 
+**Step 3b (REG): Verify Remove Buttons have aria-labels**
+
+```
+Action:       Check that all icon-only Trash2 buttons in the Site Content form have aria-labels
+Selector:     Look for all Trash2 icon buttons in the settings form
+Validate:     Each remove button should have an aria-label. Check at least:
+              - About paragraph remove buttons: `aria-label="Remove paragraph 1"`, etc.
+              - Nav link remove buttons: `aria-label="Remove nav link 1"`, etc.
+              - Category remove buttons: `aria-label="Remove category 1"`, etc.
+              If any are missing, file an issue report: add aria-label to icon-only
+              remove buttons in SettingsPage.tsx (admin/src/pages/SettingsPage.tsx).
+Screenshot:   false
+```
+
 **Step 4: Modify a Field**
 
 ```
@@ -1017,6 +1115,11 @@ Input:        N/A
 Wait for:     A new step row with input fields to appear
 Validate:     New row appears with: Step number (auto-incremented), Title input, Icon input, Description textarea
 Fill:         Title: "E2E Test Step", Icon: "Package", Description: "This is an automated E2E test step"
+              *** REGRESSION CHECK: The process step remove button (Trash2 icon) MUST have
+              `aria-label="Remove process step 1"` (or the appropriate step number).
+              Use Playwright's `page.locator('button[aria-label="Remove process step 1"]')`
+              to verify. If not found, file an issue report: add aria-label to process step
+              remove buttons in admin/src/pages/SettingsPage.tsx around line 841. ***
 Visual check: New step row is properly laid out, fields are editable, remove button (trash icon) visible
 a11y check:   false
 Screenshot:   true
@@ -1044,6 +1147,11 @@ Input:        N/A
 Wait for:     New testimonial row to appear
 Validate:     New row with fields: Name, Location, Rating (clickable star buttons 1-5), Text (textarea), Date
 Fill:         Name: "E2E Tester", Location: "Automated Tests", Rating: click the 5th star, Text: "This is an automated E2E test testimonial.", Date: today's date (YYYY-MM-DD format)
+              *** REGRESSION CHECK: The testimonial remove button (Trash2 icon) MUST have
+              `aria-label="Remove testimonial 1"` (or the appropriate index).
+              Use Playwright's `page.locator('button[aria-label="Remove testimonial 1"]')`
+              to verify. If not found, file an issue report: add aria-label to testimonial
+              remove buttons in admin/src/pages/SettingsPage.tsx around line 891. ***
 Visual check: Testimonial form fields are editable and properly laid out, stars highlight on hover and show selected rating in yellow
 a11y check:   false
 Screenshot:   true
@@ -1153,6 +1261,11 @@ Selector:     summary:has-text("Admin Configuration") or the details/summary ele
 Input:        N/A
 Wait for:     The collapsible section to expand and reveal form fields
 Validate:     Fields visible: Business Name, Email, Phone, Location, Stripe Publishable Key, Stripe Secret Key (password field), API URL, Allowed Origins
+              *** REGRESSION CHECK: The notification bell button in the navbar MUST have
+              `aria-label="Notifications"`. Use Playwright's
+              `page.locator('button[aria-label="Notifications"]')` to verify.
+              If not found, file an issue report: add aria-label to notification button
+              in admin/src/components/layout/AdminNavbar.tsx line 32. ***
 Visual check: Section expands, fields are labeled clearly, three subsections (Business Information, Stripe Configuration, API Configuration) each with their own heading
 a11y check:   false
 Screenshot:   true
@@ -1312,13 +1425,31 @@ Screenshot:   true
 **Step 4: Resize to Tablet/Mobile Viewport**
 
 ```
-Action:       Resize browser to tablet dimensions: page.setViewportSize({ width: 768, height: 1024 })
+Action:       Resize browser to mobile dimensions: page.setViewportSize({ width: 375, height: 812 })
 Selector:     N/A
 Input:        N/A
 Wait for:     Layout to re-render, sidebar to collapse/hide
-Validate:     Sidebar is now hidden (not visible on screen), a hamburger menu button (Menu icon) appears in the top navbar area
-Visual check: Layout adapts — sidebar hidden, hamburger menu icon visible in the top-left area of the navbar
-a11y check:   false
+Validate:     The sidebar container div (the fixed-position wrapper around `<aside>`) MUST
+              have CSS class `-translate-x-full` applied (hidden off-screen), and the hamburger
+              menu button with `aria-label="Toggle navigation menu"` MUST be visible in the
+              top navbar area.
+              *** REGRESSION CHECK: Use evaluate() to check the sidebar container element:
+              `page.evaluate(() => { const el = document.querySelector('.fixed.inset-y-0.left-0.z-50');
+              if (!el) return 'sidebar container not found';
+              const classes = el.className;
+              return { hasTranslateXFull: classes.includes('-translate-x-full'),
+                       hasLgTranslateX0: classes.includes('lg:translate-x-0'),
+                       offsetWidth: el.getBoundingClientRect().width,
+                       isOffScreen: el.getBoundingClientRect().right <= 0 }; })`
+              The sidebar IS correctly hidden via CSS transform on mobile when:
+              - `hasTranslateXFull` is true (or `isOffScreen` is true)
+              - The hamburger button with `aria-label="Toggle navigation menu"` exists and is visible
+              If the sidebar container is visible on screen (getBoundingClientRect().right > 0)
+              AND no hamburger button with aria-label exists, file an issue report:
+              the responsive sidebar layout is broken (admin/src/components/layout/AdminLayout.tsx
+              lines ~16-25, responsive transform classes not applying correctly). ***
+Visual check: Layout adapts — sidebar hidden off-screen via translate, hamburger menu icon (Menu) visible in the top-left of the navbar
+a11y check:   true  (verify hamburger button has aria-label="Toggle navigation menu")
 Screenshot:   true
 ```
 
@@ -1326,10 +1457,14 @@ Screenshot:   true
 
 ```
 Action:       Click the hamburger menu button
-Selector:     button with Menu icon (three horizontal lines) in the navbar, typically the first button in the header
+Selector:     button[aria-label="Toggle navigation menu"]
 Input:        N/A
 Wait for:     Sidebar to slide in from the left, overlay to appear behind it
-Validate:     Sidebar is now visible with all three links (Dashboard, Products, Settings), an overlay (semi-transparent backdrop) covers the main content area. A close button (X icon) appears in the sidebar header.
+Validate:     Sidebar is now visible with all three links (Dashboard, Products, Settings), an overlay (semi-transparent backdrop) covers the main content area. A close button (X icon) with `aria-label="Close sidebar"` appears in the sidebar header.
+              *** REGRESSION CHECK: The close button MUST have `aria-label="Close sidebar"`.
+              Use Playwright's `page.locator('button[aria-label="Close sidebar"]')` to verify.
+              If not found, file an issue report: add aria-label to sidebar close button
+              in admin/src/components/layout/Sidebar.tsx line 45. ***
 Visual check: Sidebar slides in smoothly, overlay darkens the background content
 a11y check:   false
 Screenshot:   true
@@ -1392,7 +1527,16 @@ Reference:  Happy Path Step 4
 Variation:  Resize to a very narrow width (320x568 — iPhone SE)
 Action:     Set viewport to page.setViewportSize({ width: 320, height: 568 })
 Input:      N/A
-Expected:   Same mobile behavior — sidebar hidden, hamburger visible, all content still accessible. No horizontal scrollbar at 320px.
+Expected:   Same mobile behavior — sidebar container hidden off-screen via
+            `-translate-x-full` (getBoundingClientRect().right <= 0),
+            hamburger button with aria-label="Toggle navigation menu" visible,
+            all content still accessible. No horizontal scrollbar at 320px.
+            *** REGRESSION CHECK: Same sidebar visibility assertion as Step 4
+            (check container div, not <nav> element). Use the same evaluate()
+            approach from Step 4's regression check. If sidebar container is
+            visible on screen (getBoundingClientRect().right > 0) AND no
+            hamburger button with aria-label is found, file an issue report
+            referencing admin/src/components/layout/AdminLayout.tsx lines ~16-25. ***
 Screenshot: true
 ```
 
@@ -1738,3 +1882,6 @@ The testing agent MUST ask the user these questions before executing this plan. 
 | 2.0.0   | 2026-05-15 | code review         | Removed phantom Workflow 7 (Sales Reports) — `/reports` route, date range picker, charts, and sidebar link do not exist in the codebase. Plan reduced to 6 workflows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | 3.0.0   | 2026-05-17 | e2e-test-plan skill | Fixed debounce timing 500ms→300ms (ProductsPage.tsx:84). Added workflow metadata (Priority, Tags, Duration, Dependencies). Added Test Data tables per workflow. Added a11y check field to all steps. Added data-testid convention, timeout conventions, retry strategy, and accessibility checks sections to Testing Configuration. Updated button selectors to match actual code (Create Product, Update Product). Added Cleanup strategy field to every workflow. Enhanced Workflow 2 with combined search+category filter step, results count verification at each filter stage, contextual empty state comparison edge case (ProductsPage.tsx:222-228), and combined filter no-results edge case. |
 | 4.0.0   | 2026-05-18 | manual testing      | Added §3.8 Self-Contained Testing Principle: products created during testing must always be edited and then deleted. Added Workflow 7: Dashboard → Product CRUD (create from dashboard, edit from detail page, delete from detail page). Updated Workflow 3 description to reference Self-Contained Testing Principle. Updated metadata version and date.                                                                                                                                                                                                                                                                                                                                             |
+| 5.0.0   | 2026-05-19 | e2e-tester          | Added regression checks for 5 known issues discovered during E2E test execution: (1) W1 Step 1 — root route must redirect to /dashboard, not stay at /; (2) W2 Step 2 — Edit/Delete icon buttons must have aria-label; (3) W3 Step 1 — Add Product form placeholders must be generic; (4) W3 Edge Case 7 — deleted product detail must show error state, not infinite spinner; (5) W6 Step 4 & Edge Case 3 — sidebar must actually hide on mobile via offsetParent/offsetWidth check.                                                                                                                                                                                                                 |
+| 6.0.0   | 2026-05-19 | e2e-tester          | Fixed all discovered issues: added aria-labels to 12 icon-only buttons (hamburger menu, sidebar close, notification bell, dialog close, back button, add/remove tag, image URL remove, settings trash buttons), added aria-label to category filter select. Updated W6 Step 4 regression check to verify sidebar container transform (-translate-x-full) instead of checking <nav> offsetWidth (which was a false positive). Added regression checks throughout plan to prevent regression of all fixed issues.                                                                                                                                                                                       |
+| 7.0.0   | 2026-05-19 | e2e-tester          | Added client-side price validation (price > 0) in ProductFormDialog handleSubmit, showing inline red error banner "Price must be greater than 0" instead of submitting. Added rejected handlers in productsSlice for createProduct and updateProduct thunks with proper error propagation from API. Error banner is dismissible and prevents modal from closing on failure. Added Edge Case 1b regression check for zero-price submission.                                                                                                                                                                                                                                                            |

@@ -43,9 +43,33 @@ export function ProductFormDialog({
     recurringIntervalCount: 1,
   });
   const [tagInput, setTagInput] = useState("");
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     setTagInput("");
+  }, [productId]);
+
+  useEffect(() => {
+    setSubmitError(null);
+    if (!productId) {
+      setFormData({
+        name: "",
+        slug: "",
+        description: "",
+        longDescription: "",
+        price: 0,
+        stripePaymentLinkId: "",
+        category: EProductCategory.HONEY,
+        imageUrls: [""],
+        thumbnailUrls: [""],
+        inStock: true,
+        featured: false,
+        weight: "",
+        tags: [],
+        recurringInterval: "",
+        recurringIntervalCount: 1,
+      });
+    }
   }, [productId]);
 
   useEffect(() => {
@@ -127,6 +151,12 @@ export function ProductFormDialog({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSubmitError(null);
+
+    if (formData.price <= 0) {
+      setSubmitError("Price must be greater than 0");
+      return;
+    }
 
     const productData = {
       ...formData,
@@ -135,9 +165,27 @@ export function ProductFormDialog({
     };
 
     if (isEditMode && productId) {
-      await dispatch(updateProduct({ id: productId, product: productData }));
+      const result = await dispatch(
+        updateProduct({ id: productId, product: productData }),
+      );
+      if (updateProduct.rejected.match(result)) {
+        setSubmitError(
+          (result.payload as string) ||
+            result.error?.message ||
+            "Failed to update product",
+        );
+        return;
+      }
     } else {
-      await dispatch(createProduct(productData));
+      const result = await dispatch(createProduct(productData));
+      if (createProduct.rejected.match(result)) {
+        setSubmitError(
+          (result.payload as string) ||
+            result.error?.message ||
+            "Failed to create product",
+        );
+        return;
+      }
     }
     onClose();
   };
@@ -151,6 +199,7 @@ export function ProductFormDialog({
           </h2>
           <button
             onClick={onClose}
+            aria-label="Close dialog"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-dark-500" />
@@ -170,7 +219,7 @@ export function ProductFormDialog({
                 value={formData.name}
                 onChange={(e) => handleInputChange("name", e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                placeholder="Wildflower Raw Honey"
+                placeholder="Enter product name"
               />
             </div>
             <div>
@@ -183,7 +232,7 @@ export function ProductFormDialog({
                 value={formData.slug}
                 onChange={(e) => handleInputChange("slug", e.target.value)}
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:details focus:border-primary-500 outline-none"
-                placeholder="wildflower-raw-honey"
+                placeholder="product-slug"
               />
             </div>
           </div>
@@ -199,7 +248,7 @@ export function ProductFormDialog({
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              placeholder="A beautiful blend of nectar from Bay Area's wild meadows"
+              placeholder="Short description of the product"
             />
           </div>
 
@@ -356,6 +405,7 @@ export function ProductFormDialog({
                 <button
                   type="button"
                   onClick={() => removeImageUrl(index, "imageUrls")}
+                  aria-label={`Remove image URL ${index + 1}`}
                   className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -391,6 +441,7 @@ export function ProductFormDialog({
                 <button
                   type="button"
                   onClick={() => removeImageUrl(index, "thumbnailUrls")}
+                  aria-label={`Remove thumbnail URL ${index + 1}`}
                   className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -440,6 +491,7 @@ export function ProductFormDialog({
               <button
                 type="button"
                 onClick={handleAddTag}
+                aria-label="Add tag"
                 className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
               >
                 <Plus className="w-4 h-4" />
@@ -455,6 +507,7 @@ export function ProductFormDialog({
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
+                    aria-label={`Remove tag ${tag}`}
                     className="text-dark-400 hover:text-dark-600"
                   >
                     ×
@@ -463,6 +516,20 @@ export function ProductFormDialog({
               ))}
             </div>
           </div>
+
+          {/* Error display */}
+          {submitError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <span className="text-red-600 text-sm flex-1">{submitError}</span>
+              <button
+                type="button"
+                onClick={() => setSubmitError(null)}
+                className="text-red-400 hover:text-red-600"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
 
           {/* Actions */}
           <div className="flex gap-3 justify-end border-t border-gray-200 pt-6">

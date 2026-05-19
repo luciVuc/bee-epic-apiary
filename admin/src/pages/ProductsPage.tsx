@@ -241,6 +241,7 @@ export function ProductsPage() {
             {searchTerm && (
               <button
                 onClick={() => setSearchTerm("")}
+                aria-label="Clear search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -254,6 +255,7 @@ export function ProductsPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
+              aria-label="Filter by category"
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="ALL">All Categories</option>
@@ -404,6 +406,7 @@ export function ProductsPage() {
                             e.stopPropagation();
                             handleEditProduct(product.id);
                           }}
+                          aria-label="Edit product"
                           className="p-2 text-dark-600 hover:bg-dark-100 rounded-lg transition-colors"
                         >
                           <Edit className="w-4 h-4" />
@@ -413,6 +416,7 @@ export function ProductsPage() {
                             e.stopPropagation();
                             setDeleteConfirm(product.id);
                           }}
+                          aria-label="Delete product"
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />

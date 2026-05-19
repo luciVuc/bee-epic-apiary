@@ -562,6 +562,7 @@ export function SettingsPage() {
                           />
                           <button
                             onClick={() => removeAboutParagraph(i)}
+                            aria-label={`Remove paragraph ${i + 1}`}
                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -688,6 +689,7 @@ export function SettingsPage() {
                           </div>
                           <button
                             onClick={() => removeNavLink(i)}
+                            aria-label={`Remove nav link ${i + 1}`}
                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -722,6 +724,7 @@ export function SettingsPage() {
                           </div>
                           <button
                             onClick={() => removeCategory(i)}
+                            aria-label={`Remove category ${i + 1}`}
                             className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -836,6 +839,7 @@ export function SettingsPage() {
                         </span>
                         <button
                           onClick={() => removeProcessStep(i)}
+                          aria-label={`Remove process step ${i + 1}`}
                           className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
                         >
                           <Trash2 className="w-4 h-4" />
@@ -887,6 +891,7 @@ export function SettingsPage() {
                         </span>
                         <button
                           onClick={() => removeTestimonial(i)}
+                          aria-label={`Remove testimonial ${i + 1}`}
                           className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
                         >
                           <Trash2 className="w-4 h-4" />

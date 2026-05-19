@@ -25,7 +25,7 @@ export function Sidebar({ onClose }: SidebarProps) {
   ];
 
   return (
-    <aside className="fixed inset-y-0 left-0 w-64 z-50 bg-white border-r border-gray-200 flex flex-col">
+    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
       <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
         <NavLink
           to="/dashboard"
@@ -41,6 +41,7 @@ export function Sidebar({ onClose }: SidebarProps) {
         {/* Mobile close button */}
         <button
           onClick={onClose}
+          aria-label="Close sidebar"
           className="lg:hidden p-1 hover:bg-gray-100 rounded"
         >
           <X className="w-5 h-5" />
