@@ -73,13 +73,14 @@ export function ProductsPage() {
           dispatch(restoreProducts(parsed));
           sessionStorage.removeItem("adminProductsState");
         } catch {
-          dispatch(fetchProducts());
-          dispatch(fetchProductsCount());
+          /* fall through to fetch */
         }
-      } else {
-        dispatch(fetchProducts());
-        dispatch(fetchProductsCount());
       }
+      const params: { search?: string; category?: string } = {};
+      if (searchTerm) params.search = searchTerm;
+      if (selectedCategory !== "ALL") params.category = selectedCategory;
+      dispatch(fetchProducts(params));
+      dispatch(fetchProductsCount(params));
       return;
     }
     const saved = sessionStorage.getItem("adminProductsScrollY");
