@@ -12,8 +12,8 @@
 | Field              | Value                                   |
 | ------------------ | --------------------------------------- |
 | **Plan ID**        | `admin-v1`                              |
-| **Version**        | `3.0.0`                                 |
-| **Date**           | `2026-05-17`                            |
+| **Version**        | `4.0.0`                                 |
+| **Date**           | `2026-05-18`                            |
 | **Scope**          | Admin subproject — all workflows        |
 | **Auth Method**    | None (API-level token only, no UI auth) |
 | **Target Browser** | Playwright (Chromium)                   |
@@ -179,6 +179,23 @@ Report a11y violations using the issue report format in this plan.
 ### 3.7 Authentication Detail
 
 **No UI authentication required.** The admin subproject does not have a login page. API authentication is handled automatically by the Axios client interceptor which reads `VITE_API_SECRET_KEY` from environment variables and attaches it as a Bearer token on every request. The testing agent does not need to perform any authentication steps.
+
+### 3.8 Self-Contained Testing Principle
+
+Every workflow that creates test data (products, content, settings) MUST be **self-contained** — it MUST clean up all data it creates within the same workflow. The testing agent MUST follow these rules:
+
+- **Products**: Every product created during testing MUST be **edited** and then **deleted** before the workflow completes. Under no circumstance should a test leave behind a product it created.
+- **Content modifications**: Any change to site content, process steps, or testimonials MUST be reverted using a paired teardown.
+- **LocalStorage settings**: Any change to admin configuration in localStorage MUST be restored to its original value using a paired teardown.
+
+**Rationale**: Self-contained tests ensure:
+
+1. Each workflow can be run independently without dependency on prior cleanup
+2. No stale test data accumulates in the database or localStorage
+3. The edit and delete code paths are exercised (and thus verified) on every run
+4. Bug fixes that affect edit/delete flows are caught immediately on the next test run
+
+**Exception**: If a workflow explicitly documents that it does not clean up (e.g., for manual inspection or destructive testing), the reasoning must be stated in the workflow's Test Data table.
 
 ---
 
@@ -622,7 +639,7 @@ No data is modified in this workflow — it is read-only.
 | **Duration**     | ~120s                 |
 | **Dependencies** | None (self-contained) |
 
-**Description**: A self-contained workflow that creates a new product with a unique test name, verifies it appears in the list, views its detail, edits its name and price, verifies the changes, then deletes the product. This workflow cleans up after itself.
+**Description**: A self-contained workflow that creates a new product with a unique test name, verifies it appears in the list, views its detail, edits its name and price, verifies the changes, then deletes the product. This workflow follows the Self-Contained Testing Principle (§3.8) — the product it creates is always edited and then deleted.
 
 **Preconditions**:
 
@@ -1387,6 +1404,256 @@ No data is modified in this workflow — it is read-only.
 
 ---
 
+### Workflow 7: Dashboard → Product CRUD (Create from Dashboard, Edit/Delete from Detail Page)
+
+**Metadata**:
+
+| Field            | Value                 |
+| ---------------- | --------------------- |
+| **Priority**     | P0 (critical)         |
+| **Tags**         | regression, slow      |
+| **Duration**     | ~120s                 |
+| **Dependencies** | None (self-contained) |
+
+**Description**: Tests the full product lifecycle initiated from the Dashboard page. Navigates to Dashboard, uses the "Add New Product" quick action to create a product, verifies it in the list, views its detail, edits it from the detail page, deletes it from the detail page, and verifies it is removed from the list. This workflow follows the Self-Contained Testing Principle (§3.8) — the product it creates is always edited and then deleted.
+
+**Preconditions**:
+
+- The admin app is running at `http://localhost:5174`
+- The services worker is running at `http://localhost:8787`
+
+**Test Data**:
+
+| Record                          | Creation Method    | Identifier                                   | Cleanup             |
+| ------------------------------- | ------------------ | -------------------------------------------- | ------------------- |
+| E2E Dashboard Product (created) | UI (this workflow) | `E2E Dashboard Product [timestamp]`          | Deleted in workflow |
+| E2E Dashboard Product (edited)  | UI (this workflow) | `E2E Dashboard Product [timestamp] (edited)` | Deleted in workflow |
+
+#### Happy Path
+
+| Step | Action                                  | Selector Hint                                    | a11y | Expected Result                                                   |
+| ---- | --------------------------------------- | ------------------------------------------------ | ---- | ----------------------------------------------------------------- |
+| 1    | Navigate to `http://localhost:5174`     | URL                                              | Y    | Redirects to `/dashboard` with all stat cards visible             |
+| 2    | Click "Add New Product" quick action    | `a:has-text("Add New Product")`                  | Y    | Navigates to `/products/new`, ProductFormDialog modal opens       |
+| 3    | Fill the product form with valid data   | form fields                                      | N    | All required fields populated                                     |
+| 4    | Submit the form                         | `button:has-text("Create Product")`              | N    | Modal closes, URL goes to `/products`, product appears in list    |
+| 5    | Click the new product in the list       | link containing the product name                 | Y    | Navigates to `/products/:id`, detail page shows all fields        |
+| 6    | Edit the product from the detail page   | `button:has-text("Edit")`                        | Y    | ProductFormDialog opens prefilled with existing data              |
+| 7    | Change the product name and price       | Name and price fields                            | N    | Fields update with new values                                     |
+| 8    | Submit the edit                         | `button:has-text("Update Product")`              | N    | Modal closes, detail page shows updated name and price            |
+| 9    | Delete the product from the detail page | `button:has-text("Delete")` on detail page       | N    | Confirmation modal appears                                        |
+| 10   | Confirm deletion                        | `button:has-text("Delete")` within confirm modal | N    | Modal closes, navigates to `/products`, product no longer in list |
+
+#### Detailed Steps
+
+**Step 1: Navigate to Dashboard**
+
+```
+Action:       Navigate to http://localhost:5174
+Selector:     N/A
+Input:        N/A
+Wait for:     URL to change to /dashboard (automatic redirect)
+Validate:     URL is http://localhost:5174/dashboard, stat cards are visible with numeric values
+Visual check: Dashboard renders without console errors
+a11y check:   true
+Screenshot:   true
+```
+
+**Step 2: Open Create Product from Dashboard**
+
+```
+Action:       Click the "Add New Product" quick action link in the Quick Actions section
+Selector:     a:has-text("Add New Product")
+Input:        N/A
+Wait for:     URL to change to /products/new AND the ProductFormDialog modal to appear
+Validate:     URL is http://localhost:5174/products/new, modal heading reads "Add New Product"
+Visual check: Modal is centered with overlay behind it, sticky "Add Product" button in navbar is visible
+a11y check:   true
+Screenshot:   true
+```
+
+**Step 3: Fill the Product Form**
+
+```
+Action:       Fill in all required fields with unique test data
+Selector:     Various input fields in the form
+Input:
+  - Product Name: "E2E Dashboard Product [timestamp]" (use current timestamp for uniqueness)
+  - Slug: "e2e-dashboard-product-[timestamp]"
+  - Short Description: "Created from the Dashboard quick action — delete me"
+  - Long Description: "This product was created via the Dashboard's 'Add New Product' quick action link for E2E testing."
+  - Price (cents): 5999 (for $59.99)
+  - Category: "Gift Sets"
+  - Weight: "1 lb"
+  - In Stock: checked (default)
+  - Featured: unchecked (default)
+  - Tags: add tag "e2e-test" (type "e2e-test" in the tag input and press Enter or click the + button)
+Wait for:     All fields to be filled and no validation errors visible
+Validate:     Form is complete, all fields show entered values
+Visual check: Form looks properly filled, no overlapping labels or fields
+a11y check:   false
+Screenshot:   true
+```
+
+**Step 4: Submit the Form**
+
+```
+Action:       Click the submit/create button
+Selector:     button:has-text("Create Product")
+Input:        N/A
+Wait for:     Modal to close AND URL to change to /products AND the new product to appear in the list
+Validate:     No visible error messages. The new product "E2E Dashboard Product [timestamp]" appears in the product list with correct category badge and price $59.99. The total count ("Showing X of Y products") increases by 1 compared to before creation.
+Visual check: Modal closes smoothly, product list shows the new entry
+a11y check:   false
+Screenshot:   true
+```
+
+**Step 5: View Product Detail**
+
+```
+Action:       Click on the newly created product's name or thumbnail in the list
+Selector:     a or link containing "E2E Dashboard Product [timestamp]"
+Input:        N/A
+Wait for:     URL to change to /products/<stripe-id>
+Validate:     Detail page shows:
+  - Product name: "E2E Dashboard Product [timestamp]"
+  - Price: $59.99
+  - Category: Gift Sets
+  - Short description present
+  - Long description present
+  - Weight: "1 lb"
+  - Status badge: "In Stock"
+  - Featured badge: "No"
+  - Tag: "e2e-test"
+  - Slug: "e2e-dashboard-product-[timestamp]"
+  - Edit button visible
+  - Delete button visible
+Visual check: Product detail renders correctly with all fields, no console errors
+a11y check:   true
+Screenshot:   true
+```
+
+**Step 6: Open Edit Modal from Detail Page**
+
+```
+Action:       Click the "Edit" button on the detail page
+Selector:     button:has-text("Edit")
+Input:        N/A
+Wait for:     ProductFormDialog modal to open, prefilled with the product's current data
+Validate:     Modal heading reads "Edit Product", form fields contain the product's current values
+Visual check: Prefilled form matches the product data from Step 5
+a11y check:   true
+Screenshot:   true
+```
+
+**Step 7: Change Name and Price**
+
+```
+Action:       Update the product name and price fields
+Selector:     input corresponding to Product Name and Price
+Input:
+  - Product Name: "E2E Dashboard Product [timestamp] (edited)"
+  - Price (cents): 6999 (for $69.99)
+Wait for:     Fields to show updated values
+Validate:     Product name now reads "E2E Dashboard Product [timestamp] (edited)", price shows 6999
+Visual check: Fields update with new values, no validation errors
+a11y check:   false
+Screenshot:   true
+```
+
+**Step 8: Submit the Edit**
+
+```
+Action:       Click the save/submit button
+Selector:     button:has-text("Update Product")
+Input:        N/A
+Wait for:     Modal to close AND the detail page to show updated values
+Validate:     Product name is now "E2E Dashboard Product [timestamp] (edited)", price shows $69.99
+Visual check: Updated values display correctly on the detail page
+a11y check:   false
+Screenshot:   true
+```
+
+**Step 9: Initiate Delete from Detail Page**
+
+```
+Action:       Click the "Delete" button on the detail page (the red button)
+Selector:     button:has-text("Delete") on the detail page — NOT the Edit button
+Input:        N/A
+Wait for:     A confirmation modal/dialog to appear
+Validate:     Confirmation modal reads "Confirm Delete" with text asking to confirm deletion of the product, and "Cancel" and "Delete" buttons
+Visual check: Modal is styled consistently, properly centered, text is clear about what is being deleted
+a11y check:   false
+Screenshot:   true
+```
+
+**Step 10: Confirm Deletion from Detail Page**
+
+```
+Action:       Click the confirm "Delete" button in the modal
+Selector:     button:has-text("Delete") within the confirmation modal (the red/danger button)
+Input:        N/A
+Wait for:     Modal to close AND URL to change to /products AND the product list to load without the deleted product
+Validate:     URL is http://localhost:5174/products. "E2E Dashboard Product [timestamp] (edited)" no longer appears in the product list. The total count ("Showing X of Y products") should reflect the deletion.
+Visual check: Product removed from list, no console errors, navigation from detail page to list is clean
+a11y check:   false
+Screenshot:   true
+```
+
+#### Edge Cases
+
+**Edge Case 1: Cancel Edit from Detail Page (No Save)**
+
+```
+Reference:  Happy Path Steps 6-8
+Variation:  Open edit modal from detail page, change fields, then cancel
+Action:     Navigate to a product's detail page (use the freshly created product before editing), click Edit, change the name, then click "Cancel" or the modal close button (X icon) or press Escape
+Input:      N/A
+Expected:   Modal closes without saving. The product detail page should still show the original (pre-edit) values. The URL should remain at /products/:id (the detail page).
+Screenshot: true
+```
+
+**Edge Case 2: Cancel Delete from Detail Page**
+
+```
+Reference:  Happy Path Steps 9-10
+Variation:  Open delete confirmation from detail page, then cancel
+Action:     On the detail page of a test product, click Delete, then click "Cancel" in the confirmation modal
+Input:      N/A
+Expected:   Modal closes, product still exists and is visible on its detail page. URL stays at /products/:id.
+Screenshot: true
+```
+
+**Edge Case 3: Navigate Away from Detail While Edit Modal is Open**
+
+```
+Reference:  Happy Path Steps 6-7
+Variation:  Open edit modal from detail page, then navigate away via sidebar
+Action:     Open edit modal, click the "Dashboard" sidebar link while the modal is open
+Input:      N/A
+Expected:   Modal closes, browser navigates to /dashboard. No overlay remains stuck. No console errors.
+Screenshot: true
+```
+
+**Edge Case 4: Delete Product that is Already Deleted (Double Click)**
+
+```
+Reference:  Happy Path Steps 9-10
+Variation:  Rapidly click Delete button twice
+Action:     On a product's detail page, rapidly double-click the Delete button, then confirm on the first confirmation modal
+Input:      N/A
+Expected:   Only one confirmation modal appears (no duplicate). After confirming, the product is deleted and navigated to /products. No console errors or 404s.
+Screenshot: false
+```
+
+#### Cleanup
+
+This workflow is **self-contained** — the product is created, edited, and then deleted at the end. No additional cleanup needed.
+
+**Cleanup strategy**: Self-contained
+
+---
+
 ## 5. Issue Reporting
 
 > **Instructions for the testing agent**: When you discover an issue during test execution, you MUST ask the user how to handle it BEFORE taking action.
@@ -1440,7 +1707,7 @@ date: "[YYYY-MM-DD]"
 - Browser: Playwright (Chromium)
 - Viewport: [viewport at time of failure, e.g. 1280x720]
 - URL: [URL where the issue occurred]
-- Plan Version: 3.0.0
+- Plan Version: 4.0.0
 ```
 
 ---
@@ -1470,3 +1737,4 @@ The testing agent MUST ask the user these questions before executing this plan. 
 | 1.1.0   | 2026-05-15 | e2e-test-plan skill | Added Workflow 7: Sales Reports Page — bar chart, date range picker, summary row, Reports sidebar link, API error and empty data edge cases                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | 2.0.0   | 2026-05-15 | code review         | Removed phantom Workflow 7 (Sales Reports) — `/reports` route, date range picker, charts, and sidebar link do not exist in the codebase. Plan reduced to 6 workflows.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | 3.0.0   | 2026-05-17 | e2e-test-plan skill | Fixed debounce timing 500ms→300ms (ProductsPage.tsx:84). Added workflow metadata (Priority, Tags, Duration, Dependencies). Added Test Data tables per workflow. Added a11y check field to all steps. Added data-testid convention, timeout conventions, retry strategy, and accessibility checks sections to Testing Configuration. Updated button selectors to match actual code (Create Product, Update Product). Added Cleanup strategy field to every workflow. Enhanced Workflow 2 with combined search+category filter step, results count verification at each filter stage, contextual empty state comparison edge case (ProductsPage.tsx:222-228), and combined filter no-results edge case. |
+| 4.0.0   | 2026-05-18 | manual testing      | Added §3.8 Self-Contained Testing Principle: products created during testing must always be edited and then deleted. Added Workflow 7: Dashboard → Product CRUD (create from dashboard, edit from detail page, delete from detail page). Updated Workflow 3 description to reference Self-Contained Testing Principle. Updated metadata version and date.                                                                                                                                                                                                                                                                                                                                             |

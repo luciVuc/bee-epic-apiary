@@ -1,6 +1,8 @@
 import type { IProduct, IProductInput } from "../types";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL } from "./constants";
+
+const DEFAULT_IMAGES = [DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL];
 import type {
   StripeProductResponse,
   StripePriceResponse,
@@ -87,7 +89,11 @@ export function transformToStripeParams(
   // Clean up empty values
   if (!params.description) delete params.description;
   const images = params.images as string[] | undefined;
-  if (!images || images.length === 0) params.images = [];
+  if (!images || images.length === 0) {
+    params.images = [];
+  } else {
+    params.images = images.filter((url) => !DEFAULT_IMAGES.includes(url));
+  }
 
   return params;
 }
