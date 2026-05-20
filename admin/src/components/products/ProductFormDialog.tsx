@@ -9,6 +9,8 @@ import {
 } from "../../store/productsSlice";
 import type { IProductInput } from "../../types";
 import { EProductCategory } from "../../types";
+import type { ICategory } from "../../types/settings";
+import * as api from "../../utils/api";
 
 interface ProductFormDialogProps {
   productId?: string;
@@ -42,6 +44,7 @@ export function ProductFormDialog({
     recurringInterval: "",
     recurringIntervalCount: 1,
   });
+  const [categories, setCategories] = useState<ICategory[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
 
@@ -105,6 +108,17 @@ export function ProductFormDialog({
       });
     }
   }, [isEditMode, selectedProduct]);
+
+  useEffect(() => {
+    api.api
+      .getSettings<ICategory[]>("categories")
+      .then((cats) => {
+        setCategories(cats || []);
+      })
+      .catch(() => {
+        setCategories([]);
+      });
+  }, []);
 
   const handleInputChange = <K extends keyof IProductInput>(
     field: K,
@@ -299,10 +313,15 @@ export function ProductFormDialog({
                 }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
               >
-                <option value="HONEY">Honey</option>
-                <option value="BEESWAX">Beeswax</option>
-                <option value="GIFTS">Gift Sets</option>
-                <option value="SUBSCRIPTIONS">Subscriptions</option>
+                {categories.length === 0 ? (
+                  <option value="HONEY">Honey</option>
+                ) : (
+                  categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.label}
+                    </option>
+                  ))
+                )}
               </select>
             </div>
             <div>

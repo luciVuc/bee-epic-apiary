@@ -6,12 +6,11 @@ declare namespace Cloudflare {
 		mainModule: typeof import('./src/index');
 	}
 	interface Env {
-		ALLOWED_ORIGINS: string;
-		API_SECRET_KEY: string;
 		CONTENT_KV: KVNamespace;
-		RATE_LIMIT_KV?: KVNamespace;
 		STRIPE_SECRET_KEY: string;
 		STRIPE_WEBHOOK_SECRET: string;
+		ALLOWED_ORIGINS: string;
+		API_SECRET_KEY: string;
 	}
 }
 interface Env extends Cloudflare.Env {}
@@ -20,10 +19,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 };
 declare namespace NodeJS {
 	interface ProcessEnv extends StringifyValues<
-		Pick<
-			Cloudflare.Env,
-			'ALLOWED_ORIGINS' | 'API_SECRET_KEY' | 'CONTENT_KV' | 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET' | 'RATE_LIMIT_KV'
-		>
+		Pick<Cloudflare.Env, 'STRIPE_SECRET_KEY' | 'STRIPE_WEBHOOK_SECRET' | 'ALLOWED_ORIGINS' | 'API_SECRET_KEY'>
 	> {}
 }
 

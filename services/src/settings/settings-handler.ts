@@ -1,13 +1,14 @@
 import { jsonResponse, checkAuth, isAllowedOrigin } from '../utils';
+import { categorySchema } from './schemas';
 
-const VALID_TYPES = ['site', 'process', 'testimonials'] as const;
+const VALID_TYPES = ['site', 'process', 'testimonials', 'categories'] as const;
 type SettingsType = (typeof VALID_TYPES)[number];
 
 async function settingsHandler(request: Request, env: Env): Promise<Response> {
 	const url = new URL(request.url);
 	const origin = request.headers.get('Origin');
 
-	const match = url.pathname.match(/^\/settings\/(site|process|testimonials)$/);
+	const match = url.pathname.match(/^\/settings\/(site|process|testimonials|categories)$/);
 	if (!match) {
 		return jsonResponse({ error: 'Not found' }, 404, origin, env);
 	}
@@ -38,6 +39,13 @@ async function settingsHandler(request: Request, env: Env): Promise<Response> {
 			body = await request.json();
 		} catch {
 			return jsonResponse({ error: 'Invalid JSON body' }, 400, origin, env);
+		}
+
+		if (type === 'categories') {
+			const result = categorySchema.safeParse(body);
+			if (!result.success) {
+				return jsonResponse({ error: 'Invalid categories data', details: result.error.errors }, 400, origin, env);
+			}
 		}
 
 		await env.CONTENT_KV.put(type, JSON.stringify(body));

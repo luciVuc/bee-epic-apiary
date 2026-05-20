@@ -16,7 +16,7 @@ export interface IProduct {
   price: number;
   stripePriceId?: string;
   stripePaymentLinkId?: string;
-  category: EProductCategory | ProductCategory;
+  category: string;
   imageUrls: string[];
   thumbnailUrls: string[];
   inStock: boolean;
@@ -34,7 +34,7 @@ export interface IProductInput {
   longDescription?: string;
   price: number;
   stripePaymentLinkId?: string;
-  category: EProductCategory;
+  category: string;
   imageUrls: string[];
   thumbnailUrls: string[];
   inStock: boolean;

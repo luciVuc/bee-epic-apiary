@@ -1,3 +1,8 @@
+export interface ICategory {
+  id: string;
+  label: string;
+}
+
 export interface ISiteContent {
   businessName: string;
   tagline: string;
@@ -31,7 +36,7 @@ export interface ISiteContent {
   email: string;
   phone: string;
   location: string;
-  categories: { id: string; label: string }[];
+  categories: ICategory[];
   socialLinks: { instagram: string; facebook: string; etsy: string };
 }
 
@@ -52,4 +57,4 @@ export interface ITestimonial {
   date: string;
 }
 
-export type SettingsTab = "site" | "process" | "testimonials";
+export type SettingsTab = "site" | "process" | "testimonials" | "categories";

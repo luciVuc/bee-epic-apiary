@@ -24,8 +24,10 @@ import {
   fetchProductsCount,
   restoreProducts,
 } from "../store/productsSlice";
-import { CATEGORIES, DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
+import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
 import { EProductCategory } from "../types";
+import type { ICategory } from "../types/settings";
+import * as api from "../utils/api";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
 
 export function ProductsPage() {
@@ -60,6 +62,7 @@ export function ProductsPage() {
   const [selectedCategory, setSelectedCategory] = useState(
     () => sessionStorage.getItem("adminProductsCategory") || "ALL",
   );
+  const [categories, setCategories] = useState<ICategory[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
@@ -93,6 +96,17 @@ export function ProductsPage() {
     });
     return () => cancelAnimationFrame(id);
   }, [dispatch]);
+
+  useEffect(() => {
+    api.api
+      .getSettings<ICategory[]>("categories")
+      .then((cats) => {
+        setCategories(cats || []);
+      })
+      .catch(() => {
+        setCategories([]);
+      });
+  }, []);
 
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -259,11 +273,17 @@ export function ProductsPage() {
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="ALL">All Categories</option>
-              {CATEGORIES.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.label}
+              {categories.length === 0 ? (
+                <option value="ALL" disabled>
+                  No categories available
                 </option>
-              ))}
+              ) : (
+                categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.label}
+                  </option>
+                ))
+              )}
             </select>
           </div>
         </div>

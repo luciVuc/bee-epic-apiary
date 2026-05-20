@@ -11,163 +11,22 @@ import {
   Image,
   Star,
 } from "lucide-react";
-import { SETTINGS_STORAGE_KEY } from "../utils/constants";
+import {
+  SETTINGS_STORAGE_KEY,
+  DEFAULT_SITE,
+  DEFAULT_PROCESS,
+  DEFAULT_TESTIMONIALS,
+  DEFAULT_CATEGORIES,
+} from "../utils/constants";
 import type { IAdminSettings } from "../types";
 import type {
   ISiteContent,
   IProcessStep,
   ITestimonial,
+  ICategory,
   SettingsTab,
 } from "../types/settings";
 import * as api from "../utils/api";
-
-const DEFAULT_SITE: ISiteContent = {
-  businessName: "Bee Epic Apiary",
-  tagline: "Pure, Raw Honey from Bay Area's Finest Flowers",
-  heroHeadline: "Nature's Sweetest Gift, Straight from the Hive",
-  heroSubheadline:
-    "Small-batch, raw honey harvested with care from our California apiary. Every jar captures the essence of wild California flowers.",
-  aboutTitle: "Our Story",
-  aboutText: [
-    "Bee Epic Apiary was founded in 2009 when beekeeper Sarah Mitchell received her first two hives as a wedding gift. What started as a quiet hobby in the meadows of rural California has grown into a beloved local business dedicated to sustainable beekeeping and exceptional honey.",
-    "Our bees forage among the pristine wildflowers of the Green Mountain State, away from pesticides and industrial agriculture. We believe in letting nature do its work — our honey is never heated, filtered, or processed. It goes from hive to jar just as the bees made it.",
-    "Every drop of Bee Epic Apiary honey carries the flavors of California: clover, wildflower, buckwheat, and apple blossom. We're proud to share this liquid gold with families across the Bay Area and beyond.",
-  ],
-  processTitle: "From Hive to Your Table",
-  processSubtitle:
-    "Follow our journey from the first flower to your kitchen shelf",
-  productsTitle: "Our Products",
-  productsSubtitle:
-    "Small-batch, raw honey and bee products from our California apiary",
-  testimonialsTitle: "What Our Customers Say",
-  testimonialsSubtitle: "Join our community of honey lovers",
-  contactTitle: "Contact Us",
-  contactSubtitle: "We'd love to hear from you",
-  noProductsFound: "No products found in this category.",
-  footerTagline: "Built with ❤️ in California",
-  yearsExperience: "15+ Years",
-  yearsExperienceLabel: "of Experience",
-  rawNatural: "100%",
-  rawNaturalLabel: "Raw & Natural",
-  californiaProud: "California",
-  californiaProudLabel: "Proud",
-  sinceYear: "Since 2009",
-  sinceYearLabel: "Sustaining beekeeping tradition",
-  navLinks: [
-    { id: "home", label: "Home" },
-    { id: "about", label: "About" },
-    { id: "process", label: "Our Process" },
-    { id: "products", label: "Shop" },
-    { id: "testimonials", label: "Testimonials" },
-    { id: "contact", label: "Contact" },
-  ],
-  orderConfirmed: "Order Confirmed!",
-  orderConfirmationMessage:
-    "Thank you for your order. A confirmation email will be sent shortly.",
-  questionsContact: "Questions? Contact us at",
-  continueShopping: "Continue Shopping",
-  email: "hello@beeepicapiary.com",
-  phone: "(510) 555-APIARY",
-  location: "Union City, California",
-  categories: [
-    { id: "ALL", label: "All Products" },
-    { id: "HONEY", label: "Honey" },
-    { id: "BEESWAX", label: "Beeswax" },
-    { id: "GIFTS", label: "Gift Sets" },
-    { id: "SUBSCRIPTIONS", label: "Subscriptions" },
-  ],
-  socialLinks: {
-    instagram: "https://instagram.com/beeepicapiary",
-    facebook: "https://facebook.com/beeepicapiary",
-    etsy: "https://etsy.com/shop/beeepicapiary",
-  },
-};
-
-const DEFAULT_PROCESS: IProcessStep[] = [
-  {
-    id: "process-1",
-    step: 1,
-    title: "The Hive",
-    description:
-      "Our bees live in carefully placed hives throughout California's pristine meadows, far from pesticides and industrial farmland.",
-    icon: "Home",
-  },
-  {
-    id: "process-2",
-    step: 2,
-    title: "Foraging",
-    description:
-      "Bees venture miles from the hive, collecting nectar from wildflowers, clover, apple blossoms, and buckwheat.",
-    icon: "Flower2",
-  },
-  {
-    id: "process-3",
-    step: 3,
-    title: "The Nectar",
-    description:
-      "Returning bees pass nectar to house bees, who fan their wings to evaporate moisture and transform it into honey.",
-    icon: "Wind",
-  },
-  {
-    id: "process-4",
-    step: 4,
-    title: "Sealing",
-    description:
-      "When moisture content drops below 18%, bees seal each cell with fresh beeswax — nature's perfect preservation.",
-    icon: "Shield",
-  },
-  {
-    id: "process-5",
-    step: 5,
-    title: "Harvest",
-    description:
-      "We carefully extract frames, strain to remove debris, and bottle — raw, unheated, and unfiltered.",
-    icon: "Award",
-  },
-];
-
-const DEFAULT_TESTIMONIALS: ITestimonial[] = [
-  {
-    id: "testimonial-1",
-    name: "Jennifer Walker",
-    location: "Burlington, VT",
-    rating: 5,
-    text: "I've been buying Golden Hive honey for years, and it never disappoints. The wildflower honey is absolutely divine.",
-    date: "2024-12-15",
-  },
-  {
-    id: "testimonial-2",
-    name: "Robert Chen",
-    location: "Boston, MA",
-    rating: 5,
-    text: "Ordered the gift set for my mother's birthday, and she loved it! The packaging was beautiful, and the honey was the best she's ever had.",
-    date: "2024-11-28",
-  },
-  {
-    id: "testimonial-3",
-    name: "Emily Hartwell",
-    location: "Montpelier, VT",
-    rating: 5,
-    text: "As a fellow beekeeper, I really appreciate the care Golden Hive takes with their bees. The buckwheat honey is incredible.",
-    date: "2024-10-10",
-  },
-  {
-    id: "testimonial-4",
-    name: "Michael Torres",
-    location: "New York, NY",
-    rating: 5,
-    text: "The beeswax candles are a game changer. They burn so nicely and give off the most wonderful warm glow.",
-    date: "2024-09-22",
-  },
-  {
-    id: "testimonial-5",
-    name: "Sarah & David Miller",
-    location: "Portland, OR",
-    rating: 5,
-    text: "We discovered Golden Hive at a farmers market and were immediately hooked. The lip balms are now a staple in our household.",
-    date: "2024-08-05",
-  },
-];
 
 type ContentStatus = "idle" | "loading" | "saving" | "error" | "success";
 
@@ -179,6 +38,8 @@ export function SettingsPage() {
     useState<IProcessStep[]>(DEFAULT_PROCESS);
   const [testimonialsContent, setTestimonialsContent] =
     useState<ITestimonial[]>(DEFAULT_TESTIMONIALS);
+  const [categoriesContent, setCategoriesContent] =
+    useState<ICategory[]>(DEFAULT_CATEGORIES);
 
   const [contentStatus, setContentStatus] = useState<ContentStatus>("idle");
   const [contentError, setContentError] = useState("");
@@ -225,14 +86,16 @@ export function SettingsPage() {
     setContentStatus("loading");
     setContentError("");
     try {
-      const [site, process, testimonials] = await Promise.all([
+      const [site, process, testimonials, categories] = await Promise.all([
         api.api.getSettings<ISiteContent>("site").catch(() => null),
         api.api.getSettings<IProcessStep[]>("process").catch(() => null),
         api.api.getSettings<ITestimonial[]>("testimonials").catch(() => null),
+        api.api.getSettings<ICategory[]>("categories").catch(() => null),
       ]);
       if (site) setSiteContent({ ...DEFAULT_SITE, ...site });
       if (process) setProcessContent(process);
       if (testimonials) setTestimonialsContent(testimonials);
+      if (categories && categories.length > 0) setCategoriesContent(categories);
       setContentStatus("idle");
     } catch {
       setContentStatus("idle");
@@ -270,6 +133,9 @@ export function SettingsPage() {
       await api.api.saveSettings("site", siteContent);
       await api.api.saveSettings("process", processContent);
       await api.api.saveSettings("testimonials", testimonialsContent);
+      if (categoriesContent.length > 0) {
+        await api.api.saveSettings("categories", categoriesContent);
+      }
       setContentStatus("success");
       setTimeout(() => setContentStatus("idle"), 3000);
     } catch (err: unknown) {
@@ -339,30 +205,25 @@ export function SettingsPage() {
     }));
   };
 
-  const addCategory = () => {
-    setSiteContent((prev) => ({
-      ...prev,
-      categories: [...prev.categories, { id: "", label: "" }],
-    }));
+  // --- Categories Tab Helpers ---
+  const addCategoryItem = () => {
+    setCategoriesContent((prev) => [...prev, { id: "", label: "" }]);
   };
 
-  const updateCategory = (
+  const updateCategoryItem = (
     index: number,
-    field: "id" | "label",
+    field: keyof ICategory,
     value: string,
   ) => {
-    setSiteContent((prev) => {
-      const updated = [...prev.categories];
+    setCategoriesContent((prev) => {
+      const updated = [...prev];
       updated[index] = { ...updated[index], [field]: value };
-      return { ...prev, categories: updated };
+      return updated;
     });
   };
 
-  const removeCategory = (index: number) => {
-    setSiteContent((prev) => ({
-      ...prev,
-      categories: prev.categories.filter((_, i) => i !== index),
-    }));
+  const removeCategoryItem = (index: number) => {
+    setCategoriesContent((prev) => prev.filter((_, i) => i !== index));
   };
 
   // --- Process Helpers ---
@@ -460,23 +321,27 @@ export function SettingsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
-            {(["site", "process", "testimonials"] as const).map((tab) => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? "border-primary-500 text-primary-600"
-                    : "border-transparent text-dark-500 hover:text-dark-700 hover:border-dark-300"
-                }`}
-              >
-                {tab === "site"
-                  ? "Site Content"
-                  : tab === "process"
-                    ? "Process"
-                    : "Testimonials"}
-              </button>
-            ))}
+            {(["site", "process", "testimonials", "categories"] as const).map(
+              (tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                    activeTab === tab
+                      ? "border-primary-500 text-primary-600"
+                      : "border-transparent text-dark-500 hover:text-dark-700 hover:border-dark-300"
+                  }`}
+                >
+                  {tab === "site"
+                    ? "Site Content"
+                    : tab === "process"
+                      ? "Process"
+                      : tab === "testimonials"
+                        ? "Testimonials"
+                        : "Categories"}
+                </button>
+              ),
+            )}
           </nav>
         </div>
 
@@ -705,41 +570,6 @@ export function SettingsPage() {
                     </div>
                   </Section>
 
-                  {/* Categories */}
-                  <Section title="Categories">
-                    <div className="space-y-3">
-                      {siteContent.categories.map((cat, i) => (
-                        <div key={i} className="flex gap-2 items-start">
-                          <div className="flex-1 grid grid-cols-2 gap-2">
-                            <TextField
-                              label="ID"
-                              value={cat.id}
-                              onChange={(v) => updateCategory(i, "id", v)}
-                            />
-                            <TextField
-                              label="Label"
-                              value={cat.label}
-                              onChange={(v) => updateCategory(i, "label", v)}
-                            />
-                          </div>
-                          <button
-                            onClick={() => removeCategory(i)}
-                            aria-label={`Remove category ${i + 1}`}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
-                      <button
-                        onClick={addCategory}
-                        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
-                      >
-                        <Plus className="w-4 h-4" /> Add Category
-                      </button>
-                    </div>
-                  </Section>
-
                   {/* Social Links */}
                   <Section
                     title="Social Links"
@@ -873,6 +703,54 @@ export function SettingsPage() {
                     className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
                   >
                     <Plus className="w-4 h-4" /> Add Step
+                  </button>
+                </div>
+              )}
+
+              {/* ==================== CATEGORIES TAB ==================== */}
+              {activeTab === "categories" && (
+                <div className="space-y-4">
+                  <p className="text-sm text-dark-500 mb-4">
+                    Define and manage product categories used across the store.
+                  </p>
+                  {categoriesContent.map((cat, i) => (
+                    <div
+                      key={i}
+                      className="p-4 border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="font-medium text-dark-700">
+                          Category {i + 1}
+                        </span>
+                        <button
+                          onClick={() => removeCategoryItem(i)}
+                          aria-label={`Remove category ${i + 1}`}
+                          className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <TextField
+                          label="ID (e.g. HONEY)"
+                          value={cat.id}
+                          onChange={(v) => updateCategoryItem(i, "id", v)}
+                          placeholder="HONEY"
+                        />
+                        <TextField
+                          label="Label (e.g. Honey)"
+                          value={cat.label}
+                          onChange={(v) => updateCategoryItem(i, "label", v)}
+                          placeholder="Honey"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                  <button
+                    onClick={addCategoryItem}
+                    className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+                  >
+                    <Plus className="w-4 h-4" /> Add Category
                   </button>
                 </div>
               )}
