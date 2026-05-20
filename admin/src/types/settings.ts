@@ -57,4 +57,9 @@ export interface ITestimonial {
   date: string;
 }
 
-export type SettingsTab = "site" | "process" | "testimonials" | "categories";
+export type SettingsTab =
+  | "admin"
+  | "site"
+  | "process"
+  | "testimonials"
+  | "categories";

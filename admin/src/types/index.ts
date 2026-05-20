@@ -57,12 +57,6 @@ export interface IDashboardStats {
 }
 
 export interface IAdminSettings {
-  businessName: string;
-  email: string;
-  phone: string;
-  location: string;
-  stripePublishableKey: string;
-  stripeSecretKey: string;
   apiUrl: string;
-  allowedOrigins: string;
+  stripePublishableKey: string;
 }

@@ -11,19 +11,29 @@ import {
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
 import { fetchProducts, fetchProductsCount } from "../store/productsSlice";
+import { useState } from "react";
 import type { IDashboardStats } from "../types";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
+import type { ICategory } from "../types/settings";
+import * as api from "../utils/api";
 
 export function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { items: products, loading } = useSelector(
     (state: RootState) => state.products,
   );
+  const [categories, setCategories] = useState<ICategory[]>([]);
 
   useEffect(() => {
     dispatch(fetchProducts({ limit: 100 }));
     dispatch(fetchProductsCount());
+    api.api
+      .getSettings<ICategory[]>("categories")
+      .then((cats) => {
+        setCategories(cats || []);
+      })
+      .catch(() => {});
   }, [dispatch]);
 
   const stats: IDashboardStats = useMemo(() => {
@@ -44,13 +54,13 @@ export function DashboardPage() {
       totalProducts: products.length,
       inStockProducts: products.filter((p) => p.inStock).length,
       featuredProducts: products.filter((p) => p.featured).length,
-      totalCategories: 4,
+      totalCategories: categories.length || 4,
       honeyProducts,
       beeswaxProducts,
       giftProducts,
       subscriptionProducts,
     };
-  }, [products]);
+  }, [products, categories]);
 
   if (loading) {
     return (
@@ -110,30 +120,59 @@ export function DashboardPage() {
             Products by Category
           </h3>
           <div className="space-y-3">
-            <CategoryBar
-              label="Honey"
-              count={stats.honeyProducts}
-              total={stats.totalProducts}
-              color="amber"
-            />
-            <CategoryBar
-              label="Beeswax"
-              count={stats.beeswaxProducts}
-              total={stats.totalProducts}
-              color="yellow"
-            />
-            <CategoryBar
-              label="Gift Sets"
-              count={stats.giftProducts}
-              total={stats.totalProducts}
-              color="pink"
-            />
-            <CategoryBar
-              label="Subscriptions"
-              count={stats.subscriptionProducts}
-              total={stats.totalProducts}
-              color="blue"
-            />
+            {categories.length > 0 ? (
+              categories.map((cat, i) => {
+                const count = products.filter(
+                  (p) => p.category === cat.id,
+                ).length;
+                const colors = [
+                  "amber",
+                  "yellow",
+                  "pink",
+                  "blue",
+                  "green",
+                  "indigo",
+                  "purple",
+                  "red",
+                ];
+                return (
+                  <CategoryBar
+                    key={cat.id}
+                    label={cat.label}
+                    count={count}
+                    total={stats.totalProducts}
+                    color={colors[i % colors.length]}
+                  />
+                );
+              })
+            ) : (
+              <>
+                <CategoryBar
+                  label="Honey"
+                  count={stats.honeyProducts}
+                  total={stats.totalProducts}
+                  color="amber"
+                />
+                <CategoryBar
+                  label="Beeswax"
+                  count={stats.beeswaxProducts}
+                  total={stats.totalProducts}
+                  color="yellow"
+                />
+                <CategoryBar
+                  label="Gift Sets"
+                  count={stats.giftProducts}
+                  total={stats.totalProducts}
+                  color="pink"
+                />
+                <CategoryBar
+                  label="Subscriptions"
+                  count={stats.subscriptionProducts}
+                  total={stats.totalProducts}
+                  color="blue"
+                />
+              </>
+            )}
           </div>
         </div>
 

@@ -31,7 +31,7 @@ import * as api from "../utils/api";
 type ContentStatus = "idle" | "loading" | "saving" | "error" | "success";
 
 export function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("site");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("admin");
 
   const [siteContent, setSiteContent] = useState<ISiteContent>(DEFAULT_SITE);
   const [processContent, setProcessContent] =
@@ -45,14 +45,8 @@ export function SettingsPage() {
   const [contentError, setContentError] = useState("");
 
   const [adminSettings, setAdminSettings] = useState<IAdminSettings>({
-    businessName: "",
-    email: "",
-    phone: "",
-    location: "",
-    stripePublishableKey: "",
-    stripeSecretKey: "",
     apiUrl: "",
-    allowedOrigins: "",
+    stripePublishableKey: "",
   });
   const [adminSaved, setAdminSaved] = useState(false);
   const [adminError, setAdminError] = useState("");
@@ -61,19 +55,11 @@ export function SettingsPage() {
     const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
-      delete parsed.stripeSecretKey;
       setAdminSettings((prev) => ({ ...prev, ...parsed }));
     } else {
       setAdminSettings((prev) => ({
         ...prev,
-        businessName: "Bee Epic Apiary",
-        email: "hello@beeepicapiary.com",
-        phone: "(510) 555-APIARY",
-        location: "Union City, California",
         apiUrl: import.meta.env.VITE_API_URL || "http://localhost:8787",
-        allowedOrigins:
-          import.meta.env.VITE_ALLOWED_ORIGINS ||
-          "http://localhost:5173,http://localhost:5174",
       }));
     }
   }, []);
@@ -108,8 +94,8 @@ export function SettingsPage() {
   };
 
   const handleAdminSave = () => {
-    if (!adminSettings.businessName || !adminSettings.apiUrl) {
-      setAdminError("Business Name and API URL are required");
+    if (!adminSettings.apiUrl) {
+      setAdminError("API URL is required");
       return;
     }
     try {
@@ -118,8 +104,7 @@ export function SettingsPage() {
       setAdminError("API URL must be a valid URL");
       return;
     }
-    const { stripeSecretKey: _secret, ...settingsToSave } = adminSettings;
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(settingsToSave));
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(adminSettings));
     api.updateApiBaseUrl(adminSettings.apiUrl);
     setAdminSaved(true);
     setAdminError("");
@@ -321,27 +306,35 @@ export function SettingsPage() {
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
         <div className="border-b border-gray-200">
           <nav className="flex -mb-px">
-            {(["site", "process", "testimonials", "categories"] as const).map(
-              (tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
-                    activeTab === tab
-                      ? "border-primary-500 text-primary-600"
-                      : "border-transparent text-dark-500 hover:text-dark-700 hover:border-dark-300"
-                  }`}
-                >
-                  {tab === "site"
+            {(
+              [
+                "admin",
+                "site",
+                "process",
+                "testimonials",
+                "categories",
+              ] as const
+            ).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                  activeTab === tab
+                    ? "border-primary-500 text-primary-600"
+                    : "border-transparent text-dark-500 hover:text-dark-700 hover:border-dark-300"
+                }`}
+              >
+                {tab === "admin"
+                  ? "Admin Config"
+                  : tab === "site"
                     ? "Site Content"
                     : tab === "process"
                       ? "Process"
                       : tab === "testimonials"
                         ? "Testimonials"
                         : "Categories"}
-                </button>
-              ),
-            )}
+              </button>
+            ))}
           </nav>
         </div>
 
@@ -707,6 +700,74 @@ export function SettingsPage() {
                 </div>
               )}
 
+              {/* ==================== ADMIN CONFIG TAB ==================== */}
+              {activeTab === "admin" && (
+                <div className="space-y-6">
+                  {adminError && (
+                    <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                      <span className="text-red-700">{adminError}</span>
+                    </div>
+                  )}
+                  {adminSaved && (
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                      <span className="text-green-700">
+                        Admin settings saved successfully!
+                      </span>
+                    </div>
+                  )}
+
+                  <p className="text-sm text-dark-500">
+                    These settings configure how the admin panel connects to the
+                    API. Business information and site content are managed on
+                    the Site Content tab and stored in the backend.
+                  </p>
+
+                  {/* API URL */}
+                  <Section
+                    title="API Configuration"
+                    icon={<Globe className="w-4 h-4" />}
+                  >
+                    <TextField
+                      label="API URL (Cloudflare Worker)"
+                      value={adminSettings.apiUrl}
+                      onChange={(v) => handleAdminChange("apiUrl", v)}
+                      placeholder="https://your-worker.workers.dev"
+                    />
+                  </Section>
+
+                  {/* Stripe Configuration */}
+                  <Section
+                    title="Stripe Configuration"
+                    icon={<Key className="w-4 h-4" />}
+                  >
+                    <TextField
+                      label="Publishable Key"
+                      value={adminSettings.stripePublishableKey}
+                      onChange={(v) =>
+                        handleAdminChange("stripePublishableKey", v)
+                      }
+                      placeholder="pk_test_..."
+                    />
+                    <p className="mt-2 text-xs text-dark-400">
+                      The Stripe secret key must be set as a Wrangler secret on
+                      the Cloudflare Worker (not stored client-side).
+                    </p>
+                  </Section>
+
+                  <div className="flex justify-end pt-4 border-t border-gray-200">
+                    <button
+                      onClick={handleAdminSave}
+                      className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+                    >
+                      <Save className="w-4 h-4" />
+                      Save Admin Settings
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* ==================== CATEGORIES TAB ==================== */}
               {activeTab === "categories" && (
                 <div className="space-y-4">
@@ -832,137 +893,21 @@ export function SettingsPage() {
               )}
 
               {/* Save Content Button */}
-              <div className="mt-6 flex justify-end pt-4 border-t border-gray-200">
-                <button
-                  onClick={handleSaveContent}
-                  disabled={isSaving}
-                  className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Save className="w-4 h-4" />
-                  {isSaving ? "Saving..." : "Save Content"}
-                </button>
-              </div>
+              {activeTab !== "admin" && (
+                <div className="mt-6 flex justify-end pt-4 border-t border-gray-200">
+                  <button
+                    onClick={handleSaveContent}
+                    disabled={isSaving}
+                    className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? "Saving..." : "Save Content"}
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
-      </div>
-
-      {/* Admin Configuration */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
-        <details>
-          <summary className="cursor-pointer font-heading text-xl font-semibold flex items-center gap-2 text-dark-900">
-            <Globe className="w-5 h-5 text-primary-500" />
-            Admin Configuration
-          </summary>
-
-          <div className="mt-4 space-y-6">
-            {adminError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
-                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-                <span className="text-red-700">{adminError}</span>
-              </div>
-            )}
-            {adminSaved && (
-              <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
-                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-                <span className="text-green-700">
-                  Admin settings saved successfully!
-                </span>
-              </div>
-            )}
-
-            {/* Business Info */}
-            <div>
-              <h3 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
-                <Store className="w-4 h-4 text-primary-500" />
-                Business Information
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TextField
-                  label="Business Name"
-                  value={adminSettings.businessName}
-                  onChange={(v) => handleAdminChange("businessName", v)}
-                />
-                <TextField
-                  label="Email"
-                  value={adminSettings.email}
-                  onChange={(v) => handleAdminChange("email", v)}
-                />
-                <TextField
-                  label="Phone"
-                  value={adminSettings.phone}
-                  onChange={(v) => handleAdminChange("phone", v)}
-                />
-                <TextField
-                  label="Location"
-                  value={adminSettings.location}
-                  onChange={(v) => handleAdminChange("location", v)}
-                />
-              </div>
-            </div>
-
-            {/* Stripe Configuration */}
-            <div>
-              <h3 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
-                <Key className="w-4 h-4 text-primary-500" />
-                Stripe Configuration
-              </h3>
-              <div className="space-y-4">
-                <TextField
-                  label="Publishable Key"
-                  value={adminSettings.stripePublishableKey}
-                  onChange={(v) => handleAdminChange("stripePublishableKey", v)}
-                  placeholder="pk_test_..."
-                />
-                <div>
-                  <TextField
-                    label="Secret Key"
-                    value={adminSettings.stripeSecretKey}
-                    onChange={(v) => handleAdminChange("stripeSecretKey", v)}
-                    placeholder="sk_test_..."
-                    type="password"
-                  />
-                  <p className="mt-1 text-xs text-dark-400">
-                    Note: Secret key should be stored in Cloudflare Worker
-                    environment variables, not here.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* API Configuration */}
-            <div>
-              <h3 className="font-heading text-lg font-semibold mb-4 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-primary-500" />
-                API Configuration
-              </h3>
-              <div className="space-y-4">
-                <TextField
-                  label="API URL (Cloudflare Worker)"
-                  value={adminSettings.apiUrl}
-                  onChange={(v) => handleAdminChange("apiUrl", v)}
-                  placeholder="https://your-worker.workers.dev"
-                />
-                <TextField
-                  label="Allowed Origins (CORS)"
-                  value={adminSettings.allowedOrigins}
-                  onChange={(v) => handleAdminChange("allowedOrigins", v)}
-                  placeholder="http://localhost:5173,https://example.com"
-                />
-              </div>
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                onClick={handleAdminSave}
-                className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
-              >
-                <Save className="w-4 h-4" />
-                Save Admin Settings
-              </button>
-            </div>
-          </div>
-        </details>
       </div>
     </div>
   );
