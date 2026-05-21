@@ -20,6 +20,16 @@ import {
   formatPrice,
 } from "../utils/badgeClasses";
 
+function getSavedProductsParams(): string {
+  const params = new URLSearchParams();
+  const search = sessionStorage.getItem("adminProductsSearch");
+  const category = sessionStorage.getItem("adminProductsCategory");
+  if (search) params.set("search", search);
+  if (category && category !== "ALL") params.set("category", category);
+  const qs = params.toString();
+  return qs ? `/products?${qs}` : "/products";
+}
+
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -48,7 +58,7 @@ export function ProductDetailPage() {
   const handleDelete = async () => {
     if (!product) return;
     await dispatch(deleteProduct(product.id));
-    navigate("/products");
+    navigate(getSavedProductsParams());
   };
 
   const handleCloseDialog = () => {
@@ -70,7 +80,7 @@ export function ProductDetailPage() {
           The requested product could not be loaded.
         </p>
         <Link
-          to="/products"
+          to={getSavedProductsParams()}
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           Back to Products
@@ -96,7 +106,7 @@ export function ProductDetailPage() {
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate("/products")}
+            onClick={() => navigate(getSavedProductsParams())}
             aria-label="Back to products"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >

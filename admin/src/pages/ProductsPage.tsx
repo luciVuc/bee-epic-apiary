@@ -57,6 +57,7 @@ export function ProductsPage() {
 
   const isLoadingMore = useRef(false);
   const initialLoadDone = useRef(false);
+  const isFirstRender = useRef(true);
   const lastDispatchedParams = useRef<{
     search?: string;
     category?: string;
@@ -82,9 +83,52 @@ export function ProductsPage() {
   useLayoutEffect(() => {
     if (!initialLoadDone.current) {
       initialLoadDone.current = true;
+
       const params: { search?: string; category?: string } = {};
-      if (searchTerm) params.search = searchTerm;
-      if (selectedCategory !== "ALL") params.category = selectedCategory;
+      let hasUrlParams = false;
+
+      if (searchTerm) {
+        params.search = searchTerm;
+        hasUrlParams = true;
+      }
+      if (selectedCategory !== "ALL") {
+        params.category = selectedCategory;
+        hasUrlParams = true;
+      }
+
+      const savedCount = sessionStorage.getItem("adminProductsCount");
+      const restoredCount = savedCount ? parseInt(savedCount, 10) : 0;
+
+      if (!hasUrlParams) {
+        const savedSearch = sessionStorage.getItem("adminProductsSearch");
+        const savedCategory = sessionStorage.getItem("adminProductsCategory");
+
+        if (savedSearch) params.search = savedSearch;
+        if (savedCategory && savedCategory !== "ALL")
+          params.category = savedCategory;
+        if (restoredCount > 10) (params as any).limit = restoredCount;
+
+        if (params.search || params.category) {
+          const newParams: Record<string, string> = {};
+          if (params.search) newParams.search = params.search;
+          if (params.category) newParams.category = params.category;
+          setSearchParams(newParams, { replace: true });
+          sessionStorage.removeItem("adminProductsSearch");
+          sessionStorage.removeItem("adminProductsCategory");
+          sessionStorage.removeItem("adminProductsCount");
+          if (restoredCount > 10) (params as any).limit = restoredCount;
+          dispatch(fetchProducts(params));
+          dispatch(fetchProductsCount(params));
+          return;
+        }
+      } else if (restoredCount > 10) {
+        (params as any).limit = restoredCount;
+      }
+
+      sessionStorage.removeItem("adminProductsSearch");
+      sessionStorage.removeItem("adminProductsCategory");
+      sessionStorage.removeItem("adminProductsCount");
+
       dispatch(fetchProducts(params));
       dispatch(fetchProductsCount(params));
     }
@@ -128,6 +172,12 @@ export function ProductsPage() {
 
     if (sameDispatchedSearch && sameDispatchedCat) return;
 
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      lastDispatchedParams.current = params;
+      return;
+    }
+
     searchTimer.current = setTimeout(async () => {
       lastDispatchedParams.current = params;
       await dispatch(fetchProducts(params));
@@ -140,7 +190,10 @@ export function ProductsPage() {
 
   const saveScroll = useCallback(() => {
     sessionStorage.setItem("adminProductsScrollY", String(window.scrollY));
-  }, []);
+    sessionStorage.setItem("adminProductsSearch", searchTerm);
+    sessionStorage.setItem("adminProductsCategory", selectedCategory);
+    sessionStorage.setItem("adminProductsCount", String(products.length));
+  }, [searchTerm, selectedCategory, products.length]);
 
   const handleLoadMore = () => {
     isLoadingMore.current = true;
