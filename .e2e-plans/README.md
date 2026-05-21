@@ -4,7 +4,7 @@ This directory contains End-to-End (E2E) test plans for this project. Plans are 
 
 ## Plans
 
-- [admin](admin.md) — Admin subproject E2E test plan (v2.0.0, 6 workflows)
+- [admin](admin.md) — Admin subproject E2E test plan (v8.0.0, 6 workflows)
 
 ## Usage
 

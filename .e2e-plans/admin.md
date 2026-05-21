@@ -12,8 +12,8 @@
 | Field              | Value                                   |
 | ------------------ | --------------------------------------- |
 | **Plan ID**        | `admin-v1`                              |
-| **Version**        | `7.0.0`                                 |
-| **Date**           | `2026-05-19`                            |
+| **Version**        | `8.0.0`                                 |
+| **Date**           | `2026-05-21`                            |
 | **Scope**          | Admin subproject — all workflows        |
 | **Auth Method**    | None (API-level token only, no UI auth) |
 | **Target Browser** | Playwright (Chromium)                   |
@@ -448,6 +448,8 @@ No data is modified in this workflow — it is read-only.
 | 6    | Clear all filters, verify full count restored   | Clear search input, set category to "All"            | N    | Count returns to original total; all products visible                                                         |
 | 7    | Scroll to bottom, click "Load More Products"    | Scroll until `button:has-text("Load More Products")` | N    | "Load More Products" button visible and clickable                                                             |
 | 8    | Verify pagination appended products             | Product list after clicking "Load More"              | N    | Additional 10 products appended; list grows; no duplicates                                                    |
+| 9    | Click a product, verify detail loads            | `a[href*="/products/"]` (first product name link)    | Y    | Navigates to `/products/:id`, detail page shows product info                                                  |
+| 10   | Click "Back to products", verify count+scroll   | `button[aria-label="Back to products"]`              | N    | Returns to `/products`, count shows same number as before navigation (e.g. 30), scroll position restored      |
 
 #### Detailed Steps
 
@@ -566,6 +568,55 @@ a11y check:   false
 Screenshot:   true
 ```
 
+**Step 9: Navigate to Product Detail from List**
+
+```
+Action:       Click on the first product's name link in the product table
+Selector:     a[href*="/products/"] — the first product name link in the desktop table
+              (use .first() to get the first matching link)
+Input:        N/A
+Wait for:     URL to change to /products/<stripe-id>
+Validate:     URL is /products/<stripe-id>, product detail page renders with the product's name,
+              price, category, description, weight, and stock status. The "Back to products"
+              button (aria-label="Back to products") is visible in the top bar.
+              *** REGRESSION CHECK: The back button MUST have aria-label="Back to products".
+              Use Playwright's page.locator('button[aria-label="Back to products"]')
+              to verify. If not found, file an issue report. ***
+Visual check: Detail page renders correctly, product images (if any) load without broken icons
+a11y check:   true
+Screenshot:   true
+```
+
+**Step 10: Navigate Back — Verify Count and Scroll Persistence**
+
+```
+Action:       Click the "Back to products" button (ArrowLeft icon) in the detail page header
+Selector:     button[aria-label="Back to products"]
+Input:        N/A
+Wait for:     URL to change back to /products AND the product list to finish loading
+Validate:     URL is /products. The "Showing X of Y products" count text shows the same
+              number of items as before navigating to the detail page — specifically, the
+              product list length from Step 8 (after Load More). For example, if 30 items
+              were shown before, "Showing 30 of Y products" should appear (not "Showing 10
+              of Y products"). The count reflects fresh data reloaded from the backend with
+              the same limit.
+              *** REGRESSION CHECK: If the count drops to 10 (the default page size) instead
+              of the previous count, file an issue report: the products page is falling back
+              to the initial 10-item fetch instead of reloading with the previous item count
+              (admin/src/pages/ProductsPage.tsx useLayoutEffect — the saved-state branch must
+              pass limit: <previousCount> to fetchProducts). ***
+Scroll check: Verify window.scrollY is close to the value set before navigating to detail
+              (captured in Step 8 before clicking the product link). Use
+              page.evaluate(() => window.scrollY) and compare it to the captured value.
+              A small difference (e.g. ±50px) is acceptable due to layout shifts from
+              fresh data, but the scroll position should be recognizably in the same area
+              of the page (not scrolled back to top).
+Visual check: Product list shows items, no loading spinner remains visible, scroll position
+              is recognizably the same part of the page as before navigation
+a11y check:   false
+Screenshot:   true
+```
+
 #### Edge Cases
 
 **Edge Case 1: Empty Search Results (No Filters)**
@@ -631,6 +682,34 @@ Variation:  Compare empty state message text when filters are active vs inactive
 Action:     Temporarily ensure no filters are active (category = "All", search = empty). Clear all filters and verify the "true empty" state message. Then apply filters and verify the "filtered empty" message. This edge case can be observed while testing Edge Cases 1-3.
 Input:      N/A
 Expected:   When no filters are active: empty state shows "Get started by adding your first product". When filters ARE active: empty state shows "Try adjusting your search or filter". The component code at ProductsPage.tsx:222-228 distinguishes these cases.
+Screenshot: true
+```
+
+**Edge Case 7: Back-Navigation After Load More — Count Persists**
+
+```
+Reference:  Happy Path Steps 8-10
+Variation:  Normal flow: load more, navigate to detail, navigate back, verify count
+Action:     Load at least 2 pages (20+ items), click a product, navigate back
+Input:      N/A
+Expected:   The "Showing X of Y products" count shows the same X as before navigating
+            to the detail page (e.g., 20, 30, etc.), not the default 10.
+            The scroll position is near where it was before navigating to detail.
+            No console errors, no infinite loading spinner.
+Screenshot: true
+```
+
+**Edge Case 8: Back-Navigation Without Load More (Single Page)**
+
+```
+Reference:  Happy Path Steps 9-10
+Variation:  Navigate to detail and back without ever clicking "Load More"
+Action:     With only the initial 10 items loaded, click a product name, navigate back
+Input:      N/A
+Expected:   Count shows "Showing 10 of Y products" — the default page size is preserved.
+            The back-navigation should not artificially inflate the count. This verifies
+            that the count-restoration logic correctly uses the previously-shown count
+            (10) rather than a hardcoded value.
 Screenshot: true
 ```
 
@@ -1885,3 +1964,4 @@ The testing agent MUST ask the user these questions before executing this plan. 
 | 5.0.0   | 2026-05-19 | e2e-tester          | Added regression checks for 5 known issues discovered during E2E test execution: (1) W1 Step 1 — root route must redirect to /dashboard, not stay at /; (2) W2 Step 2 — Edit/Delete icon buttons must have aria-label; (3) W3 Step 1 — Add Product form placeholders must be generic; (4) W3 Edge Case 7 — deleted product detail must show error state, not infinite spinner; (5) W6 Step 4 & Edge Case 3 — sidebar must actually hide on mobile via offsetParent/offsetWidth check.                                                                                                                                                                                                                 |
 | 6.0.0   | 2026-05-19 | e2e-tester          | Fixed all discovered issues: added aria-labels to 12 icon-only buttons (hamburger menu, sidebar close, notification bell, dialog close, back button, add/remove tag, image URL remove, settings trash buttons), added aria-label to category filter select. Updated W6 Step 4 regression check to verify sidebar container transform (-translate-x-full) instead of checking <nav> offsetWidth (which was a false positive). Added regression checks throughout plan to prevent regression of all fixed issues.                                                                                                                                                                                       |
 | 7.0.0   | 2026-05-19 | e2e-tester          | Added client-side price validation (price > 0) in ProductFormDialog handleSubmit, showing inline red error banner "Price must be greater than 0" instead of submitting. Added rejected handlers in productsSlice for createProduct and updateProduct thunks with proper error propagation from API. Error banner is dismissible and prevents modal from closing on failure. Added Edge Case 1b regression check for zero-price submission.                                                                                                                                                                                                                                                            |
+| 8.0.0   | 2026-05-21 | e2e-test-plan skill | Fixed products list back-navigation: when navigating back from product detail, the list now reloads from the backend with the same item count that was previously shown (not just the default 10), and scroll position is restored. Removed restoreProducts import from ProductsPage. Added Workflow 2 Steps 9-10 (detail navigation and back-count verification), Edge Case 7 (count persistence after load more), Edge Case 8 (back-navigation without load more).                                                                                                                                                                                                                                  |
