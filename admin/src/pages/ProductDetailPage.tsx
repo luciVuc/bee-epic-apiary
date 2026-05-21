@@ -20,14 +20,8 @@ import {
   formatPrice,
 } from "../utils/badgeClasses";
 
-function getSavedProductsParams(): string {
-  const params = new URLSearchParams();
-  const search = sessionStorage.getItem("adminProductsSearch");
-  const category = sessionStorage.getItem("adminProductsCategory");
-  if (search) params.set("search", search);
-  if (category && category !== "ALL") params.set("category", category);
-  const qs = params.toString();
-  return qs ? `/products?${qs}` : "/products";
+function getBackUrl(location: ReturnType<typeof useLocation>): string {
+  return (location.state as { from?: string } | null)?.from || "/products";
 }
 
 export function ProductDetailPage() {
@@ -58,11 +52,14 @@ export function ProductDetailPage() {
   const handleDelete = async () => {
     if (!product) return;
     await dispatch(deleteProduct(product.id));
-    navigate(getSavedProductsParams());
+    navigate(getBackUrl(location));
   };
 
   const handleCloseDialog = () => {
-    navigate(`/products/${id}`, { replace: true });
+    navigate(`/products/${id}`, {
+      replace: true,
+      state: { from: getBackUrl(location) },
+    });
   };
 
   const handleEdit = () => {
@@ -80,7 +77,7 @@ export function ProductDetailPage() {
           The requested product could not be loaded.
         </p>
         <Link
-          to={getSavedProductsParams()}
+          to={getBackUrl(location)}
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           Back to Products
@@ -101,12 +98,14 @@ export function ProductDetailPage() {
     return <ProductFormDialog productId={id} onClose={handleCloseDialog} />;
   }
 
+  const backUrl = getBackUrl(location);
+
   return (
     <div>
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
-            onClick={() => navigate(getSavedProductsParams())}
+            onClick={() => navigate(backUrl)}
             aria-label="Back to products"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >

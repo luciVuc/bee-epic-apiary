@@ -56,19 +56,16 @@ export function ProductsPage() {
   } = useSelector((state: RootState) => state.products);
 
   const isLoadingMore = useRef(false);
-  const initialLoadDone = useRef(false);
-  const isFirstRender = useRef(true);
-  const lastDispatchedParams = useRef<{
-    search?: string;
-    category?: string;
-  } | null>(null);
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const searchTerm = searchParams.get("search") || "";
   const selectedCategory = searchParams.get("category") || "ALL";
 
+  const prevSearch = useRef(searchTerm);
+  const prevCategory = useRef(selectedCategory);
+
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const updateSearchParams = useCallback(
     (search: string, category: string) => {
@@ -81,58 +78,14 @@ export function ProductsPage() {
   );
 
   useLayoutEffect(() => {
-    if (!initialLoadDone.current) {
-      initialLoadDone.current = true;
-
-      const params: { search?: string; category?: string } = {};
-      let hasUrlParams = false;
-
-      if (searchTerm) {
-        params.search = searchTerm;
-        hasUrlParams = true;
-      }
-      if (selectedCategory !== "ALL") {
-        params.category = selectedCategory;
-        hasUrlParams = true;
-      }
-
-      const savedCount = sessionStorage.getItem("adminProductsCount");
-      const restoredCount = savedCount ? parseInt(savedCount, 10) : 0;
-
-      if (!hasUrlParams) {
-        const savedSearch = sessionStorage.getItem("adminProductsSearch");
-        const savedCategory = sessionStorage.getItem("adminProductsCategory");
-
-        if (savedSearch) params.search = savedSearch;
-        if (savedCategory && savedCategory !== "ALL")
-          params.category = savedCategory;
-        if (restoredCount > 10) (params as any).limit = restoredCount;
-
-        if (params.search || params.category) {
-          const newParams: Record<string, string> = {};
-          if (params.search) newParams.search = params.search;
-          if (params.category) newParams.category = params.category;
-          setSearchParams(newParams, { replace: true });
-          sessionStorage.removeItem("adminProductsSearch");
-          sessionStorage.removeItem("adminProductsCategory");
-          sessionStorage.removeItem("adminProductsCount");
-          if (restoredCount > 10) (params as any).limit = restoredCount;
-          dispatch(fetchProducts(params));
-          dispatch(fetchProductsCount(params));
-          return;
-        }
-      } else if (restoredCount > 10) {
-        (params as any).limit = restoredCount;
-      }
-
-      sessionStorage.removeItem("adminProductsSearch");
-      sessionStorage.removeItem("adminProductsCategory");
-      sessionStorage.removeItem("adminProductsCount");
-
-      dispatch(fetchProducts(params));
-      dispatch(fetchProductsCount(params));
-    }
-  }, [dispatch]);
+    const params: { search?: string; category?: string; limit?: number } = {};
+    if (searchTerm) params.search = searchTerm;
+    if (selectedCategory !== "ALL") params.category = selectedCategory;
+    const limitParam = searchParams.get("limit");
+    if (limitParam) params.limit = parseInt(limitParam, 10);
+    dispatch(fetchProducts(params));
+    dispatch(fetchProductsCount(params));
+  }, []);
 
   useLayoutEffect(() => {
     const saved = sessionStorage.getItem("adminProductsScrollY");
@@ -158,28 +111,23 @@ export function ProductsPage() {
   }, []);
 
   useEffect(() => {
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-
-    const params: { search?: string; category?: string } = {};
-    if (searchTerm) params.search = searchTerm;
-    if (selectedCategory !== "ALL") params.category = selectedCategory;
-
-    const dispatched = lastDispatchedParams.current || {};
-    const sameDispatchedSearch =
-      (dispatched.search || "") === (params.search || "");
-    const sameDispatchedCat =
-      (dispatched.category || "ALL") === (params.category || "ALL");
-
-    if (sameDispatchedSearch && sameDispatchedCat) return;
-
-    if (isFirstRender.current) {
-      isFirstRender.current = false;
-      lastDispatchedParams.current = params;
+    if (
+      prevSearch.current === searchTerm &&
+      prevCategory.current === selectedCategory
+    ) {
+      prevSearch.current = searchTerm;
+      prevCategory.current = selectedCategory;
       return;
     }
 
+    prevSearch.current = searchTerm;
+    prevCategory.current = selectedCategory;
+
+    if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
-      lastDispatchedParams.current = params;
+      const params: { search?: string; category?: string } = {};
+      if (searchTerm) params.search = searchTerm;
+      if (selectedCategory !== "ALL") params.category = selectedCategory;
       await dispatch(fetchProducts(params));
       await dispatch(fetchProductsCount(params));
     }, 300);
@@ -190,13 +138,16 @@ export function ProductsPage() {
 
   const saveScroll = useCallback(() => {
     sessionStorage.setItem("adminProductsScrollY", String(window.scrollY));
-    sessionStorage.setItem("adminProductsSearch", searchTerm);
-    sessionStorage.setItem("adminProductsCategory", selectedCategory);
-    sessionStorage.setItem("adminProductsCount", String(products.length));
-  }, [searchTerm, selectedCategory, products.length]);
+  }, []);
 
   const handleLoadMore = () => {
     isLoadingMore.current = true;
+    const newLimit = products.length + 10;
+    const params: Record<string, string> = {};
+    if (searchTerm) params.search = searchTerm;
+    if (selectedCategory !== "ALL") params.category = selectedCategory;
+    params.limit = String(newLimit);
+    setSearchParams(params, { replace: true });
     saveScroll();
     dispatch(
       fetchProducts({
@@ -213,6 +164,8 @@ export function ProductsPage() {
     setDeleteConfirm(null);
   };
 
+  const currentUrl = `${location.pathname}${location.search}`;
+
   const handleAddProduct = () => {
     saveScroll();
     navigate("/products/new", { replace: true });
@@ -220,7 +173,10 @@ export function ProductsPage() {
 
   const handleEditProduct = (id: string) => {
     saveScroll();
-    navigate(`/products/${id}/edit`, { replace: true });
+    navigate(`/products/${id}/edit`, {
+      replace: true,
+      state: { from: currentUrl },
+    });
   };
 
   const handleCloseDialog = () => {
@@ -393,6 +349,7 @@ export function ProductsPage() {
                       <Link
                         to={`/products/${product.id}`}
                         onClick={saveScroll}
+                        state={{ from: currentUrl }}
                         className="flex items-center gap-3"
                       >
                         <img
@@ -542,6 +499,7 @@ export function ProductsPage() {
                   <Link
                     to={`/products/${product.id}`}
                     onClick={saveScroll}
+                    state={{ from: currentUrl }}
                     className="flex-1 text-center px-3 py-2 text-sm bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors"
                   >
                     View
