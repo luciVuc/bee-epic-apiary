@@ -1,26 +1,10 @@
-// workers/create-price.ts
 import Stripe from 'stripe';
-import { jsonResponse, isValidUrl, withStripeHandler } from '../../utils';
+import { jsonResponse, withStripeHandler } from '../../utils';
 
-/**
- * Stripe Price Create Handler
- *
- * Handles POST /prices requests to create a new Stripe price for a product.
- * Requires authentication if API_SECRET_KEY is set.
- *
- * @module create-price
- */
-
-/**
- * Inner handler for creating prices.
- * Exported for testing with mocked Stripe instances.
- */
 export async function handleCreatePrice(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
-		// Parse request body
 		const priceData = (await request.json()) as Stripe.PriceCreateParams;
 
-		// Basic validation
 		if (!priceData.product || typeof priceData.product !== 'string') {
 			return jsonResponse({ error: 'Product ID is required' }, 400, origin, env);
 		}
@@ -33,7 +17,6 @@ export async function handleCreatePrice(stripe: Stripe, request: Request, env: E
 			return jsonResponse({ error: 'Currency is required' }, 400, origin, env);
 		}
 
-		// Validate lookup_key if provided
 		if (priceData.lookup_key && typeof priceData.lookup_key !== 'string') {
 			return jsonResponse({ error: 'lookup_key must be a string' }, 400, origin, env);
 		}
@@ -48,26 +31,6 @@ export async function handleCreatePrice(stripe: Stripe, request: Request, env: E
 	}
 }
 
-/**
- * Export default fetch handler for POST /prices endpoint
- * Creates a new Stripe price with validation
- *
- * @type {ExportedHandler<Env>}
- * @param {Stripe} stripe - Initialized Stripe client
- * @param {Request} request - Incoming HTTP request with price data
- * @param {Env} env - Cloudflare Worker environment variables
- * @param {string | null} origin - Request origin for CORS headers
- * @returns {Promise<Response>} JSON response with created price
- *
- * @example
- * // Request body:
- * // {
- * //   "product": "prod_123",
- * //   "unit_amount": 2000,
- * //   "currency": "usd",
- * //   "lookup_key": "premium_monthly"
- * // }
- */
 export default {
-	fetch: withStripeHandler('POST', handleCreatePrice),
+	fetch: withStripeHandler('POST', handleCreatePrice, { requireAuth: true }),
 } satisfies ExportedHandler<Env>;

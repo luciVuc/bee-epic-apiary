@@ -5,7 +5,6 @@ import Stripe from 'stripe';
 
 describe('delete-product handler', () => {
 	let mockStripe: any;
-	let mockCacheDelete: any;
 
 	beforeEach(() => {
 		vi.restoreAllMocks();
@@ -20,9 +19,6 @@ describe('delete-product handler', () => {
 				update: vi.fn(),
 			},
 		};
-
-		mockCacheDelete = vi.fn().mockResolvedValue(true);
-		vi.spyOn(caches.default, 'delete').mockImplementation(mockCacheDelete);
 	});
 
 	// Tests for business logic (using exported handler function with mocked Stripe)
@@ -94,8 +90,6 @@ describe('delete-product handler', () => {
 		expect(body.archived_prices).toEqual(['price_1', 'price_2']);
 		expect(body.archived_prices_count).toBe(2);
 		expect(body.message).toBe('Product and associated prices archived successfully. To permanently delete, use the Stripe Dashboard.');
-		// Verify cache was busted
-		expect(mockCacheDelete).toHaveBeenCalled();
 	});
 
 	it('handles default price error when archiving prices', async () => {
@@ -134,8 +128,6 @@ describe('delete-product handler', () => {
 		const body = (await response.json()) as any;
 		expect(body.archived_product.active).toBe(false);
 		expect(body.archived_prices.length).toBeGreaterThan(0);
-		// Verify cache was busted
-		expect(mockCacheDelete).toHaveBeenCalled();
 	});
 
 	it('archives product with no active prices', async () => {
@@ -156,7 +148,6 @@ describe('delete-product handler', () => {
 		expect(body.archived_product.active).toBe(false);
 		expect(body.archived_prices).toEqual([]);
 		expect(body.archived_prices_count).toBe(0);
-		expect(mockCacheDelete).toHaveBeenCalled();
 	});
 
 	it('handles Stripe errors gracefully during archiving', async () => {

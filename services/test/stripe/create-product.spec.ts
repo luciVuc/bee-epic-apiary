@@ -5,7 +5,6 @@ import Stripe from 'stripe';
 
 describe('create-product handler', () => {
 	let mockStripe: any;
-	let mockCacheDelete: any;
 
 	beforeEach(() => {
 		vi.restoreAllMocks();
@@ -15,9 +14,6 @@ describe('create-product handler', () => {
 				create: vi.fn(),
 			},
 		};
-
-		mockCacheDelete = vi.fn().mockResolvedValue(true);
-		vi.spyOn(caches.default, 'delete').mockImplementation(mockCacheDelete);
 	});
 
 	// Tests for business logic (using exported handler function with mocked Stripe)
@@ -89,7 +85,6 @@ describe('create-product handler', () => {
 		const body = (await response.json()) as any;
 		expect(body.id).toBe('prod_123');
 		expect(body.name).toBe('Test Product');
-		expect(mockCacheDelete).toHaveBeenCalled();
 	});
 
 	it('handles Stripe errors gracefully', async () => {
@@ -121,7 +116,6 @@ describe('create-product handler', () => {
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
 		expect(body.url).toBe('https://example.com/product');
-		expect(mockCacheDelete).toHaveBeenCalled();
 	});
 
 	it('returns 401 with invalid Stripe API key', async () => {

@@ -6,81 +6,43 @@ import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
 import createPriceHandler from './stripe/price/create-price';
 import settingsHandler from './settings/settings-handler';
-import { z } from 'zod';
-import { categorySchema } from './schemas';
 import { jsonResponse, handleCORS, checkAuth, isAllowedOrigin } from './utils';
 
-/**
- * Routes incoming HTTP requests to the appropriate handler based on pathname and HTTP method.
- * Handles CORS preflight, authentication for protected routes, and method validation.
- *
- * @param {Request} request - The incoming HTTP request
- * @param {Env} env - Cloudflare Worker environment variables and bindings
- * @returns {Promise<Response>} The HTTP response from the matched handler
- *
- * @example
- * // Routes /checkout to checkout handler
- * // Routes /products to product handlers (with auth for POST)
- * // Routes /products/:id to product handlers (with auth for PUT, DELETE)
- */
 export const router = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
 	const pathname = url.pathname;
 	const origin = request.headers.get('Origin');
 
-	// Route: /checkout (Stripe checkout session creation)
+	// Route: /checkout
 	if (pathname === '/checkout' || pathname === '/checkout/') {
 		return checkoutHandler.fetch(request, env);
 	}
 
-	// Route: /prices (Price creation)
+	// Route: /prices
 	if (pathname === '/prices' || pathname === '/prices/') {
-		if (request.method === 'POST') {
-			if (!isAllowedOrigin(origin, env)) {
-				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
-			}
-			const auth = checkAuth(request, env);
-			if (!auth.authenticated) return auth.error!;
-			return createPriceHandler.fetch(request, env);
-		}
+		if (request.method === 'POST') return createPriceHandler.fetch(request, env);
 		if (request.method === 'OPTIONS') return createPriceHandler.fetch(request, env);
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
-	// Route: /products (Product CRUD operations)
+	// Route: /products
 	if (pathname === '/products' || pathname === '/products/') {
-		// Check authentication for POST (create)
-		if (request.method === 'POST') {
-			if (!isAllowedOrigin(origin, env)) {
-				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
-			}
-			const auth = checkAuth(request, env);
-			if (!auth.authenticated) return auth.error!;
-			return createProductHandler.fetch(request, env);
-		}
+		if (request.method === 'POST') return createProductHandler.fetch(request, env);
 		if (request.method === 'GET') return getProductsHandler.fetch(request, env);
 		if (request.method === 'OPTIONS') return createProductHandler.fetch(request, env);
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
-	// Route: /products/count (Product count)
+	// Route: /products/count
 	if (pathname === '/products/count' || pathname === '/products/count/') {
 		if (request.method === 'GET') return getProductsCountHandler.fetch(request, env);
 		if (request.method === 'OPTIONS') return getProductsCountHandler.fetch(request, env);
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
-	// Route: /products/:id (Product operations by ID)
+	// Route: /products/:id
 	const productIdMatch = pathname.match(/^\/products\/([^/]+)$/);
 	if (productIdMatch) {
-		// Check authentication for PUT and DELETE
-		if (request.method === 'PUT' || request.method === 'DELETE') {
-			if (!isAllowedOrigin(origin, env)) {
-				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
-			}
-			const auth = checkAuth(request, env);
-			if (!auth.authenticated) return auth.error!;
-		}
 		if (request.method === 'PUT') return updateProductHandler.fetch(request, env);
 		if (request.method === 'DELETE') return deleteProductHandler.fetch(request, env);
 		if (request.method === 'GET') return getProductsHandler.fetch(request, env);
@@ -92,7 +54,7 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
-	// Route: /settings/:type (Content settings)
+	// Route: /settings/:type
 	const settingsMatch = pathname.match(/^\/settings\/(site|process|testimonials|categories)$/);
 	if (settingsMatch) {
 		const type = settingsMatch[1];
@@ -105,7 +67,6 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 			const auth = checkAuth(request, env);
 			if (!auth.authenticated) return auth.error!;
 
-			// Clone the request to avoid body consumption issues
 			const clonedRequest = new Request(request.clone());
 			return settingsHandler.fetch(clonedRequest, env);
 		}
