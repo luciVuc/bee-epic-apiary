@@ -1,0 +1,100 @@
+import {
+  Store,
+  Globe,
+  Key,
+  Save,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
+import { TextField, Section } from "../../components/forms";
+import type { IAdminSettings } from "../../types";
+
+interface AdminConfigTabProps {
+  adminSettings: IAdminSettings;
+  adminSaved: boolean;
+  adminError: string;
+  onAdminChange: (field: keyof IAdminSettings, value: string) => void;
+  onAdminSave: () => void;
+}
+
+export function AdminConfigTab({
+  adminSettings,
+  adminSaved,
+  adminError,
+  onAdminChange,
+  onAdminSave,
+}: AdminConfigTabProps) {
+  return (
+    <div className="space-y-6">
+      {adminError && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+          <span className="text-red-700">{adminError}</span>
+        </div>
+      )}
+      {adminSaved && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+          <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+          <span className="text-green-700">
+            Admin settings saved successfully!
+          </span>
+        </div>
+      )}
+
+      <p className="text-sm text-dark-500">
+        These settings configure how the admin panel connects to the API.
+        Business information and site content are managed on the Site Content
+        tab and stored in the backend.
+      </p>
+
+      <Section title="API Configuration" icon={<Globe className="w-4 h-4" />}>
+        <TextField
+          label="API URL (Cloudflare Worker)"
+          value={adminSettings.apiUrl}
+          onChange={(v) => onAdminChange("apiUrl", v)}
+          placeholder="https://your-worker.workers.dev"
+        />
+      </Section>
+
+      <Section title="API Secret Key" icon={<Key className="w-4 h-4" />}>
+        <TextField
+          label="API Secret Key"
+          value={adminSettings.apiSecretKey || ""}
+          onChange={(v) => onAdminChange("apiSecretKey", v)}
+          placeholder="sk_live_..."
+          type="password"
+        />
+        <p className="mt-2 text-xs text-dark-400">
+          Stored in browser localStorage, never sent to the server. Used to
+          authenticate API requests to the Cloudflare Worker.
+        </p>
+      </Section>
+
+      <Section
+        title="Stripe Configuration"
+        icon={<Store className="w-4 h-4" />}
+      >
+        <TextField
+          label="Publishable Key"
+          value={adminSettings.stripePublishableKey}
+          onChange={(v) => onAdminChange("stripePublishableKey", v)}
+          placeholder="pk_test_..."
+        />
+        <p className="mt-2 text-xs text-dark-400">
+          The Stripe secret key must be set as a Wrangler secret on the
+          Cloudflare Worker (not stored client-side).
+        </p>
+      </Section>
+
+      <div className="flex justify-end pt-4 border-t border-gray-200">
+        <button
+          onClick={onAdminSave}
+          className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+        >
+          <Save className="w-4 h-4" />
+          Save Admin Settings
+        </button>
+      </div>
+    </div>
+  );
+}

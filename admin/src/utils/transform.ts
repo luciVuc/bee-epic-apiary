@@ -2,11 +2,12 @@ import type { IProduct, IProductInput } from "../types";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL } from "./constants";
 
-const DEFAULT_IMAGES = [DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL];
 import type {
   StripeProductResponse,
   StripePriceResponse,
 } from "../types/stripe";
+
+const DEFAULT_IMAGES = [DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL];
 
 /**
  * Transform Stripe product to admin product format

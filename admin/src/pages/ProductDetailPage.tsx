@@ -10,8 +10,15 @@ import {
   setSelectedProduct,
 } from "../store/productsSlice";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
+import { DeleteConfirmDialog } from "../components/shared/DeleteConfirmDialog";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_IMAGE } from "../utils/constants";
+import {
+  stockBadgeClass,
+  stockLabel,
+  recurringText,
+  formatPrice,
+} from "../utils/badgeClasses";
 
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -177,13 +184,9 @@ export function ProductDetailPage() {
               <div className="flex items-center justify-between">
                 <span className="text-dark-600">Stock Status</span>
                 <span
-                  className={`px-2 py-1 text-xs font-medium rounded-full ${
-                    product.inStock
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
-                  }`}
+                  className={`px-2 py-1 text-xs font-medium rounded-full ${stockBadgeClass(product.inStock)}`}
                 >
-                  {product.inStock ? "In Stock" : "Out of Stock"}
+                  {stockLabel(product.inStock)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
@@ -215,13 +218,14 @@ export function ProductDetailPage() {
               <div>
                 <span className="text-sm text-dark-500">Price</span>
                 <p className="text-2xl font-bold text-dark-900">
-                  ${(product.price / 100).toFixed(2)}
+                  {formatPrice(product.price)}
                 </p>
                 {product.recurringInterval && (
                   <p className="text-sm text-blue-600 mt-1">
-                    every {product.recurringIntervalCount || 1}{" "}
-                    {product.recurringInterval}
-                    {(product.recurringIntervalCount || 1) > 1 ? "s" : ""}
+                    {recurringText(
+                      product.recurringInterval,
+                      product.recurringIntervalCount,
+                    )}
                   </p>
                 )}
               </div>
@@ -270,36 +274,15 @@ export function ProductDetailPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
-      {deleteConfirm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-            <h3 className="font-heading text-xl font-semibold mb-4">
-              Confirm Delete
-            </h3>
-            <p className="text-dark-600 mb-6">
-              Are you sure you want to delete "{product?.name}"? This action
-              cannot be undone.
-            </p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setDeleteConfirm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setDeleteConfirm(false);
-                  handleDelete();
-                }}
-                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmDialog
+        isOpen={deleteConfirm}
+        productName={product.name}
+        onCancel={() => setDeleteConfirm(false)}
+        onConfirm={() => {
+          setDeleteConfirm(false);
+          handleDelete();
+        }}
+      />
     </div>
   );
 }

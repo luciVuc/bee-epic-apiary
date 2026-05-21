@@ -59,4 +59,5 @@ export interface IDashboardStats {
 export interface IAdminSettings {
   apiUrl: string;
   stripePublishableKey: string;
+  apiSecretKey?: string;
 }

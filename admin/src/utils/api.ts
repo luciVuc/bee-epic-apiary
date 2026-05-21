@@ -7,6 +7,7 @@ import {
   transformToStripeParams,
   transformToStripePriceParams,
 } from "./transform";
+import { SETTINGS_STORAGE_KEY } from "./constants";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
@@ -17,9 +18,21 @@ const apiClient = axios.create({
   },
 });
 
-// Add auth interceptor if API key is set
+function getApiKey(): string | null {
+  try {
+    const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed.apiSecretKey) return parsed.apiSecretKey;
+    }
+  } catch {
+    /* ignore */
+  }
+  return import.meta.env.VITE_API_SECRET_KEY || null;
+}
+
 apiClient.interceptors.request.use((config) => {
-  const apiKey = import.meta.env.VITE_API_SECRET_KEY;
+  const apiKey = getApiKey();
   if (apiKey) {
     config.headers.Authorization = `Bearer ${apiKey}`;
   }
@@ -97,23 +110,34 @@ export const api = {
     const productResponse = await apiClient.post("/products", productParams);
     const createdProduct = productResponse.data;
 
-    // Step 2: Create a price for the product in Stripe
-    const isSubscription = product.category === EProductCategory.SUBSCRIPTIONS;
-    const priceData = await createStripePrice(
-      createdProduct.id,
-      product.price,
-      product.slug,
-      isSubscription ? product.recurringInterval : undefined,
-      isSubscription ? product.recurringIntervalCount : undefined,
-    );
+    try {
+      // Step 2: Create a price for the product in Stripe
+      const isSubscription =
+        product.category === EProductCategory.SUBSCRIPTIONS;
+      const priceData = await createStripePrice(
+        createdProduct.id,
+        product.price,
+        product.slug,
+        isSubscription ? product.recurringInterval : undefined,
+        isSubscription ? product.recurringIntervalCount : undefined,
+      );
 
-    // Step 3: Update the product to set the default_price
-    await apiClient.put(`/products/${createdProduct.id}`, {
-      default_price: priceData.id,
-    });
+      // Step 3: Update the product to set the default_price
+      await apiClient.put(`/products/${createdProduct.id}`, {
+        default_price: priceData.id,
+      });
 
-    // Return the full product with price info
-    return api.getProductById(createdProduct.id);
+      // Return the full product with price info
+      return api.getProductById(createdProduct.id);
+    } catch (err) {
+      // Rollback: delete the orphaned product if price creation fails
+      try {
+        await apiClient.delete(`/products/${createdProduct.id}`);
+      } catch {
+        /* best-effort cleanup */
+      }
+      throw err;
+    }
   },
 
   updateProduct: async (id: string, product: Partial<IProductInput>) => {
@@ -123,17 +147,21 @@ export const api = {
 
     // Step 2: If price changed, create a new price and update default_price
     if (product.price !== undefined) {
-      const isSubscription =
-        product.category === EProductCategory.SUBSCRIPTIONS;
-      const priceData = await createStripePrice(
-        id,
-        product.price,
-        undefined, // Don't set lookup_key to avoid conflicts
-        isSubscription ? product.recurringInterval : undefined,
-        isSubscription ? product.recurringIntervalCount : undefined,
-      );
+      let priceData;
+      try {
+        const isSubscription =
+          product.category === EProductCategory.SUBSCRIPTIONS;
+        priceData = await createStripePrice(
+          id,
+          product.price,
+          undefined,
+          isSubscription ? product.recurringInterval : undefined,
+          isSubscription ? product.recurringIntervalCount : undefined,
+        );
+      } catch (err) {
+        throw err;
+      }
 
-      // Update the product to set the new default_price
       await apiClient.put(`/products/${id}`, {
         default_price: priceData.id,
       });

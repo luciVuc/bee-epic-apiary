@@ -6,7 +6,12 @@ import {
   useCallback,
 } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useSearchParams,
+} from "react-router-dom";
 import {
   Plus,
   Search,
@@ -24,22 +29,30 @@ import {
   fetchProductsCount,
 } from "../store/productsSlice";
 import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
-import { EProductCategory } from "../types";
 import type { ICategory } from "../types/settings";
 import * as api from "../utils/api";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
+import { DeleteConfirmDialog } from "../components/shared/DeleteConfirmDialog";
+import {
+  stockBadgeClass,
+  stockLabel,
+  categoryBadgeClass,
+  categoryLabel,
+  recurringText,
+  formatPrice,
+} from "../utils/badgeClasses";
 
 export function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const {
     items: products,
     loading,
     error,
     hasMore,
     totalCount,
-    lastFetchParams,
   } = useSelector((state: RootState) => state.products);
 
   const isLoadingMore = useRef(false);
@@ -48,59 +61,36 @@ export function ProductsPage() {
     search?: string;
     category?: string;
   } | null>(null);
-  const savedStateRef = useRef({
-    products,
-    hasMore,
-    totalCount,
-    lastFetchParams,
-  });
-  savedStateRef.current = { products, hasMore, totalCount, lastFetchParams };
-  const [searchTerm, setSearchTerm] = useState(
-    () => sessionStorage.getItem("adminProductsSearch") || "",
-  );
-  const [selectedCategory, setSelectedCategory] = useState(
-    () => sessionStorage.getItem("adminProductsCategory") || "ALL",
-  );
+
+  const searchTerm = searchParams.get("search") || "";
+  const selectedCategory = searchParams.get("category") || "ALL";
+
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
+  const updateSearchParams = useCallback(
+    (search: string, category: string) => {
+      const params: Record<string, string> = {};
+      if (search) params.search = search;
+      if (category && category !== "ALL") params.category = category;
+      setSearchParams(params, { replace: true });
+    },
+    [setSearchParams],
+  );
+
   useLayoutEffect(() => {
     if (!initialLoadDone.current) {
       initialLoadDone.current = true;
-      const savedState = sessionStorage.getItem("adminProductsState");
-      if (savedState) {
-        try {
-          const parsed = JSON.parse(savedState);
-          sessionStorage.removeItem("adminProductsState");
-          const itemCount = parsed.items?.length || 10;
-          const lastParams = parsed.lastFetchParams || {};
-          const refreshParams: {
-            limit: number;
-            search?: string;
-            category?: string;
-          } = { limit: itemCount };
-          if (lastParams.search) refreshParams.search = lastParams.search;
-          if (lastParams.category) refreshParams.category = lastParams.category;
-          dispatch(fetchProducts(refreshParams));
-          dispatch(
-            fetchProductsCount({
-              search: refreshParams.search,
-              category: refreshParams.category,
-            }),
-          );
-          return;
-        } catch {
-          /* fall through to fetch */
-        }
-      }
       const params: { search?: string; category?: string } = {};
       if (searchTerm) params.search = searchTerm;
       if (selectedCategory !== "ALL") params.category = selectedCategory;
       dispatch(fetchProducts(params));
       dispatch(fetchProductsCount(params));
-      return;
     }
+  }, [dispatch]);
+
+  useLayoutEffect(() => {
     const saved = sessionStorage.getItem("adminProductsScrollY");
     if (!saved) return;
     const y = parseInt(saved, 10);
@@ -110,7 +100,7 @@ export function ProductsPage() {
       sessionStorage.removeItem("adminProductsScrollY");
     });
     return () => cancelAnimationFrame(id);
-  }, [dispatch]);
+  }, []);
 
   useEffect(() => {
     api.api
@@ -130,17 +120,12 @@ export function ProductsPage() {
     if (searchTerm) params.search = searchTerm;
     if (selectedCategory !== "ALL") params.category = selectedCategory;
 
-    const last = lastFetchParams || {};
-    const sameSearch = (last.search || "") === (params.search || "");
-    const sameCat = (last.category || "ALL") === (params.category || "ALL");
-
     const dispatched = lastDispatchedParams.current || {};
     const sameDispatchedSearch =
       (dispatched.search || "") === (params.search || "");
     const sameDispatchedCat =
       (dispatched.category || "ALL") === (params.category || "ALL");
 
-    if (sameSearch && sameCat && products.length > 0) return;
     if (sameDispatchedSearch && sameDispatchedCat) return;
 
     searchTimer.current = setTimeout(async () => {
@@ -151,39 +136,11 @@ export function ProductsPage() {
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
-  }, [
-    searchTerm,
-    selectedCategory,
-    dispatch,
-    lastFetchParams,
-    products.length,
-  ]);
+  }, [searchTerm, selectedCategory, dispatch]);
 
   const saveScroll = useCallback(() => {
     sessionStorage.setItem("adminProductsScrollY", String(window.scrollY));
-    sessionStorage.setItem("adminProductsSearch", searchTerm);
-    sessionStorage.setItem("adminProductsCategory", selectedCategory);
-  }, [searchTerm, selectedCategory]);
-
-  useEffect(() => {
-    return () => {
-      sessionStorage.setItem("adminProductsSearch", searchTerm);
-      sessionStorage.setItem("adminProductsCategory", selectedCategory);
-      const s = savedStateRef.current;
-      if (s.products.length > 0) {
-        sessionStorage.setItem(
-          "adminProductsState",
-          JSON.stringify({
-            items: s.products,
-            hasMore: s.hasMore,
-            lastId: s.products[s.products.length - 1]?.id || null,
-            totalCount: s.totalCount,
-            lastFetchParams: s.lastFetchParams,
-          }),
-        );
-      }
-    };
-  }, [searchTerm, selectedCategory]);
+  }, []);
 
   const handleLoadMore = () => {
     isLoadingMore.current = true;
@@ -199,7 +156,6 @@ export function ProductsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    saveScroll();
     await dispatch(deleteProduct(id));
     setDeleteConfirm(null);
   };
@@ -217,6 +173,18 @@ export function ProductsPage() {
   const handleCloseDialog = () => {
     navigate("/products", { replace: true });
   };
+
+  const handleSearchChange = (value: string) => {
+    updateSearchParams(value, selectedCategory);
+  };
+
+  const handleCategoryChange = (value: string) => {
+    updateSearchParams(searchTerm, value);
+  };
+
+  const deleteTarget = deleteConfirm
+    ? products.find((p) => p.id === deleteConfirm)
+    : null;
 
   if (
     loading &&
@@ -264,12 +232,12 @@ export function ProductsPage() {
               type="text"
               placeholder="Search products..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
             {searchTerm && (
               <button
-                onClick={() => setSearchTerm("")}
+                onClick={() => handleSearchChange("")}
                 aria-label="Clear search"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
               >
@@ -283,7 +251,7 @@ export function ProductsPage() {
             <Filter className="w-4 h-4 text-dark-400" />
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => handleCategoryChange(e.target.value)}
               aria-label="Filter by category"
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
@@ -336,6 +304,7 @@ export function ProductsPage() {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
             </div>
           )}
+
           {/* Desktop table view */}
           <div className="hidden md:flex flex-col overflow-x-auto">
             <table className="w-full">
@@ -393,38 +362,30 @@ export function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.category === EProductCategory.SUBSCRIPTIONS
-                            ? "bg-blue-100 text-blue-700"
-                            : "bg-primary-50 text-primary-700"
-                        }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${categoryBadgeClass(product.category)}`}
                       >
-                        {product.category === EProductCategory.SUBSCRIPTIONS
-                          ? "Subscription"
-                          : product.category}
+                        {categoryLabel(product.category)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-dark-700">
-                        ${(product.price / 100).toFixed(2)}
+                        {formatPrice(product.price)}
                       </span>
                       {product.recurringInterval && (
                         <p className="text-xs text-blue-600 mt-0.5">
-                          / {product.recurringIntervalCount || 1}{" "}
-                          {product.recurringInterval}
-                          {(product.recurringIntervalCount || 1) > 1 ? "s" : ""}
+                          /{" "}
+                          {recurringText(
+                            product.recurringInterval,
+                            product.recurringIntervalCount,
+                          )}
                         </p>
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.inStock
-                            ? "bg-green-100 text-green-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${stockBadgeClass(product.inStock)}`}
                       >
-                        {product.inStock ? "In Stock" : "Out of Stock"}
+                        {stockLabel(product.inStock)}
                       </span>
                     </td>
                     <td className="px-1 py-4">
@@ -457,46 +418,6 @@ export function ProductsPage() {
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
-
-                      {/* Delete Confirmation - Desktop */}
-                      {deleteConfirm === product.id && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                          <div className="bg-white rounded-xl p-6 max-w-md w-full mx-4">
-                            <h3
-                              className="font-heading text-xl font-semibold mb-4"
-                              style={{
-                                textAlign: "justify",
-                              }}
-                            >
-                              Confirm Delete
-                            </h3>
-                            <p
-                              className="text-dark-600 mb-6"
-                              style={{
-                                whiteSpace: "initial",
-                                textAlign: "justify",
-                              }}
-                            >
-                              Are you sure you want to delete "{product.name}
-                              "? This action cannot be undone.
-                            </p>
-                            <div className="flex gap-3 justify-end">
-                              <button
-                                onClick={() => setDeleteConfirm(null)}
-                                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-                              >
-                                Cancel
-                              </button>
-                              <button
-                                onClick={() => handleDelete(product.id)}
-                                className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                              >
-                                Delete
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      )}
                     </td>
                   </tr>
                 ))}
@@ -528,40 +449,32 @@ export function ProductsPage() {
                   <div>
                     <span className="text-dark-500">Category:</span>
                     <span
-                      className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${
-                        product.category === EProductCategory.SUBSCRIPTIONS
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-primary-50 text-primary-700"
-                      }`}
+                      className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${categoryBadgeClass(product.category)}`}
                     >
-                      {product.category === EProductCategory.SUBSCRIPTIONS
-                        ? "Subscription"
-                        : product.category}
+                      {categoryLabel(product.category)}
                     </span>
                   </div>
                   <div>
                     <span className="text-dark-500">Price:</span>
                     <span className="ml-1 text-dark-700">
-                      ${(product.price / 100).toFixed(2)}
+                      {formatPrice(product.price)}
                     </span>
                     {product.recurringInterval && (
                       <span className="ml-1 text-xs text-blue-600">
-                        / {product.recurringIntervalCount || 1}{" "}
-                        {product.recurringInterval}
-                        {(product.recurringIntervalCount || 1) > 1 ? "s" : ""}
+                        /{" "}
+                        {recurringText(
+                          product.recurringInterval,
+                          product.recurringIntervalCount,
+                        )}
                       </span>
                     )}
                   </div>
                   <div>
                     <span className="text-dark-500">Status:</span>
                     <span
-                      className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${
-                        product.inStock
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                      className={`ml-1 px-2 py-1 text-xs font-medium rounded-full ${stockBadgeClass(product.inStock)}`}
                     >
-                      {product.inStock ? "In Stock" : "Out of Stock"}
+                      {stockLabel(product.inStock)}
                     </span>
                   </div>
                   <div>
@@ -593,36 +506,10 @@ export function ProductsPage() {
                     Delete
                   </button>
                 </div>
-
-                {/* Delete Confirmation - Mobile */}
-                {deleteConfirm === product.id && (
-                  <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <h3 className="font-medium text-red-900 mb-2">
-                      Confirm Delete
-                    </h3>
-                    <p className="text-sm text-red-700 mb-3">
-                      Are you sure you want to delete "{product.name}"? This
-                      action cannot be undone.
-                    </p>
-                    <div className="flex gap-2 justify-end">
-                      <button
-                        onClick={() => setDeleteConfirm(null)}
-                        className="px-3 py-1 border border-gray-300 rounded text-sm hover:bg-gray-50"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        className="px-3 py-1 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </div>
-                )}
               </div>
             ))}
           </div>
+
           {/* Load More Button */}
           {hasMore && (
             <div className="mt-6 text-center">
@@ -637,6 +524,14 @@ export function ProductsPage() {
           )}
         </div>
       )}
+
+      {/* Shared Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={deleteConfirm !== null}
+        productName={deleteTarget?.name || ""}
+        onCancel={() => setDeleteConfirm(null)}
+        onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+      />
 
       {/* Product Form Dialog */}
       {location.pathname === "/products/new" && (

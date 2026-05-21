@@ -47,6 +47,7 @@ export function ProductFormDialog({
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [fetchingEditData, setFetchingEditData] = useState(false);
 
   useEffect(() => {
     setTagInput("");
@@ -77,9 +78,16 @@ export function ProductFormDialog({
 
   useEffect(() => {
     if (productId && (!selectedProduct || selectedProduct.id !== productId)) {
+      setFetchingEditData(true);
       dispatch(fetchProductById(productId));
     }
   }, [dispatch, productId]);
+
+  useEffect(() => {
+    if (selectedProduct && selectedProduct.id === productId) {
+      setFetchingEditData(false);
+    }
+  }, [selectedProduct, productId]);
 
   useEffect(() => {
     if (isEditMode && selectedProduct) {
@@ -220,358 +228,374 @@ export function ProductFormDialog({
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Basic Info */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
-                Product Name *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                placeholder="Enter product name"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
-                Slug *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.slug}
-                onChange={(e) => handleInputChange("slug", e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:details focus:border-primary-500 outline-none"
-                placeholder="product-slug"
-              />
-            </div>
+        {isEditMode && fetchingEditData ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
           </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-sm font-medium text-dark-700 mb-2">
-              Short Description *
-            </label>
-            <input
-              type="text"
-              required
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              placeholder="Short description of the product"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-dark-700 mb-2">
-              Long Description
-            </label>
-            <textarea
-              value={formData.longDescription}
-              onChange={(e) =>
-                handleInputChange("longDescription", e.target.value)
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              rows={4}
-              placeholder="Detailed description of the product..."
-            />
-          </div>
-
-          {/* Price and Category */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
-                Price (cents) *
-              </label>
-              <input
-                type="number"
-                required
-                min="0"
-                value={formData.price}
-                onChange={(e) =>
-                  handleInputChange("price", parseInt(e.target.value) || 0)
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                placeholder="1400"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
-                Category *
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) =>
-                  handleInputChange(
-                    "category",
-                    e.target.value as EProductCategory,
-                  )
-                }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              >
-                {categories.length === 0 ? (
-                  <option value="HONEY">Honey</option>
-                ) : (
-                  categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
-                    </option>
-                  ))
-                )}
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
-                Weight *
-              </label>
-              <input
-                type="text"
-                required
-                value={formData.weight}
-                onChange={(e) => handleInputChange("weight", e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                placeholder="16 oz"
-              />
-            </div>
-          </div>
-
-          {/* Recurring (Subscription) */}
-          {formData.category === EProductCategory.SUBSCRIPTIONS && (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+        ) : (
+          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+            {/* Basic Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-dark-700 mb-2">
-                  Interval
+                  Product Name *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.name}
+                  onChange={(e) => handleInputChange("name", e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  placeholder="Enter product name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-2">
+                  Slug *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.slug}
+                  onChange={(e) => handleInputChange("slug", e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:details focus:border-primary-500 outline-none"
+                  placeholder="product-slug"
+                />
+              </div>
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 mb-2">
+                Short Description *
+              </label>
+              <input
+                type="text"
+                required
+                value={formData.description}
+                onChange={(e) =>
+                  handleInputChange("description", e.target.value)
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                placeholder="Short description of the product"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-dark-700 mb-2">
+                Long Description
+              </label>
+              <textarea
+                value={formData.longDescription}
+                onChange={(e) =>
+                  handleInputChange("longDescription", e.target.value)
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                rows={4}
+                placeholder="Detailed description of the product..."
+              />
+            </div>
+
+            {/* Price and Category */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-2">
+                  Price (cents) *
+                </label>
+                <input
+                  type="number"
+                  required
+                  min="0"
+                  value={formData.price}
+                  onChange={(e) =>
+                    handleInputChange("price", parseInt(e.target.value) || 0)
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  placeholder="1400"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-dark-700 mb-2">
+                  Category *
                 </label>
                 <select
-                  value={formData.recurringInterval || ""}
+                  value={formData.category}
                   onChange={(e) =>
-                    handleInputChange("recurringInterval", e.target.value)
+                    handleInputChange(
+                      "category",
+                      e.target.value as EProductCategory,
+                    )
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                 >
-                  <option value="">Select interval...</option>
-                  <option value="day">Day</option>
-                  <option value="week">Week</option>
-                  <option value="month">Month</option>
-                  <option value="year">Year</option>
+                  {categories.length === 0 ? (
+                    <option value="HONEY">Honey</option>
+                  ) : (
+                    categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.label}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-dark-700 mb-2">
-                  Every
+                  Weight *
                 </label>
                 <input
-                  type="number"
-                  min="1"
-                  value={formData.recurringIntervalCount || 1}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "recurringIntervalCount",
-                      parseInt(e.target.value) || 1,
-                    )
-                  }
+                  type="text"
+                  required
+                  value={formData.weight}
+                  onChange={(e) => handleInputChange("weight", e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                  placeholder="1"
+                  placeholder="16 oz"
                 />
               </div>
             </div>
-          )}
 
-          {/* Stock and Featured */}
-          <div className="flex gap-6">
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.inStock}
-                onChange={(e) => handleInputChange("inStock", e.target.checked)}
-                className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
-              />
-              <span className="text-sm text-dark-700">In Stock</span>
-            </label>
-            <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
-                checked={formData.featured}
-                onChange={(e) =>
-                  handleInputChange("featured", e.target.checked)
-                }
-                className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
-              />
-              <span className="text-sm text-dark-700">Featured Product</span>
-            </label>
-          </div>
-
-          {/* Image URLs */}
-          <div>
-            <label className="block text-sm font-medium text-dark-700 mb-2">
-              Image URLs
-            </label>
-            {formData.imageUrls.map((url, index) => (
-              <div key={index} className="flex gap-2 mb-2">
-                <input
-                  type="url"
-                  value={url}
-                  onChange={(e) =>
-                    handleImageUrlChange(index, e.target.value, "imageUrls")
-                  }
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                  placeholder="https://example.com/image.png"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeImageUrl(index, "imageUrls")}
-                  aria-label={`Remove image URL ${index + 1}`}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+            {/* Recurring (Subscription) */}
+            {formData.category === EProductCategory.SUBSCRIPTIONS && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-2">
+                    Interval
+                  </label>
+                  <select
+                    value={formData.recurringInterval || ""}
+                    onChange={(e) =>
+                      handleInputChange("recurringInterval", e.target.value)
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  >
+                    <option value="">Select interval...</option>
+                    <option value="day">Day</option>
+                    <option value="week">Week</option>
+                    <option value="month">Month</option>
+                    <option value="year">Year</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-dark-700 mb-2">
+                    Every
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={formData.recurringIntervalCount || 1}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "recurringIntervalCount",
+                        parseInt(e.target.value) || 1,
+                      )
+                    }
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                    placeholder="1"
+                  />
+                </div>
               </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => addImageUrl("imageUrls")}
-              className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
-            >
-              <Plus className="w-4 h-4" />
-              Add Image URL
-            </button>
-          </div>
+            )}
 
-          {/* Thumbnail URLs */}
-          <div>
-            <label className="block text-sm font-medium text-dark-700 mb-2">
-              Thumbnail URLs
-            </label>
-            {formData.thumbnailUrls.map((url, index) => (
-              <div key={index} className="flex gap-2 mb-2">
+            {/* Stock and Featured */}
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2">
                 <input
-                  type="url"
-                  value={url}
+                  type="checkbox"
+                  checked={formData.inStock}
                   onChange={(e) =>
-                    handleImageUrlChange(index, e.target.value, "thumbnailUrls")
+                    handleInputChange("inStock", e.target.checked)
                   }
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                  placeholder="https://example.com/thumb.png"
+                  className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
                 />
-                <button
-                  type="button"
-                  onClick={() => removeImageUrl(index, "thumbnailUrls")}
-                  aria-label={`Remove thumbnail URL ${index + 1}`}
-                  className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            ))}
-            <button
-              type="button"
-              onClick={() => addImageUrl("thumbnailUrls")}
-              className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
-            >
-              <Plus className="w-4 h-4" />
-              Add Thumbnail URL
-            </button>
-          </div>
-
-          {/* Stripe Payment Link ID */}
-          <div>
-            <label className="block text-sm font-medium text-dark-700 mb-2">
-              Stripe Payment Link ID
-            </label>
-            <input
-              type="text"
-              value={formData.stripePaymentLinkId || ""}
-              onChange={(e) =>
-                handleInputChange("stripePaymentLinkId", e.target.value)
-              }
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-              placeholder="plink_..."
-            />
-          </div>
-
-          {/* Tags */}
-          <div>
-            <label className="block text-sm font-medium text-dark-700 mb-2">
-              Tags
-            </label>
-            <div className="flex gap-2 mb-2">
-              <input
-                type="text"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
-                className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                placeholder="Add a tag"
-              />
-              <button
-                type="button"
-                onClick={handleAddTag}
-                aria-label="Add tag"
-                className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+                <span className="text-sm text-dark-700">In Stock</span>
+              </label>
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={formData.featured}
+                  onChange={(e) =>
+                    handleInputChange("featured", e.target.checked)
+                  }
+                  className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                />
+                <span className="text-sm text-dark-700">Featured Product</span>
+              </label>
             </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-dark-700 rounded-full text-sm"
-                >
-                  {tag}
+
+            {/* Image URLs */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 mb-2">
+                Image URLs
+              </label>
+              {formData.imageUrls.map((url, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) =>
+                      handleImageUrlChange(index, e.target.value, "imageUrls")
+                    }
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                    placeholder="https://example.com/image.png"
+                  />
                   <button
                     type="button"
-                    onClick={() => handleRemoveTag(tag)}
-                    aria-label={`Remove tag ${tag}`}
-                    className="text-dark-400 hover:text-dark-600"
+                    onClick={() => removeImageUrl(index, "imageUrls")}
+                    aria-label={`Remove image URL ${index + 1}`}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
-                    ×
+                    <Trash2 className="w-4 h-4" />
                   </button>
-                </span>
+                </div>
               ))}
-            </div>
-          </div>
-
-          {/* Error display */}
-          {submitError && (
-            <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-              <span className="text-red-600 text-sm flex-1">{submitError}</span>
               <button
                 type="button"
-                onClick={() => setSubmitError(null)}
-                className="text-red-400 hover:text-red-600"
+                onClick={() => addImageUrl("imageUrls")}
+                className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
               >
-                <X className="w-4 h-4" />
+                <Plus className="w-4 h-4" />
+                Add Image URL
               </button>
             </div>
-          )}
 
-          {/* Actions */}
-          <div className="flex gap-3 justify-end border-t border-gray-200 pt-6">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading
-                ? "Saving..."
-                : isEditMode
-                  ? "Update Product"
-                  : "Create Product"}
-            </button>
-          </div>
-        </form>
+            {/* Thumbnail URLs */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 mb-2">
+                Thumbnail URLs
+              </label>
+              {formData.thumbnailUrls.map((url, index) => (
+                <div key={index} className="flex gap-2 mb-2">
+                  <input
+                    type="url"
+                    value={url}
+                    onChange={(e) =>
+                      handleImageUrlChange(
+                        index,
+                        e.target.value,
+                        "thumbnailUrls",
+                      )
+                    }
+                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                    placeholder="https://example.com/thumb.png"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => removeImageUrl(index, "thumbnailUrls")}
+                    aria-label={`Remove thumbnail URL ${index + 1}`}
+                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => addImageUrl("thumbnailUrls")}
+                className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
+              >
+                <Plus className="w-4 h-4" />
+                Add Thumbnail URL
+              </button>
+            </div>
+
+            {/* Stripe Payment Link ID */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 mb-2">
+                Stripe Payment Link ID
+              </label>
+              <input
+                type="text"
+                value={formData.stripePaymentLinkId || ""}
+                onChange={(e) =>
+                  handleInputChange("stripePaymentLinkId", e.target.value)
+                }
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                placeholder="plink_..."
+              />
+            </div>
+
+            {/* Tags */}
+            <div>
+              <label className="block text-sm font-medium text-dark-700 mb-2">
+                Tags
+              </label>
+              <div className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleAddTag()}
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  placeholder="Add a tag"
+                />
+                <button
+                  type="button"
+                  onClick={handleAddTag}
+                  aria-label="Add tag"
+                  className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {formData.tags.map((tag) => (
+                  <span
+                    key={tag}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-dark-700 rounded-full text-sm"
+                  >
+                    {tag}
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveTag(tag)}
+                      aria-label={`Remove tag ${tag}`}
+                      className="text-dark-400 hover:text-dark-600"
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+
+            {/* Error display */}
+            {submitError && (
+              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                <span className="text-red-600 text-sm flex-1">
+                  {submitError}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSubmitError(null)}
+                  className="text-red-400 hover:text-red-600"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Actions */}
+            <div className="flex gap-3 justify-end border-t border-gray-200 pt-6">
+              <button
+                type="button"
+                onClick={onClose}
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading
+                  ? "Saving..."
+                  : isEditMode
+                    ? "Update Product"
+                    : "Create Product"}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );
