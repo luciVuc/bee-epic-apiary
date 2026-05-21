@@ -29,4 +29,16 @@ describe('jsonResponse', () => {
 		const response = jsonResponse({}, 204);
 		expect(response.status).toBe(204);
 	});
+
+	it('handles 205 status with no body', () => {
+		const response = jsonResponse({}, 205);
+		expect(response.status).toBe(205);
+		const body = async () => await response.text();
+		expect(body).not.toContain('{}');
+	});
+
+	it('handles 304 status with no body', () => {
+		const response = jsonResponse({}, 304);
+		expect(response.status).toBe(304);
+	});
 });

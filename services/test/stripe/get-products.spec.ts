@@ -196,4 +196,105 @@ describe('get-products handler', () => {
 		expect(response.status).toBe(204);
 		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('GET, OPTIONS');
 	});
+
+	it('lists products with starting_after parameter', async () => {
+		mockStripe.products.list.mockResolvedValue({
+			data: [{ id: 'prod_2', name: 'Product 2', active: true }],
+			has_more: false,
+		});
+
+		const request = new Request('http://example.com/products?starting_after=prod_1&limit=1', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		expect(mockStripe.products.list).toHaveBeenCalledWith(expect.objectContaining({ starting_after: 'prod_1', limit: 1 }));
+	});
+
+	it('lists products with expand parameter', async () => {
+		mockStripe.products.list.mockResolvedValue({
+			data: [{ id: 'prod_1', name: 'Product 1', active: true }],
+			has_more: false,
+		});
+
+		const request = new Request('http://example.com/products?expand[]=default_price', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		expect(mockStripe.products.list).toHaveBeenCalledWith(expect.objectContaining({ expand: ['default_price'] }));
+	});
+
+	it('retrieves single product with expand parameter', async () => {
+		const mockProduct = { id: 'prod_123', name: 'Test Product', active: true };
+		mockStripe.products.retrieve.mockResolvedValue(mockProduct);
+
+		const request = new Request('http://example.com/products/prod_123?expand[]=default_price', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		expect(mockStripe.products.retrieve).toHaveBeenCalledWith('prod_123', expect.objectContaining({ expand: ['default_price'] }));
+	});
+
+	it('filters products by search term', async () => {
+		const allProducts = [
+			{ id: 'prod_1', name: 'Wildflower Honey', active: true, description: null, metadata: {} },
+			{ id: 'prod_2', name: 'Beeswax Candles', active: true, description: null, metadata: {} },
+		];
+		mockStripe.products.list.mockResolvedValue({ data: allProducts, has_more: false });
+
+		const request = new Request('http://example.com/products?search=Honey', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as any;
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].name).toBe('Wildflower Honey');
+	});
+
+	it('filters products by category', async () => {
+		const allProducts = [
+			{ id: 'prod_1', name: 'Honey', active: true, description: null, metadata: { category: 'HONEY' } },
+			{ id: 'prod_2', name: 'Candles', active: true, description: null, metadata: { category: 'BEESWAX' } },
+		];
+		mockStripe.products.list.mockResolvedValue({ data: allProducts, has_more: false });
+
+		const request = new Request('http://example.com/products?category=HONEY', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as any;
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].name).toBe('Honey');
+	});
+
+	it('handles error when fetching all products for total_count', async () => {
+		mockStripe.products.list
+			.mockResolvedValueOnce({ data: [{ id: 'prod_1', name: 'Product 1', active: true }], has_more: false })
+			.mockRejectedValueOnce(new Error('Network error'));
+
+		const request = new Request('http://example.com/products?limit=1', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as any;
+		expect(body.total_count).toBe(1);
+		expect(body.data).toHaveLength(1);
+	});
 });

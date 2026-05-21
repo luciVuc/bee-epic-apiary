@@ -229,6 +229,26 @@ describe('delete-product handler', () => {
 		expect(body.error).toBe('An error occurred');
 	});
 
+	it('re-throws price archiving error that is not about default price', async () => {
+		const mockProduct = { id: 'prod_123', active: true, name: 'Test Product' };
+		mockStripe.products.retrieve.mockResolvedValue(mockProduct);
+		mockStripe.products.update.mockResolvedValue({ id: 'prod_123', active: false, name: 'Test Product' });
+		mockStripe.prices.list.mockResolvedValue({
+			data: [{ id: 'price_1', active: true }],
+		});
+		mockStripe.prices.update.mockRejectedValue({ message: 'Some other Stripe error', statusCode: 400 });
+
+		const request = new Request('http://example.com/products/prod_123', {
+			method: 'DELETE',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleDeleteProduct(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(400);
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('Some other Stripe error');
+	});
+
 	// Tests for middleware (using worker.fetch)
 	it('returns 403 for disallowed origin', async () => {
 		const request = new Request('http://example.com/products/prod_123', {

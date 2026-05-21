@@ -220,7 +220,140 @@ describe('products/:id endpoint', () => {
 	});
 });
 
+describe('settings endpoint', () => {
+	it('returns 403 for PUT with disallowed origin on settings', async () => {
+		const request = new Request('http://example.com/settings/site', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json', Origin: 'http://evil.com', Authorization: 'Bearer secret-key' },
+			body: JSON.stringify({ name: 'Updated' }),
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com', API_SECRET_KEY: 'secret-key' });
+		expect(response.status).toBe(403);
+	});
+
+	it('handles OPTIONS preflight for settings/site', async () => {
+		const request = new Request('http://example.com/settings/site', {
+			method: 'OPTIONS',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).toBe(204);
+		expect(response.headers.get('Access-Control-Allow-Methods')).toContain('GET');
+		expect(response.headers.get('Access-Control-Allow-Methods')).toContain('PUT');
+	});
+
+	it('returns 405 for POST on settings', async () => {
+		const request = new Request('http://example.com/settings/site', {
+			method: 'POST',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).toBe(405);
+	});
+
+	it('returns 200 for GET settings/process', async () => {
+		const request = new Request('http://example.com/settings/process', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			CONTENT_KV: { get: () => Promise.resolve(JSON.stringify({ steps: [] })) },
+		});
+		expect(response.status).toBe(200);
+	});
+
+	it('returns 200 for GET settings/testimonials', async () => {
+		const request = new Request('http://example.com/settings/testimonials', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			CONTENT_KV: { get: () => Promise.resolve(JSON.stringify({ items: [] })) },
+		});
+		expect(response.status).toBe(200);
+	});
+
+	it('returns 200 for GET settings/categories', async () => {
+		const request = new Request('http://example.com/settings/categories', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			CONTENT_KV: { get: () => Promise.resolve(JSON.stringify([{ id: 'HONEY', label: 'Honey' }])) },
+		});
+		expect(response.status).toBe(200);
+	});
+});
+
 describe('routing', () => {
+	it('returns 405 for GET /prices (must be POST)', async () => {
+		const request = new Request('http://example.com/prices', { method: 'GET' });
+		const response = await worker.fetch(request, env);
+		expect(response.status).toBe(405);
+	});
+
+	it('handles OPTIONS preflight for /prices', async () => {
+		const request = new Request('http://example.com/prices', {
+			method: 'OPTIONS',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).toBe(204);
+		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('POST, OPTIONS');
+	});
+
+	it('routes POST /prices through the router', async () => {
+		const request = new Request('http://example.com/prices', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com', Authorization: 'Bearer secret-key' },
+			body: JSON.stringify({ product: 'prod_123', unit_amount: 2000, currency: 'usd' }),
+		});
+		const response = await worker.fetch(request, {
+			...env,
+			ALLOWED_ORIGINS: 'https://example.com',
+			API_SECRET_KEY: 'secret-key',
+		});
+		expect(response.status).not.toBe(405);
+		expect(response.status).not.toBe(401);
+		expect(response.status).not.toBe(403);
+	});
+
+	it('returns 405 for POST /products/count', async () => {
+		const request = new Request('http://example.com/products/count', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({}),
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).toBe(405);
+	});
+
+	it('handles OPTIONS preflight for /products/count', async () => {
+		const request = new Request('http://example.com/products/count', {
+			method: 'OPTIONS',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).toBe(204);
+		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('GET, OPTIONS');
+	});
+
+	it('routes GET /products/count through the router', { timeout: 30000 }, async () => {
+		const request = new Request('http://example.com/products/count', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
+		expect(response.status).not.toBe(405);
+		expect(response.status).not.toBe(403);
+	});
+
 	it('returns 404 for unknown routes', async () => {
 		const request = new IncomingRequest('http://example.com/unknown', { method: 'GET' });
 		const response = await worker.fetch(request, env);
