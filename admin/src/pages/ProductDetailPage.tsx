@@ -63,7 +63,10 @@ export function ProductDetailPage() {
   };
 
   const handleEdit = () => {
-    navigate(`/products/${id}/edit`, { replace: true });
+    navigate(`/products/${id}/edit`, {
+      replace: true,
+      state: { from: getBackUrl(location) },
+    });
   };
 
   if (error) {

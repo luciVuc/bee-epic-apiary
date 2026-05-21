@@ -55,7 +55,6 @@ export function ProductsPage() {
     totalCount,
   } = useSelector((state: RootState) => state.products);
 
-  const isLoadingMore = useRef(false);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
 
   const searchTerm = searchParams.get("search") || "";
@@ -77,14 +76,23 @@ export function ProductsPage() {
     [setSearchParams],
   );
 
-  useLayoutEffect(() => {
+  const buildFetchParams = (includeLimit?: boolean) => {
     const params: { search?: string; category?: string; limit?: number } = {};
     if (searchTerm) params.search = searchTerm;
     if (selectedCategory !== "ALL") params.category = selectedCategory;
-    const limitParam = searchParams.get("limit");
-    if (limitParam) params.limit = parseInt(limitParam, 10);
-    dispatch(fetchProducts(params));
-    dispatch(fetchProductsCount(params));
+    if (includeLimit) {
+      const limitParam = searchParams.get("limit");
+      if (limitParam) {
+        const parsed = parseInt(limitParam, 10);
+        if (!isNaN(parsed) && parsed > 0) params.limit = parsed;
+      }
+    }
+    return params;
+  };
+
+  useLayoutEffect(() => {
+    dispatch(fetchProducts(buildFetchParams(true)));
+    dispatch(fetchProductsCount(buildFetchParams(true)));
   }, []);
 
   useLayoutEffect(() => {
@@ -125,11 +133,8 @@ export function ProductsPage() {
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
-      const params: { search?: string; category?: string } = {};
-      if (searchTerm) params.search = searchTerm;
-      if (selectedCategory !== "ALL") params.category = selectedCategory;
-      await dispatch(fetchProducts(params));
-      await dispatch(fetchProductsCount(params));
+      await dispatch(fetchProducts(buildFetchParams()));
+      await dispatch(fetchProductsCount(buildFetchParams()));
     }, 300);
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -141,7 +146,6 @@ export function ProductsPage() {
   }, []);
 
   const handleLoadMore = () => {
-    isLoadingMore.current = true;
     const newLimit = products.length + 10;
     const params: Record<string, string> = {};
     if (searchTerm) params.search = searchTerm;
