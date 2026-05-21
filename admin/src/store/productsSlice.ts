@@ -71,10 +71,14 @@ export const createProduct = createAsyncThunk(
         }),
       );
       return newProduct;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const axiosErr = err as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
       const message =
-        err?.response?.data?.error ||
-        err?.message ||
+        axiosErr?.response?.data?.error ||
+        axiosErr?.message ||
         "Failed to create product";
       return rejectWithValue(message);
     }
@@ -98,10 +102,14 @@ export const updateProduct = createAsyncThunk(
         }),
       );
       return updatedProduct;
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const axiosErr = err as {
+        response?: { data?: { error?: string } };
+        message?: string;
+      };
       const message =
-        err?.response?.data?.error ||
-        err?.message ||
+        axiosErr?.response?.data?.error ||
+        axiosErr?.message ||
         "Failed to update product";
       return rejectWithValue(message);
     }

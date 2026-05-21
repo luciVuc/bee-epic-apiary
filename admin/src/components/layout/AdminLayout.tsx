@@ -29,7 +29,7 @@ export function AdminLayout() {
         <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <main
           className="flex-1 overflow-y-auto p-4 md:p-6"
-          style={{ paddingTop: "93px" }}
+          style={{ paddingTop: "93px" /* matches fixed AdminNavbar height */ }}
         >
           <Outlet />
         </main>

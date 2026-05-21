@@ -2,8 +2,17 @@ import Stripe from 'stripe';
 import { handleCORS, isAllowedOrigin, jsonResponse, RateLimiter, checkAuth } from '.';
 import type { HttpMethod } from './handleCORS';
 
-const RATE_LIMIT_MAX = 100;
-const RATE_LIMIT_WINDOW = 60;
+let stripeInstance: Stripe | null = null;
+
+function getStripeInstance(env: Env): Stripe {
+	if (!stripeInstance) {
+		stripeInstance = new Stripe(env.STRIPE_SECRET_KEY, {
+			apiVersion: '2026-04-22.dahlia',
+			httpClient: Stripe.createFetchHttpClient(),
+		});
+	}
+	return stripeInstance;
+}
 
 type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
 
@@ -33,10 +42,11 @@ export function withStripeHandler(method: HttpMethod, handler: StripeHandler, op
 
 		if (env.RATE_LIMIT_KV) {
 			const url = new URL(request.url);
-			const clientIP = (request as any).cf?.connectingIp || request.headers.get('CF-Connecting-IP') || 'unknown';
+			const clientIP =
+				(request as Request<unknown, IncomingRequestCfProperties>).cf?.connectingIp || request.headers.get('CF-Connecting-IP') || 'unknown';
 			const rateLimiter = new RateLimiter(env.RATE_LIMIT_KV, {
-				maxRequests: RATE_LIMIT_MAX,
-				windowSeconds: RATE_LIMIT_WINDOW,
+				maxRequests: parseInt(env.RATE_LIMIT_MAX, 10),
+				windowSeconds: parseInt(env.RATE_LIMIT_WINDOW, 10),
 			});
 			const result = await rateLimiter.check(`${clientIP}:${method}:${url.pathname}`);
 			if (!result.allowed) {
@@ -45,16 +55,12 @@ export function withStripeHandler(method: HttpMethod, handler: StripeHandler, op
 		}
 
 		try {
-			const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-				apiVersion: '2026-04-22.dahlia',
-				httpClient: Stripe.createFetchHttpClient(),
-			});
+			const stripe = getStripeInstance(env);
 			return await handler(stripe, request, env, origin);
 		} catch (error: any) {
 			console.error('Stripe error:', error);
 			const statusCode = error.statusCode || 500;
-			const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
-			return jsonResponse({ error: message }, statusCode, origin, env);
+			return jsonResponse({ error: 'An error occurred' }, statusCode, origin, env);
 		}
 	};
 }

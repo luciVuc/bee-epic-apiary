@@ -73,6 +73,9 @@ export class RateLimiter {
 		const kvKey = `rate_limit:${key}:${windowStart}`;
 
 		// Get current count from KV
+		// Note: This read-then-write pattern is not atomic. Two concurrent requests from the same key
+		// can both read the same value and both write an incremented value, allowing up to 2x the
+		// intended limit. For stricter enforcement, use Durable Objects or Analytics Engine.
 		const currentCountStr = await this.kv.get(kvKey);
 		const currentCount = currentCountStr ? parseInt(currentCountStr, 10) : 0;
 

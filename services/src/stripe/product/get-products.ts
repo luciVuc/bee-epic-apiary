@@ -60,8 +60,8 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 			try {
 				const allProducts = await fetchAllActiveProducts(stripe, expand);
 				totalCount = allProducts.length;
-			} catch {
-				// Fallback
+			} catch (error) {
+				console.error('Failed to fetch full product list for total_count, falling back to first page count:', error);
 			}
 
 			resultData = {

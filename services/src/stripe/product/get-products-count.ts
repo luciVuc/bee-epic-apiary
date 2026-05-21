@@ -17,27 +17,8 @@ export async function handleGetProductsCount(stripe: Stripe, request: Request, e
 				return matchesSearch(p, search) && matchesCategory(p, category);
 			}).length;
 		} else {
-			const firstPage = await stripe.products.list({
-				active: true,
-				limit: 100,
-			});
-
-			totalCount = firstPage.data.length;
-
-			let hasMore = firstPage.has_more;
-			let lastId = firstPage.data[firstPage.data.length - 1]?.id;
-
-			while (hasMore && lastId) {
-				const nextPage = await stripe.products.list({
-					active: true,
-					limit: 100,
-					starting_after: lastId,
-				});
-
-				totalCount += nextPage.data.length;
-				hasMore = nextPage.has_more;
-				lastId = nextPage.data[nextPage.data.length - 1]?.id;
-			}
+			const allProducts = await fetchAllActiveProducts(stripe);
+			totalCount = allProducts.length;
 		}
 
 		return jsonResponse({ total: totalCount }, 200, origin, env);

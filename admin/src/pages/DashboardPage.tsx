@@ -15,6 +15,7 @@ import { useState } from "react";
 import type { IDashboardStats } from "../types";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
+import { Spinner } from "../components/shared/Spinner";
 import type { ICategory } from "../types/settings";
 import * as api from "../utils/api";
 
@@ -63,11 +64,7 @@ export function DashboardPage() {
   }, [products, categories]);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   return (
@@ -229,6 +226,7 @@ export function DashboardPage() {
               <img
                 src={product.thumbnailUrls[0] || DEFAULT_PRODUCT_THUMBNAIL}
                 alt={product.name}
+                loading="lazy"
                 className="w-12 h-12 rounded-lg object-cover"
               />
               <div className="flex-1">
@@ -315,11 +313,15 @@ function CategoryBar({
   color: string;
 }) {
   const percentage = total > 0 ? (count / total) * 100 : 0;
-  const colorClasses = {
+  const colorClasses: Record<string, string> = {
     amber: "bg-amber-500",
     yellow: "bg-yellow-500",
     pink: "bg-pink-500",
     blue: "bg-blue-500",
+    green: "bg-green-500",
+    indigo: "bg-indigo-500",
+    purple: "bg-purple-500",
+    red: "bg-red-500",
   };
 
   return (

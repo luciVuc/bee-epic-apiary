@@ -87,6 +87,8 @@ describe('withStripeHandler', () => {
 			ALLOWED_ORIGINS: 'https://example.com',
 			STRIPE_SECRET_KEY: 'sk_test_123',
 			RATE_LIMIT_KV: mockKV,
+			RATE_LIMIT_MAX: '100',
+			RATE_LIMIT_WINDOW: '60',
 		} as unknown as Env;
 		const response = await handler(request, env);
 		expect(response.status).toBe(429);
@@ -105,7 +107,7 @@ describe('withStripeHandler', () => {
 		const response = await handler(request, env);
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Bad request');
+		expect(body.error).toBe('An error occurred');
 	});
 
 	it('handles Stripe errors with statusCode >=500', async () => {

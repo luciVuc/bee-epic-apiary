@@ -9,6 +9,7 @@ import {
   deleteProduct,
   setSelectedProduct,
 } from "../store/productsSlice";
+import { Spinner } from "../components/shared/Spinner";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
 import { DeleteConfirmDialog } from "../components/shared/DeleteConfirmDialog";
 import { EProductCategory } from "../types";
@@ -90,11 +91,7 @@ export function ProductDetailPage() {
   }
 
   if (loading || !product) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   if (isEditMode) {
@@ -150,6 +147,7 @@ export function ProductDetailPage() {
                   key={index}
                   src={url || DEFAULT_PRODUCT_IMAGE}
                   alt={`${product.name} ${index + 1}`}
+                  loading="lazy"
                   className="w-48 h-48 object-cover rounded-lg"
                 />
               ))}

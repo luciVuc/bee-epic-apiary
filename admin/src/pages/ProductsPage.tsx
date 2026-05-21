@@ -31,6 +31,7 @@ import {
 import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
 import type { ICategory } from "../types/settings";
 import * as api from "../utils/api";
+import { Spinner } from "../components/shared/Spinner";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
 import { DeleteConfirmDialog } from "../components/shared/DeleteConfirmDialog";
 import {
@@ -204,11 +205,7 @@ export function ProductsPage() {
     products.length === 0 &&
     location.pathname !== "/products/new"
   ) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
-      </div>
-    );
+    return <Spinner />;
   }
 
   const showingCount = products.length;
@@ -362,6 +359,7 @@ export function ProductsPage() {
                             DEFAULT_PRODUCT_THUMBNAIL
                           }
                           alt={product.name}
+                          loading="lazy"
                           className="w-10 h-10 rounded-lg object-cover"
                         />
                         <div>
@@ -450,6 +448,7 @@ export function ProductsPage() {
                   <img
                     src={product.thumbnailUrls[0] || DEFAULT_PRODUCT_THUMBNAIL}
                     alt={product.name}
+                    loading="lazy"
                     className="w-12 h-12 rounded-lg object-cover"
                   />
                   <div className="flex-1">

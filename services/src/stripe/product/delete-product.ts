@@ -35,8 +35,7 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 		}
 
 		if (product.default_price) {
-			await stripe.products.update(productId, { default_price: null } as any);
-			product = await stripe.products.retrieve(productId);
+			await stripe.products.update(productId, { default_price: null as unknown as string });
 		}
 
 		const activePrices = await stripe.prices.list({
@@ -52,7 +51,7 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 				archivedPrices.push(archivedPrice.id);
 			} catch (priceError: any) {
 				if (priceError.message?.includes('default price')) {
-					await stripe.products.update(productId, { default_price: null } as any);
+					await stripe.products.update(productId, { default_price: null as unknown as string });
 					const archivedPrice = await stripe.prices.update(price.id, { active: false });
 					archivedPrices.push(archivedPrice.id);
 				} else {
@@ -77,7 +76,7 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 			env,
 		);
 	} catch (error: any) {
-		console.error('Archive product error:', JSON.stringify(error, null, 2));
+		console.error('Archive product error:', { message: error.message, statusCode: error.statusCode, stack: error.stack });
 		const statusCode = error.statusCode || error.status || 500;
 		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
 
