@@ -22,7 +22,6 @@ import {
   fetchProducts,
   deleteProduct,
   fetchProductsCount,
-  restoreProducts,
 } from "../store/productsSlice";
 import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
 import { EProductCategory } from "../types";
@@ -73,8 +72,24 @@ export function ProductsPage() {
       if (savedState) {
         try {
           const parsed = JSON.parse(savedState);
-          dispatch(restoreProducts(parsed));
           sessionStorage.removeItem("adminProductsState");
+          const itemCount = parsed.items?.length || 10;
+          const lastParams = parsed.lastFetchParams || {};
+          const refreshParams: {
+            limit: number;
+            search?: string;
+            category?: string;
+          } = { limit: itemCount };
+          if (lastParams.search) refreshParams.search = lastParams.search;
+          if (lastParams.category) refreshParams.category = lastParams.category;
+          dispatch(fetchProducts(refreshParams));
+          dispatch(
+            fetchProductsCount({
+              search: refreshParams.search,
+              category: refreshParams.category,
+            }),
+          );
+          return;
         } catch {
           /* fall through to fetch */
         }
