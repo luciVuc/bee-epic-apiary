@@ -54,4 +54,4 @@ Key points:
 - **Env var conventions differ**: Web uses `VITE_` prefix (Vite), services uses Wrangler secrets
 - **Hash Router**: Web uses `HashRouter` for GitHub Pages compatibility (URLs like `/#/products`)
 - **Services KV namespace**: Must create via `npx wrangler kv namespace create "RATE_LIMIT_KV"` before deploying
-- **No root tests**: Run `npm test` exits with error; use `npm run services:test` for service tests
+- **Root tests**: `npm test` runs `services:test` then `admin:test` sequentially

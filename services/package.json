@@ -10,7 +10,9 @@
 		"format": "prettier --write .",
 		"format:staged": "pretty-quick --staged --no-restage --verbose",
 		"postinstall": "npm run cf-typegen",
-		"test": "vitest"
+		"test": "vitest run",
+		"test:watch": "vitest",
+		"test:coverage": "vitest run --coverage"
 	},
 	"devDependencies": {
 		"@cloudflare/vitest-pool-workers": "^0.12.4",
