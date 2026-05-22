@@ -1,5 +1,7 @@
 # Bee Epic Apiary
 
+> **EXTREMLEY IMPORTANT INSTRUCTION**: Whenever you make a change, fix, update, upgrade, or any modification to this project, you MUST also read this file and update it as necessary to keep it in sync with the project's current structure, conventions, requirements, commands, and gotchas. This is your single source of truth — keep it accurate.
+
 Monorepo: `web/` (React frontend) + `services/` (Cloudflare Worker).
 
 ## Commands
