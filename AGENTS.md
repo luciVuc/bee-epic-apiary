@@ -20,9 +20,20 @@ Root scripts use `npm run <script> --prefix <dir>` to delegate to sub-packages.
 
 All TypeScript interface definitions must be exported and prefixed with `I` (e.g., `ISpinnerProps`, `IProductFormDialogProps`, `IStripeProductResponse`, `IProduct`). This applies to `admin/`, `web/`, and `services/`.
 
-## Data Attributes (all React UI projects)
+## Data Attributes & Accessibility (all React UI projects)
 
 Every React component must include `data-testid` attributes on its root element and all interactive/important child elements, using kebab-case hierarchical naming. The root gets `data-testid="component-name"` and children get `data-testid="component-name_element"`. This applies to `admin/` and `web/`.
+
+Additionally, every component must comply with these accessibility requirements:
+
+- **Form labels**: All `<input>`, `<select>`, and `<textarea>` elements must have an associated `<label>` via `htmlFor`/`id` or `aria-label`. Use the `TextField`/`TextAreaField` components (which auto-generate label associations) where possible.
+- **Modals**: Dialog overlays require `role="dialog"`, `aria-modal="true"`, and `aria-labelledby` pointing to the dialog title.
+- **Status/loading indicators**: Use `role="status"` with `aria-live="polite"` and visually hidden text (`sr-only`) for screen readers.
+- **Error messages**: Use `role="alert"` on error banners so screen readers announce them immediately.
+- **Progress bars**: Use `role="progressbar"` with `aria-valuenow`, `aria-valuemin`, `aria-valuemax`.
+- **Icon-only buttons**: Must have `aria-label` describing the action.
+- **Images**: Must have descriptive `alt` text.
+- **Hidden content**: Elements off-screen (e.g. mobile sidebar closed state) must use `aria-hidden="true"` to hide from screen readers.
 
 ## Web App (`web/`)
 

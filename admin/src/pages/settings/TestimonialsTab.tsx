@@ -70,6 +70,7 @@ export function TestimonialsTab({
                         star as ITestimonial["rating"],
                       )
                     }
+                    aria-label={`${star} star${star > 1 ? "s" : ""}`}
                     className={`p-1 rounded transition-colors ${star <= testimonial.rating ? "text-yellow-400" : "text-gray-300"}`}
                   >
                     <Star className="w-5 h-5 fill-current" />

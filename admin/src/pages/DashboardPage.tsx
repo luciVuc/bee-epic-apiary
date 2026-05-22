@@ -339,7 +339,14 @@ function CategoryBar({
           {count} ({total > 0 ? Math.round(percentage) : 0}%)
         </span>
       </div>
-      <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden">
+      <div
+        className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+        role="progressbar"
+        aria-valuenow={count}
+        aria-valuemin={0}
+        aria-valuemax={total}
+        aria-label={label}
+      >
         <div
           className={`h-full ${colorClasses[color as keyof typeof colorClasses]}`}
           style={{ width: `${percentage}%` }}

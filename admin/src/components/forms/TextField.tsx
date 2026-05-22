@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 export interface ITextFieldProps {
   label: string;
   value: string;
@@ -15,16 +17,20 @@ export function TextField({
   type,
   name,
 }: ITextFieldProps) {
+  const id = useId();
+  const fieldId = name || `text-field-${id}`;
+
   return (
     <div data-testid="text-field">
       <label
-        htmlFor={name}
+        htmlFor={fieldId}
         className="block text-sm font-medium text-dark-700 mb-2"
         data-testid="text-field_label"
       >
         {label}
       </label>
       <input
+        id={fieldId}
         type={type || "text"}
         value={value ?? ""}
         name={name}

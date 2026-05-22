@@ -1,3 +1,5 @@
+import { useId } from "react";
+
 export interface ITextAreaFieldProps {
   label: string;
   value: string;
@@ -13,11 +15,14 @@ export function TextAreaField({
   hideLabel,
   name,
 }: ITextAreaFieldProps) {
+  const id = useId();
+  const fieldId = name || `textarea-field-${id}`;
+
   return (
     <div className="w-full" data-testid="text-area-field">
       {!hideLabel && (
         <label
-          htmlFor={name}
+          htmlFor={fieldId}
           className="block text-sm font-medium text-dark-700 mb-2"
           data-testid="text-area-field_label"
         >
@@ -25,6 +30,7 @@ export function TextAreaField({
         </label>
       )}
       <textarea
+        id={fieldId}
         name={name}
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}

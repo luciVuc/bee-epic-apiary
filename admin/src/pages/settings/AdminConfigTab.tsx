@@ -27,13 +27,19 @@ export function AdminConfigTab({
   return (
     <div className="space-y-6" data-testid="admin-config-tab">
       {adminError && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+        <div
+          role="alert"
+          className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+        >
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
           <span className="text-red-700">{adminError}</span>
         </div>
       )}
       {adminSaved && (
-        <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+        <div
+          role="status"
+          className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+        >
           <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
           <span className="text-green-700">
             Admin settings saved successfully!

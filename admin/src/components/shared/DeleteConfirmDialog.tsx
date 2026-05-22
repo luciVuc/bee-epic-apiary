@@ -15,6 +15,9 @@ export function DeleteConfirmDialog({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="delete-confirm-dialog_title"
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
       data-testid="delete-confirm-dialog"
     >
@@ -23,6 +26,7 @@ export function DeleteConfirmDialog({
         data-testid="delete-confirm-dialog_content"
       >
         <h3
+          id="delete-confirm-dialog_title"
           className="font-heading text-xl font-semibold mb-4"
           data-testid="delete-confirm-dialog_title"
         >

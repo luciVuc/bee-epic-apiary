@@ -288,13 +288,19 @@ export function SettingsPage() {
 
       {/* Content Status Messages */}
       {contentError && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+        <div
+          role="alert"
+          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+        >
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
           <span className="text-red-700">{contentError}</span>
         </div>
       )}
       {contentStatus === "success" && (
-        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2">
+        <div
+          role="status"
+          className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+        >
           <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
           <span className="text-green-700">Content saved successfully!</span>
         </div>
@@ -339,8 +345,13 @@ export function SettingsPage() {
 
         <div className="p-6">
           {contentStatus === "loading" ? (
-            <div className="flex items-center justify-center h-32">
+            <div
+              className="flex items-center justify-center h-32"
+              role="status"
+              aria-live="polite"
+            >
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <span className="sr-only">Loading settings...</span>
             </div>
           ) : (
             <>

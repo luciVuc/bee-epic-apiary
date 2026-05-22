@@ -13,6 +13,7 @@ export function AdminLayout() {
         <div
           className="fixed inset-0 bg-black/50 z-40 lg:hidden"
           data-testid="admin-layout_overlay"
+          aria-hidden="true"
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -23,6 +24,7 @@ export function AdminLayout() {
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         } lg:translate-x-0`}
         data-testid="admin-layout_sidebar"
+        aria-hidden={!sidebarOpen}
       >
         <Sidebar onClose={() => setSidebarOpen(false)} />
       </div>

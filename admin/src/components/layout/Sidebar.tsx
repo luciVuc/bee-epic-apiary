@@ -55,6 +55,7 @@ export function Sidebar({ onClose }: ISidebarProps) {
         </button>
       </div>
       <nav
+        aria-label="Main navigation"
         className="flex-1 p-4 space-y-2 overflow-y-auto"
         data-testid="sidebar_nav"
       >

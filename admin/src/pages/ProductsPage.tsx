@@ -231,6 +231,7 @@ export function ProductsPage() {
 
       {error && (
         <div
+          role="alert"
           className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
           data-testid="products-page_error"
         >
@@ -245,7 +246,11 @@ export function ProductsPage() {
           {/* Search */}
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
+            <label htmlFor="products-search" className="sr-only">
+              Search products
+            </label>
             <input
+              id="products-search"
               type="text"
               placeholder="Search products..."
               value={searchTerm}
@@ -320,8 +325,13 @@ export function ProductsPage() {
       ) : (
         <div className="relative">
           {loading && (
-            <div className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px]">
+            <div
+              role="status"
+              aria-live="polite"
+              className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px]"
+            >
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              <span className="sr-only">Loading products...</span>
             </div>
           )}
 

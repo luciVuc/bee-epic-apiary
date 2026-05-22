@@ -214,6 +214,9 @@ export function ProductFormDialog({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="product-form-dialog_title"
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
       data-testid="product-form-dialog"
     >
@@ -226,6 +229,7 @@ export function ProductFormDialog({
           data-testid="product-form-dialog_header"
         >
           <h2
+            id="product-form-dialog_title"
             className="font-heading text-2xl font-bold text-dark-900"
             data-testid="product-form-dialog_title"
           >
@@ -242,8 +246,13 @@ export function ProductFormDialog({
         </div>
 
         {isEditMode && fetchingEditData ? (
-          <div className="flex items-center justify-center h-64">
+          <div
+            className="flex items-center justify-center h-64"
+            role="status"
+            aria-live="polite"
+          >
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            <span className="sr-only">Loading product data...</span>
           </div>
         ) : (
           <form
@@ -254,10 +263,14 @@ export function ProductFormDialog({
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div data-testid="product-form-dialog_field-name">
-                <label className="block text-sm font-medium text-dark-700 mb-2">
+                <label
+                  htmlFor="product-name"
+                  className="block text-sm font-medium text-dark-700 mb-2"
+                >
                   Product Name *
                 </label>
                 <input
+                  id="product-name"
                   type="text"
                   required
                   value={formData.name}
@@ -268,10 +281,14 @@ export function ProductFormDialog({
                 />
               </div>
               <div data-testid="product-form-dialog_field-slug">
-                <label className="block text-sm font-medium text-dark-700 mb-2">
+                <label
+                  htmlFor="product-slug"
+                  className="block text-sm font-medium text-dark-700 mb-2"
+                >
                   Slug *
                 </label>
                 <input
+                  id="product-slug"
                   type="text"
                   required
                   value={formData.slug}
@@ -285,10 +302,14 @@ export function ProductFormDialog({
 
             {/* Description */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
+              <label
+                htmlFor="product-description"
+                className="block text-sm font-medium text-dark-700 mb-2"
+              >
                 Short Description *
               </label>
               <input
+                id="product-description"
                 type="text"
                 required
                 value={formData.description}
@@ -301,10 +322,14 @@ export function ProductFormDialog({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
+              <label
+                htmlFor="product-long-description"
+                className="block text-sm font-medium text-dark-700 mb-2"
+              >
                 Long Description
               </label>
               <textarea
+                id="product-long-description"
                 value={formData.longDescription}
                 onChange={(e) =>
                   handleInputChange("longDescription", e.target.value)
@@ -318,10 +343,14 @@ export function ProductFormDialog({
             {/* Price and Category */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-dark-700 mb-2">
+                <label
+                  htmlFor="product-price"
+                  className="block text-sm font-medium text-dark-700 mb-2"
+                >
                   Price (cents) *
                 </label>
                 <input
+                  id="product-price"
                   type="number"
                   required
                   min="0"
@@ -334,10 +363,14 @@ export function ProductFormDialog({
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-dark-700 mb-2">
+                <label
+                  htmlFor="product-category"
+                  className="block text-sm font-medium text-dark-700 mb-2"
+                >
                   Category *
                 </label>
                 <select
+                  id="product-category"
                   value={formData.category}
                   onChange={(e) =>
                     handleInputChange(
@@ -359,10 +392,14 @@ export function ProductFormDialog({
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-dark-700 mb-2">
+                <label
+                  htmlFor="product-weight"
+                  className="block text-sm font-medium text-dark-700 mb-2"
+                >
                   Weight *
                 </label>
                 <input
+                  id="product-weight"
                   type="text"
                   required
                   value={formData.weight}
@@ -377,10 +414,14 @@ export function ProductFormDialog({
             {formData.category === EProductCategory.SUBSCRIPTIONS && (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-2">
+                  <label
+                    htmlFor="product-interval"
+                    className="block text-sm font-medium text-dark-700 mb-2"
+                  >
                     Interval
                   </label>
                   <select
+                    id="product-interval"
                     value={formData.recurringInterval || ""}
                     onChange={(e) =>
                       handleInputChange("recurringInterval", e.target.value)
@@ -395,10 +436,14 @@ export function ProductFormDialog({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-dark-700 mb-2">
+                  <label
+                    htmlFor="product-interval-count"
+                    className="block text-sm font-medium text-dark-700 mb-2"
+                  >
                     Every
                   </label>
                   <input
+                    id="product-interval-count"
                     type="number"
                     min="1"
                     value={formData.recurringIntervalCount || 1}
@@ -417,8 +462,12 @@ export function ProductFormDialog({
 
             {/* Stock and Featured */}
             <div className="flex gap-6">
-              <label className="flex items-center gap-2">
+              <label
+                htmlFor="product-inStock"
+                className="flex items-center gap-2"
+              >
                 <input
+                  id="product-inStock"
                   type="checkbox"
                   checked={formData.inStock}
                   onChange={(e) =>
@@ -428,8 +477,12 @@ export function ProductFormDialog({
                 />
                 <span className="text-sm text-dark-700">In Stock</span>
               </label>
-              <label className="flex items-center gap-2">
+              <label
+                htmlFor="product-featured"
+                className="flex items-center gap-2"
+              >
                 <input
+                  id="product-featured"
                   type="checkbox"
                   checked={formData.featured}
                   onChange={(e) =>
@@ -454,6 +507,7 @@ export function ProductFormDialog({
                     onChange={(e) =>
                       handleImageUrlChange(index, e.target.value, "imageUrls")
                     }
+                    aria-label={`Image URL ${index + 1}`}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                     placeholder="https://example.com/image.png"
                   />
@@ -494,6 +548,7 @@ export function ProductFormDialog({
                         "thumbnailUrls",
                       )
                     }
+                    aria-label={`Thumbnail URL ${index + 1}`}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                     placeholder="https://example.com/thumb.png"
                   />
@@ -519,10 +574,14 @@ export function ProductFormDialog({
 
             {/* Stripe Payment Link ID */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
+              <label
+                htmlFor="product-stripe-link"
+                className="block text-sm font-medium text-dark-700 mb-2"
+              >
                 Stripe Payment Link ID
               </label>
               <input
+                id="product-stripe-link"
                 type="text"
                 value={formData.stripePaymentLinkId || ""}
                 onChange={(e) =>
@@ -535,11 +594,15 @@ export function ProductFormDialog({
 
             {/* Tags */}
             <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
+              <label
+                htmlFor="product-tags-input"
+                className="block text-sm font-medium text-dark-700 mb-2"
+              >
                 Tags
               </label>
               <div className="flex gap-2 mb-2">
                 <input
+                  id="product-tags-input"
                   type="text"
                   value={tagInput}
                   onChange={(e) => setTagInput(e.target.value)}
@@ -584,6 +647,7 @@ export function ProductFormDialog({
             {/* Error display */}
             {submitError && (
               <div
+                role="alert"
                 className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
                 data-testid="product-form-dialog_error"
               >
@@ -593,6 +657,7 @@ export function ProductFormDialog({
                 <button
                   type="button"
                   onClick={() => setSubmitError(null)}
+                  aria-label="Dismiss error"
                   className="text-red-400 hover:text-red-600"
                 >
                   <X className="w-4 h-4" />

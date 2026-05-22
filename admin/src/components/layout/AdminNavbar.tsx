@@ -21,7 +21,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="lg:hidden">
+        <div className="lg:hidden" aria-hidden="true">
           <h1
             className="font-heading text-xl font-bold text-dark-900"
             data-testid="admin-navbar_title"
