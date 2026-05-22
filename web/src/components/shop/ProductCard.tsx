@@ -22,6 +22,7 @@ export const ProductCard = ({ product }: IProductCardProps) => {
 
   return (
     <motion.div
+      data-testid={`product-card-${product.slug}`}
       className="bg-white rounded-2xl shadow-sm hover:shadow-amber transition-shadow duration-300 overflow-hidden"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -30,7 +31,10 @@ export const ProductCard = ({ product }: IProductCardProps) => {
       whileHover={{ y: -5 }}
     >
       <div className="aspect-[4/3] bg-primary-50 relative overflow-hidden">
-        <Link to={`/products/${product.slug}`}>
+        <Link
+          to={`/products/${product.slug}`}
+          aria-label={`View ${product.name}`}
+        >
           {product.imageUrls && product.imageUrls[0] ? (
             <img
               src={product.imageUrls[0]}
@@ -40,7 +44,9 @@ export const ProductCard = ({ product }: IProductCardProps) => {
           ) : (
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
-                <span className="text-5xl">🍯</span>
+                <span className="text-5xl" aria-hidden="true">
+                  🍯
+                </span>
               </div>
             </div>
           )}
@@ -62,6 +68,7 @@ export const ProductCard = ({ product }: IProductCardProps) => {
           <h3 className="font-heading text-lg font-semibold text-dark-900">
             <Link
               to={`/products/${product.slug}`}
+              data-testid={`product-card_${product.slug}_name-link`}
               className="hover:text-primary-600 transition-colors"
             >
               {product.name}
@@ -83,11 +90,22 @@ export const ProductCard = ({ product }: IProductCardProps) => {
 
           <Button
             size="sm"
+            data-testid={`product-card_${product.slug}_add-btn`}
             onClick={handleAddToCart}
             disabled={!product.inStock}
             className="flex items-center"
+            aria-label={
+              product.inStock
+                ? `Add ${product.name} to cart`
+                : `${product.name} is unavailable`
+            }
+            title={
+              product.inStock
+                ? `Add ${product.name} to cart`
+                : `${product.name} is unavailable`
+            }
           >
-            <ShoppingCart className="w-4 h-4 mr-1" />
+            <ShoppingCart className="w-4 h-4 mr-1" aria-hidden="true" />
             {product.inStock ? "Add" : "Unavailable"}
           </Button>
         </div>

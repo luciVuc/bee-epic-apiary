@@ -31,6 +31,7 @@ export function CategoriesTab({
             <button
               onClick={() => removeCategoryItem(i)}
               aria-label={`Remove category ${i + 1}`}
+              title={`Remove category ${i + 1}`}
               className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
             >
               <Trash2 className="w-4 h-4" />

@@ -87,7 +87,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
 
   if (status === "success") {
     return (
-      <section id="contact" className="py-20 bg-white">
+      <section
+        id="contact"
+        data-testid="contact-section"
+        className="py-20 bg-white"
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader
             title={content.contactTitle}
@@ -100,7 +104,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
             animate={{ opacity: 1, scale: 1 }}
           >
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Send className="w-8 h-8 text-green-600" />
+              <Send className="w-8 h-8 text-green-600" aria-hidden="true" />
             </div>
             <h3 className="font-heading text-2xl font-semibold text-dark-900 mb-4">
               Message Sent!
@@ -119,7 +123,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
   }
 
   return (
-    <section id="contact" className="py-20 bg-white">
+    <section
+      id="contact"
+      data-testid="contact-section"
+      className="py-20 bg-white"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader title="Contact Us" />
 
@@ -141,11 +149,14 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   type="text"
                   id="name"
                   name="name"
+                  data-testid="contact-section_input-name"
                   value={formData.name}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body"
                   placeholder="Your name"
+                  aria-label="Your name"
+                  title="Enter your name"
                 />
               </div>
 
@@ -160,11 +171,14 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   type="email"
                   id="email"
                   name="email"
+                  data-testid="contact-section_input-email"
                   value={formData.email}
                   onChange={handleChange}
                   required
                   className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body"
                   placeholder="you@example.com"
+                  aria-label="Your email address"
+                  title="Enter your email address"
                 />
               </div>
 
@@ -178,9 +192,12 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                 <select
                   id="subject"
                   name="subject"
+                  data-testid="contact-section_select-subject"
                   value={formData.subject}
                   onChange={handleChange}
                   className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body"
+                  aria-label="Subject"
+                  title="Select a subject"
                 >
                   {subjectOptions.map((option) => (
                     <option key={option.value} value={option.value}>
@@ -200,12 +217,15 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                 <textarea
                   id="message"
                   name="message"
+                  data-testid="contact-section_textarea-message"
                   value={formData.message}
                   onChange={handleChange}
                   required
                   rows={5}
                   className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body resize-none"
                   placeholder="Your message..."
+                  aria-label="Your message"
+                  title="Enter your message"
                 />
               </div>
 
@@ -215,11 +235,18 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                 style={{ display: "none" }}
                 tabIndex={-1}
                 autoComplete="off"
+                aria-hidden="true"
               />
 
               {status === "error" && errorMessage && (
-                <div className="flex items-center space-x-2 p-3 bg-red-50 rounded-lg">
-                  <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
+                <div
+                  className="flex items-center space-x-2 p-3 bg-red-50 rounded-lg"
+                  role="alert"
+                >
+                  <AlertCircle
+                    className="w-5 h-5 text-red-500 flex-shrink-0"
+                    aria-hidden="true"
+                  />
                   <p className="font-body text-sm text-red-600">
                     {errorMessage}
                   </p>
@@ -230,7 +257,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                 {status === "loading" ? (
                   <LoadingSpinner size="sm" />
                 ) : (
-                  <Send className="w-5 h-5 mr-2" />
+                  <Send className="w-5 h-5 mr-2" aria-hidden="true" />
                 )}
                 Send Message
               </Button>
@@ -249,7 +276,10 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
               </h3>
               <div className="space-y-6">
                 <div className="flex items-start space-x-4">
-                  <Mail className="w-6 h-6 text-primary-500 mt-0.5" />
+                  <Mail
+                    className="w-6 h-6 text-primary-500 mt-0.5"
+                    aria-hidden="true"
+                  />
                   <div>
                     <p className="font-body text-sm text-dark-500">Email</p>
                     <a
@@ -262,7 +292,10 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <Phone className="w-6 h-6 text-primary-500 mt-0.5" />
+                  <Phone
+                    className="w-6 h-6 text-primary-500 mt-0.5"
+                    aria-hidden="true"
+                  />
                   <div>
                     <p className="font-body text-sm text-dark-500">Phone</p>
                     <a
@@ -275,7 +308,10 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                 </div>
 
                 <div className="flex items-start space-x-4">
-                  <MapPin className="w-6 h-6 text-primary-500 mt-0.5" />
+                  <MapPin
+                    className="w-6 h-6 text-primary-500 mt-0.5"
+                    aria-hidden="true"
+                  />
                   <div>
                     <p className="font-body text-sm text-dark-500">Location</p>
                     <p className="font-body text-dark-900">
@@ -287,7 +323,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
             </div>
 
             <div className="aspect-[4/3] bg-primary-50 rounded-2xl flex items-center justify-center">
-              <div className="text-center">
+              <div className="text-center" aria-hidden="true">
                 <MapPin className="w-12 h-12 text-primary-400 mx-auto mb-3" />
                 <p className="font-body text-primary-700">[Map Placeholder]</p>
               </div>

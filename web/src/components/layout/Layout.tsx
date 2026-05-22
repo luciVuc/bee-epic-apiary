@@ -10,9 +10,11 @@ interface ILayoutProps {
 
 export const Layout = ({ children, siteContent }: ILayoutProps) => {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div data-testid="layout" className="min-h-screen flex flex-col">
       <Navbar content={siteContent} />
-      <main className="flex-grow">{children}</main>
+      <main data-testid="layout_main" className="flex-grow">
+        {children}
+      </main>
       <Footer content={siteContent} />
     </div>
   );

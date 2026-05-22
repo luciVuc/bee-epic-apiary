@@ -27,7 +27,7 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
   ];
 
   return (
-    <section id="about" className="py-20 bg-white">
+    <section id="about" data-testid="about-section" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <motion.div
@@ -60,7 +60,9 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
             <div className="aspect-[4/3] rounded-2xl overflow-hidden bg-primary-100 shadow-amber-lg">
               <div className="w-full h-full flex items-center justify-center">
                 <div className="text-center p-8">
-                  <span className="text-6xl">🐝</span>
+                  <span className="text-6xl" aria-hidden="true">
+                    🐝
+                  </span>
                   <p className="font-body text-primary-700 mt-4">
                     [About Image]
                   </p>
@@ -101,7 +103,10 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <stat.icon className="w-10 h-10 text-primary-500 mx-auto mb-3" />
+              <stat.icon
+                className="w-10 h-10 text-primary-500 mx-auto mb-3"
+                aria-hidden="true"
+              />
               <p className="font-heading text-3xl font-bold text-dark-900">
                 {stat.label}
               </p>

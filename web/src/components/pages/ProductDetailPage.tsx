@@ -41,7 +41,10 @@ export function ProductDetailPage() {
 
   if (!product) {
     return (
-      <div className="min-h-screen bg-primary-50 flex items-center justify-center">
+      <div
+        data-testid="product-detail-page"
+        className="min-h-screen bg-primary-50 flex items-center justify-center"
+      >
         <div className="text-center">
           <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
             Product not found
@@ -80,6 +83,7 @@ export function ProductDetailPage() {
 
   return (
     <motion.div
+      data-testid="product-detail-page"
       className="min-h-screen bg-primary-50 py-8 px-4 sm:px-6 lg:px-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -87,10 +91,13 @@ export function ProductDetailPage() {
     >
       <div className="max-w-6xl mx-auto py-12">
         <button
+          data-testid="product-detail-page_back-btn"
           onClick={() => navigate("/products")}
           className="flex items-center text-dark-600 hover:text-primary-600 transition-colors mb-6 font-body"
+          aria-label="Back to products"
+          title="Back to products"
         >
-          <ChevronLeft className="w-5 h-5 mr-1" />
+          <ChevronLeft className="w-5 h-5 mr-1" aria-hidden="true" />
           Back to Products
         </button>
 
@@ -108,22 +115,33 @@ export function ProductDetailPage() {
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.3 }}
                     onClick={() => setShowLightbox(true)}
+                    data-testid="product-detail-page_main-image"
                   />
                   {hasMultipleImages && (
                     <>
                       <button
+                        data-testid="product-detail-page_prev-image-btn"
                         onClick={prevImage}
                         className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors"
                         aria-label="Previous image"
+                        title="Previous image"
                       >
-                        <ChevronLeft className="w-6 h-6 text-dark-700" />
+                        <ChevronLeft
+                          className="w-6 h-6 text-dark-700"
+                          aria-hidden="true"
+                        />
                       </button>
                       <button
+                        data-testid="product-detail-page_next-image-btn"
                         onClick={nextImage}
                         className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors"
                         aria-label="Next image"
+                        title="Next image"
                       >
-                        <ChevronRight className="w-6 h-6 text-dark-700" />
+                        <ChevronRight
+                          className="w-6 h-6 text-dark-700"
+                          aria-hidden="true"
+                        />
                       </button>
                       <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
                         {images.map((_, idx) => (
@@ -136,6 +154,7 @@ export function ProductDetailPage() {
                                 : "bg-dark-300"
                             }`}
                             aria-label={`Go to image ${idx + 1}`}
+                            title={`Go to image ${idx + 1}`}
                           />
                         ))}
                       </div>
@@ -145,7 +164,9 @@ export function ProductDetailPage() {
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <div className="text-center">
-                    <span className="text-9xl">🍯</span>
+                    <span className="text-9xl" aria-hidden="true">
+                      🍯
+                    </span>
                   </div>
                 </div>
               )}
@@ -206,32 +227,53 @@ export function ProductDetailPage() {
                     <span className="font-body text-dark-600">Quantity:</span>
                     <div className="flex items-center gap-2">
                       <button
+                        data-testid="product-detail-page_decrease-qty-btn"
                         onClick={() => handleQuantityChange(-1)}
                         className="p-1 hover:bg-dark-100 rounded transition-colors"
                         aria-label="Decrease quantity"
+                        title="Decrease quantity"
                       >
-                        <Minus className="w-4 h-4 text-dark-600" />
+                        <Minus
+                          className="w-4 h-4 text-dark-600"
+                          aria-hidden="true"
+                        />
                       </button>
                       <span className="font-body text-dark-900 w-8 text-center">
                         {quantity}
                       </span>
                       <button
+                        data-testid="product-detail-page_increase-qty-btn"
                         onClick={() => handleQuantityChange(1)}
                         className="p-1 hover:bg-dark-100 rounded transition-colors"
                         aria-label="Increase quantity"
+                        title="Increase quantity"
                       >
-                        <Plus className="w-4 h-4 text-dark-600" />
+                        <Plus
+                          className="w-4 h-4 text-dark-600"
+                          aria-hidden="true"
+                        />
                       </button>
                     </div>
                   </div>
                 )}
                 <Button
+                  data-testid="product-detail-page_add-to-cart-btn"
                   size="lg"
                   onClick={handleAddToCart}
                   disabled={!product.inStock}
                   className="w-full flex items-center justify-center"
+                  aria-label={
+                    product.inStock
+                      ? `Add ${product.name} to cart`
+                      : `${product.name} is out of stock`
+                  }
+                  title={
+                    product.inStock
+                      ? `Add ${product.name} to cart`
+                      : `${product.name} is out of stock`
+                  }
                 >
-                  <ShoppingCart className="w-5 h-5 mr-2" />
+                  <ShoppingCart className="w-5 h-5 mr-2" aria-hidden="true" />
                   {product.inStock ? "Add to Cart" : "Out of Stock"}
                 </Button>
               </div>
@@ -243,37 +285,56 @@ export function ProductDetailPage() {
       <AnimatePresence>
         {showLightbox && (
           <motion.div
+            data-testid="product-detail-page_lightbox"
             className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center"
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Lightbox for ${product.name}`}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowLightbox(false)}
           >
             <button
+              data-testid="product-detail-page_lightbox-close-btn"
               className="absolute top-4 right-4 w-10 h-10 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
               onClick={() => setShowLightbox(false)}
+              aria-label="Close lightbox"
+              title="Close lightbox"
             >
-              <X className="w-6 h-6 text-white" />
+              <X className="w-6 h-6 text-white" aria-hidden="true" />
             </button>
             {hasMultipleImages && (
               <>
                 <button
+                  data-testid="product-detail-page_lightbox-prev-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     prevImage();
                   }}
                   className="absolute left-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+                  aria-label="Previous image"
+                  title="Previous image"
                 >
-                  <ChevronLeft className="w-8 h-8 text-white" />
+                  <ChevronLeft
+                    className="w-8 h-8 text-white"
+                    aria-hidden="true"
+                  />
                 </button>
                 <button
+                  data-testid="product-detail-page_lightbox-next-btn"
                   onClick={(e) => {
                     e.stopPropagation();
                     nextImage();
                   }}
                   className="absolute right-4 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 rounded-full flex items-center justify-center hover:bg-white/30 transition-colors"
+                  aria-label="Next image"
+                  title="Next image"
                 >
-                  <ChevronRight className="w-8 h-8 text-white" />
+                  <ChevronRight
+                    className="w-8 h-8 text-white"
+                    aria-hidden="true"
+                  />
                 </button>
               </>
             )}

@@ -262,6 +262,7 @@ export function ProductsPage() {
               <button
                 onClick={() => handleSearchChange("")}
                 aria-label="Clear search"
+                title="Clear search"
                 data-testid="products-page_search-clear"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
               >
@@ -435,6 +436,7 @@ export function ProductsPage() {
                             handleEditProduct(product.id);
                           }}
                           aria-label="Edit product"
+                          title="Edit product"
                           className="p-2 text-dark-600 hover:bg-dark-100 rounded-lg transition-colors"
                         >
                           <Edit className="w-4 h-4" />
@@ -445,6 +447,7 @@ export function ProductsPage() {
                             setDeleteConfirm(product.id);
                           }}
                           aria-label="Delete product"
+                          title="Delete product"
                           className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />

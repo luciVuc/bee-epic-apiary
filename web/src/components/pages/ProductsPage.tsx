@@ -7,5 +7,9 @@ interface IProductsPageProps {
 }
 
 export function ProductsPage({ content, products }: IProductsPageProps) {
-  return <ProductsSection products={products} content={content} />;
+  return (
+    <div data-testid="products-page">
+      <ProductsSection products={products} content={content} />
+    </div>
+  );
 }

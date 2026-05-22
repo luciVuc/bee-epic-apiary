@@ -12,9 +12,10 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
   return (
     <section
       id="home"
+      data-testid="hero-section"
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-amber-50 via-primary-50 to-white"
     >
-      <div className="absolute inset-0 overflow-hidden">
+      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
         <motion.div
           className="absolute -top-20 -right-20 w-96 h-96 bg-primary-200 rounded-full opacity-30"
           animate={{
@@ -53,7 +54,7 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
-            <Heart className="w-4 h-4 text-primary-500" />
+            <Heart className="w-4 h-4 text-primary-500" aria-hidden="true" />
             <span className="font-body text-sm text-primary-700">
               {content.tagline}
             </span>
@@ -71,7 +72,10 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
             <Link to="/products">
               <Button size="lg" className="group">
                 Shop Our Honey
-                <ArrowRight className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight
+                  className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
+                  aria-hidden="true"
+                />
               </Button>
             </Link>
             <Link to="/about">
@@ -84,9 +88,11 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
       </div>
 
       <motion.div
+        data-testid="hero-section_scroll-indicator"
         className="absolute bottom-8 left-1/2 -translate-x-1/2"
         animate={{ y: [0, 10, 0] }}
         transition={{ duration: 2, repeat: Infinity }}
+        aria-hidden="true"
       >
         <div className="w-6 h-10 border-2 border-dark-300 rounded-full flex justify-center pt-1">
           <motion.div

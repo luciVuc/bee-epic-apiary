@@ -18,7 +18,11 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
 
 export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
   return (
-    <section id="process" className="py-20 bg-primary-50">
+    <section
+      id="process"
+      data-testid="process-section"
+      className="py-20 bg-primary-50"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
           title={content.processTitle}
@@ -26,7 +30,10 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
         />
 
         <div className="relative">
-          <div className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-primary-200 -translate-y-1/2" />
+          <div
+            className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-primary-200 -translate-y-1/2"
+            aria-hidden="true"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
             {steps.map((processStep, index) => {
@@ -35,6 +42,7 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
               return (
                 <motion.div
                   key={processStep.id}
+                  data-testid={`process-section_step-${processStep.id}`}
                   className="relative"
                   initial={{ opacity: 0, y: 30 }}
                   whileInView={{ opacity: 1, y: 0 }}
@@ -47,7 +55,10 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <IconComponent className="w-8 h-8 text-primary-500" />
+                      <IconComponent
+                        className="w-8 h-8 text-primary-500"
+                        aria-hidden="true"
+                      />
                     </motion.div>
 
                     <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-heading font-bold text-sm">
@@ -84,7 +95,10 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
                 >
                   <div className="absolute -left-[9px] top-0 w-4 h-4 bg-primary-500 rounded-full" />
                   <div className="w-12 h-12 bg-white rounded-full shadow-amber flex items-center justify-center mb-3">
-                    <IconComponent className="w-6 h-6 text-primary-500" />
+                    <IconComponent
+                      className="w-6 h-6 text-primary-500"
+                      aria-hidden="true"
+                    />
                   </div>
                   <h3 className="font-heading text-lg font-semibold text-dark-900 mb-1">
                     {processStep.title}

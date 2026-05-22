@@ -22,7 +22,10 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
   const sessionId = searchParams.get("session_id");
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white flex items-center justify-center p-4">
+    <div
+      data-testid="success-page"
+      className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white flex items-center justify-center p-4"
+    >
       <motion.div
         className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
         initial={{ scale: 0.9, opacity: 0 }}
@@ -35,7 +38,10 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring" }}
         >
-          <ShoppingBag className="w-10 h-10 text-green-600" />
+          <ShoppingBag
+            className="w-10 h-10 text-green-600"
+            aria-hidden="true"
+          />
         </motion.div>
 
         <h1 className="font-heading text-3xl font-bold text-dark-900 mb-4">
@@ -59,11 +65,17 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
           </h3>
           <ul className="space-y-2">
             <li className="flex items-start gap-2 font-body text-sm text-dark-600">
-              <Mail className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
+              <Mail
+                className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0"
+                aria-hidden="true"
+              />
               Check your email for order confirmation
             </li>
             <li className="flex items-start gap-2 font-body text-sm text-dark-600">
-              <Clock className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0" />
+              <Clock
+                className="w-4 h-4 text-primary-500 mt-0.5 flex-shrink-0"
+                aria-hidden="true"
+              />
               Your items will ship within 2-3 business days
             </li>
           </ul>
@@ -77,7 +89,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
           </Link>
           <Link to="/" className="block">
             <Button variant="outline" size="lg" className="w-full">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 mr-2" aria-hidden="true" />
               Back to Home
             </Button>
           </Link>

@@ -6,5 +6,9 @@ interface IContactPageProps {
 }
 
 export function ContactPage({ content }: IContactPageProps) {
-  return <ContactSection content={content} />;
+  return (
+    <div data-testid="contact-page">
+      <ContactSection content={content} />
+    </div>
+  );
 }

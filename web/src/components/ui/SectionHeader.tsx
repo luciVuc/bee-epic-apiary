@@ -21,6 +21,7 @@ export const SectionHeader = ({
 
   return (
     <motion.div
+      data-testid="section-header"
       className={`mb-12 ${alignments[align]} ${className}`}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}

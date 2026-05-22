@@ -33,6 +33,7 @@ export function TestimonialsTab({
             <button
               onClick={() => removeTestimonial(i)}
               aria-label={`Remove testimonial ${i + 1}`}
+              title={`Remove testimonial ${i + 1}`}
               data-testid={`testimonials-tab_remove-btn-${i}`}
               className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
             >
@@ -71,6 +72,7 @@ export function TestimonialsTab({
                       )
                     }
                     aria-label={`${star} star${star > 1 ? "s" : ""}`}
+                    title={`${star} star${star > 1 ? "s" : ""}`}
                     className={`p-1 rounded transition-colors ${star <= testimonial.rating ? "text-yellow-400" : "text-gray-300"}`}
                   >
                     <Star className="w-5 h-5 fill-current" />

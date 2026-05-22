@@ -95,6 +95,7 @@ export function SiteContentTab({
               <button
                 onClick={() => removeAboutParagraph(i)}
                 aria-label={`Remove paragraph ${i + 1}`}
+                title={`Remove paragraph ${i + 1}`}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
               >
                 <Trash2 className="w-4 h-4" />
@@ -219,6 +220,7 @@ export function SiteContentTab({
               <button
                 onClick={() => removeNavLink(i)}
                 aria-label={`Remove nav link ${i + 1}`}
+                title={`Remove nav link ${i + 1}`}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
               >
                 <Trash2 className="w-4 h-4" />

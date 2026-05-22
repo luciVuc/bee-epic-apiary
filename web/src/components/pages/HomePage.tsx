@@ -9,9 +9,9 @@ interface IHomePageProps {
 
 export function HomePage({ content, testimonials }: IHomePageProps) {
   return (
-    <>
+    <div data-testid="home-page">
       <HeroSection content={content} />
       <TestimonialsSection testimonials={testimonials} content={content} />
-    </>
+    </div>
   );
 }

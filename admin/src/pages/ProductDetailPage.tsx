@@ -117,6 +117,7 @@ export function ProductDetailPage() {
             data-testid="product-detail-page_back-button"
             onClick={() => navigate(backUrl)}
             aria-label="Back to products"
+            title="Back to products"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <ArrowLeft className="w-5 h-5 text-dark-600" />

@@ -15,6 +15,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
         <button
           onClick={onMenuClick}
           aria-label="Toggle navigation menu"
+          title="Toggle navigation menu"
           className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
           data-testid="admin-navbar_menu-btn"
         >
@@ -42,6 +43,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
         <div className="flex items-center gap-4">
           <button
             aria-label="Notifications"
+            title="Notifications"
             data-testid="admin-navbar_notifications"
             className="relative p-2 text-dark-600 hover:bg-gray-100 rounded-lg"
           >

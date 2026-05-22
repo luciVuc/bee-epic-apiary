@@ -9,9 +9,9 @@ interface IAboutProcessPageProps {
 
 export function AboutProcessPage({ content, steps }: IAboutProcessPageProps) {
   return (
-    <>
+    <div data-testid="about-process-page">
       <AboutSection content={content} />
       <ProcessSection steps={steps} content={content} />
-    </>
+    </div>
   );
 }

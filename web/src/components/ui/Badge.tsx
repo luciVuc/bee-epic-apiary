@@ -21,6 +21,7 @@ export const Badge = ({
 
   return (
     <span
+      data-testid="badge"
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${variants[variant]} ${className}`}
     >
       {children}

@@ -17,7 +17,7 @@ export const Footer = ({ content }: IFooterProps) => {
     }));
 
   return (
-    <footer className="bg-dark-900 text-white">
+    <footer data-testid="footer" className="bg-dark-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-2">
@@ -33,10 +33,12 @@ export const Footer = ({ content }: IFooterProps) => {
                   href={content.socialLinks.instagram}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-testid="footer_instagram-link"
                   className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
                   aria-label="Instagram"
+                  title="Instagram"
                 >
-                  <Instagram className="w-5 h-5" />
+                  <Instagram className="w-5 h-5" aria-hidden="true" />
                 </a>
               )}
               {content.socialLinks.facebook && (
@@ -44,10 +46,12 @@ export const Footer = ({ content }: IFooterProps) => {
                   href={content.socialLinks.facebook}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-testid="footer_facebook-link"
                   className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
                   aria-label="Facebook"
+                  title="Facebook"
                 >
-                  <Facebook className="w-5 h-5" />
+                  <Facebook className="w-5 h-5" aria-hidden="true" />
                 </a>
               )}
               {content.socialLinks.etsy && (
@@ -55,8 +59,10 @@ export const Footer = ({ content }: IFooterProps) => {
                   href={content.socialLinks.etsy}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-testid="footer_etsy-link"
                   className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
                   aria-label="Etsy"
+                  title="Etsy"
                 >
                   <span className="text-sm font-bold">E</span>
                 </a>
@@ -73,6 +79,7 @@ export const Footer = ({ content }: IFooterProps) => {
                 <li key={link.label}>
                   <a
                     href={link.href}
+                    data-testid={`footer_link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                     className="font-body text-dark-300 hover:text-primary-400 transition-colors duration-200"
                   >
                     {link.label}
@@ -88,25 +95,36 @@ export const Footer = ({ content }: IFooterProps) => {
             </h4>
             <ul className="space-y-3">
               <li className="flex items-start space-x-3">
-                <Mail className="w-5 h-5 text-primary-400 mt-0.5" />
+                <Mail
+                  className="w-5 h-5 text-primary-400 mt-0.5"
+                  aria-hidden="true"
+                />
                 <a
                   href={`mailto:${content.email}`}
+                  data-testid="footer_email-link"
                   className="font-body text-dark-300 hover:text-primary-400 transition-colors duration-200"
                 >
                   {content.email}
                 </a>
               </li>
               <li className="flex items-start space-x-3">
-                <Phone className="w-5 h-5 text-primary-400 mt-0.5" />
+                <Phone
+                  className="w-5 h-5 text-primary-400 mt-0.5"
+                  aria-hidden="true"
+                />
                 <a
                   href={`tel:${content.phone}`}
+                  data-testid="footer_phone-link"
                   className="font-body text-dark-300 hover:text-primary-400 transition-colors duration-200"
                 >
                   {content.phone}
                 </a>
               </li>
               <li className="flex items-start space-x-3">
-                <MapPin className="w-5 h-5 text-primary-400 mt-0.5" />
+                <MapPin
+                  className="w-5 h-5 text-primary-400 mt-0.5"
+                  aria-hidden="true"
+                />
                 <span className="font-body text-dark-300">
                   {content.location}
                 </span>

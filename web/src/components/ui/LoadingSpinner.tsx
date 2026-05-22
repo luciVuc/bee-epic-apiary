@@ -16,7 +16,12 @@ export const LoadingSpinner = ({
   };
 
   return (
-    <div className={`flex items-center justify-center ${className}`}>
+    <div
+      data-testid="loading-spinner"
+      className={`flex items-center justify-center ${className}`}
+      role="status"
+      aria-live="polite"
+    >
       <motion.div
         className={`border-2 border-primary-200 border-t-primary-500 rounded-full ${sizes[size]}`}
         animate={{ rotate: 360 }}
@@ -26,6 +31,7 @@ export const LoadingSpinner = ({
           ease: "linear",
         }}
       />
+      <span className="sr-only">Loading...</span>
     </div>
   );
 };

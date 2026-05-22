@@ -44,12 +44,14 @@ export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
     return (
       <button
         ref={ref}
+        data-testid="button"
         className={combinedClasses}
         disabled={disabled || isLoading}
+        aria-busy={isLoading ? true : undefined}
         {...props}
       >
         {isLoading ? (
-          <span className="mr-2">
+          <span className="mr-2" aria-hidden="true">
             <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
               <circle
                 className="opacity-25"

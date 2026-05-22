@@ -238,6 +238,7 @@ export function ProductFormDialog({
           <button
             onClick={onClose}
             aria-label="Close dialog"
+            title="Close dialog"
             data-testid="product-form-dialog_close-btn"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
@@ -318,6 +319,9 @@ export function ProductFormDialog({
                 }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                 placeholder="Short description of the product"
+                data-testid="product-form-dialog_input-description"
+                aria-label="Short description"
+                title="Enter a short description"
               />
             </div>
 
@@ -337,6 +341,9 @@ export function ProductFormDialog({
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                 rows={4}
                 placeholder="Detailed description of the product..."
+                data-testid="product-form-dialog_textarea-long-description"
+                aria-label="Long description"
+                title="Enter a detailed description"
               />
             </div>
 
@@ -360,6 +367,9 @@ export function ProductFormDialog({
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                   placeholder="1400"
+                  data-testid="product-form-dialog_input-price"
+                  aria-label="Price in cents"
+                  title="Enter price in cents"
                 />
               </div>
               <div>
@@ -379,6 +389,9 @@ export function ProductFormDialog({
                     )
                   }
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  data-testid="product-form-dialog_select-category"
+                  aria-label="Category"
+                  title="Select a category"
                 >
                   {categories.length === 0 ? (
                     <option value="HONEY">Honey</option>
@@ -406,6 +419,9 @@ export function ProductFormDialog({
                   onChange={(e) => handleInputChange("weight", e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                   placeholder="16 oz"
+                  data-testid="product-form-dialog_input-weight"
+                  aria-label="Weight"
+                  title="Enter product weight"
                 />
               </div>
             </div>
@@ -427,6 +443,9 @@ export function ProductFormDialog({
                       handleInputChange("recurringInterval", e.target.value)
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                    data-testid="product-form-dialog_select-interval"
+                    aria-label="Recurring interval"
+                    title="Select a billing interval"
                   >
                     <option value="">Select interval...</option>
                     <option value="day">Day</option>
@@ -455,6 +474,9 @@ export function ProductFormDialog({
                     }
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                     placeholder="1"
+                    data-testid="product-form-dialog_input-interval-count"
+                    aria-label="Recurring interval count"
+                    title="Enter interval count"
                   />
                 </div>
               </div>
@@ -474,6 +496,9 @@ export function ProductFormDialog({
                     handleInputChange("inStock", e.target.checked)
                   }
                   className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                  data-testid="product-form-dialog_checkbox-in-stock"
+                  aria-label="In Stock"
+                  title="Toggle in stock status"
                 />
                 <span className="text-sm text-dark-700">In Stock</span>
               </label>
@@ -489,6 +514,9 @@ export function ProductFormDialog({
                     handleInputChange("featured", e.target.checked)
                   }
                   className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                  data-testid="product-form-dialog_checkbox-featured"
+                  aria-label="Featured product"
+                  title="Toggle featured status"
                 />
                 <span className="text-sm text-dark-700">Featured Product</span>
               </label>
@@ -515,6 +543,7 @@ export function ProductFormDialog({
                     type="button"
                     onClick={() => removeImageUrl(index, "imageUrls")}
                     aria-label={`Remove image URL ${index + 1}`}
+                    title={`Remove image URL ${index + 1}`}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -525,6 +554,7 @@ export function ProductFormDialog({
                 type="button"
                 onClick={() => addImageUrl("imageUrls")}
                 className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
+                title="Add image URL"
               >
                 <Plus className="w-4 h-4" />
                 Add Image URL
@@ -556,6 +586,7 @@ export function ProductFormDialog({
                     type="button"
                     onClick={() => removeImageUrl(index, "thumbnailUrls")}
                     aria-label={`Remove thumbnail URL ${index + 1}`}
+                    title={`Remove thumbnail URL ${index + 1}`}
                     className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -566,6 +597,7 @@ export function ProductFormDialog({
                 type="button"
                 onClick={() => addImageUrl("thumbnailUrls")}
                 className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
+                title="Add thumbnail URL"
               >
                 <Plus className="w-4 h-4" />
                 Add Thumbnail URL
@@ -589,6 +621,9 @@ export function ProductFormDialog({
                 }
                 className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                 placeholder="plink_..."
+                data-testid="product-form-dialog_input-stripe-link"
+                aria-label="Stripe payment link ID"
+                title="Enter the Stripe payment link ID"
               />
             </div>
 
@@ -614,11 +649,15 @@ export function ProductFormDialog({
                   }}
                   className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                   placeholder="Add a tag"
+                  data-testid="product-form-dialog_input-tags"
+                  aria-label="Add a tag"
+                  title="Type a tag name and press Enter"
                 />
                 <button
                   type="button"
                   onClick={handleAddTag}
                   aria-label="Add tag"
+                  title="Add tag"
                   className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
                 >
                   <Plus className="w-4 h-4" />
@@ -658,6 +697,7 @@ export function ProductFormDialog({
                   type="button"
                   onClick={() => setSubmitError(null)}
                   aria-label="Dismiss error"
+                  title="Dismiss error"
                   className="text-red-400 hover:text-red-600"
                 >
                   <X className="w-4 h-4" />

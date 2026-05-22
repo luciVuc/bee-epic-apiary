@@ -28,7 +28,11 @@ export const ProductsSection = ({
   }));
 
   return (
-    <section id="products" className="py-20 bg-white">
+    <section
+      id="products"
+      data-testid="products-section"
+      className="py-20 bg-white"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
           title={content.productsTitle}
@@ -39,6 +43,7 @@ export const ProductsSection = ({
           {categories.map((category) => (
             <button
               key={category.id}
+              data-testid={`products-section_filter-${category.value.toLowerCase()}`}
               onClick={() =>
                 setActiveCategory(category.value as EProductCategory | "ALL")
               }
@@ -47,6 +52,8 @@ export const ProductsSection = ({
                   ? "bg-primary-500 text-white shadow-amber"
                   : "bg-primary-50 text-dark-600 hover:bg-primary-100"
               }`}
+              aria-label={`Filter by ${category.label}`}
+              title={`Filter by ${category.label}`}
             >
               {category.label}
             </button>
@@ -65,7 +72,10 @@ export const ProductsSection = ({
         </motion.div>
 
         {filteredProducts.length === 0 && (
-          <div className="text-center py-12">
+          <div
+            data-testid="products-section_empty"
+            className="text-center py-12"
+          >
             <p className="font-body text-dark-500">{content.noProductsFound}</p>
           </div>
         )}

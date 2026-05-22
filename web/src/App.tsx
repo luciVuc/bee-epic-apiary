@@ -86,13 +86,18 @@ function AppContent() {
       <AnimatePresence>
         {showSuccessModal && (
           <motion.div
+            data-testid="success-modal_overlay"
             className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="success-modal_title"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setShowSuccessModal(false)}
           >
             <motion.div
+              data-testid="success-modal"
               className="bg-white rounded-2xl p-8 max-w-md w-full"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -101,9 +106,14 @@ function AppContent() {
             >
               <div className="text-center">
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <span className="text-3xl">🎉</span>
+                  <span className="text-3xl" aria-hidden="true">
+                    🎉
+                  </span>
                 </div>
-                <h2 className="font-heading text-2xl font-bold text-dark-900 mb-4">
+                <h2
+                  id="success-modal_title"
+                  className="font-heading text-2xl font-bold text-dark-900 mb-4"
+                >
                   {siteContent.orderConfirmed}
                 </h2>
                 <p className="font-body text-dark-600 mb-2">
@@ -113,8 +123,11 @@ function AppContent() {
                   {siteContent.questionsContact} {siteContent.email}
                 </p>
                 <button
+                  data-testid="success-modal_continue-btn"
                   onClick={() => setShowSuccessModal(false)}
                   className="px-6 py-2 bg-primary-500 text-white rounded-xl font-body font-medium hover:bg-primary-600 transition-colors"
+                  aria-label={siteContent.continueShopping}
+                  title={siteContent.continueShopping}
                 >
                   {siteContent.continueShopping}
                 </button>

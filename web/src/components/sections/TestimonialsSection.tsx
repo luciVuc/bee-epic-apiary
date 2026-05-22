@@ -14,7 +14,11 @@ export const TestimonialsSection = ({
   content,
 }: ITestimonialsSectionProps) => {
   return (
-    <section id="testimonials" className="py-20 bg-primary-50">
+    <section
+      id="testimonials"
+      data-testid="testimonials-section"
+      className="py-20 bg-primary-50"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
           title={content.testimonialsTitle}
@@ -25,6 +29,7 @@ export const TestimonialsSection = ({
           {testimonials.map((testimonial, index) => (
             <motion.div
               key={testimonial.id}
+              data-testid={`testimonials-section_card-${testimonial.id}`}
               className="bg-white rounded-2xl p-6 shadow-sm"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -40,14 +45,18 @@ export const TestimonialsSection = ({
                         ? "fill-primary-500 text-primary-500"
                         : "fill-dark-200 text-dark-200"
                     }`}
+                    aria-hidden="true"
                   />
                 ))}
               </div>
 
-              <Quote className="w-8 h-8 text-primary-200 mb-3" />
+              <Quote
+                className="w-8 h-8 text-primary-200 mb-3"
+                aria-hidden="true"
+              />
 
               <p className="font-body text-dark-600 mb-6 italic">
-                "{testimonial.text}"
+                &ldquo;{testimonial.text}&rdquo;
               </p>
 
               <div className="flex items-center justify-between">

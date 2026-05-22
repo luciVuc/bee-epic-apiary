@@ -38,6 +38,7 @@ export const Navbar = ({ content }: INavbarProps) => {
 
   return (
     <motion.nav
+      data-testid="navbar"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
         isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
       }`}
@@ -49,9 +50,14 @@ export const Navbar = ({ content }: INavbarProps) => {
         <div className="flex items-center justify-between h-16 md:h-20">
           <Link
             to="/"
+            data-testid="navbar_logo-link"
             className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+            aria-label={`${content.businessName} - Home`}
+            title={`${content.businessName} - Home`}
           >
-            <span className="text-3xl">🐝</span>
+            <span className="text-3xl" aria-hidden="true">
+              🐝
+            </span>
             <span className="font-heading text-xl font-bold text-dark-900 hidden sm:block">
               {content.businessName}
             </span>
@@ -79,11 +85,16 @@ export const Navbar = ({ content }: INavbarProps) => {
 
           <div className="flex items-center space-x-4">
             <button
+              data-testid="navbar_cart-btn"
               onClick={open}
               className="relative p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
               aria-label={`Shopping cart with ${totalItems} items`}
+              title={`Shopping cart with ${totalItems} items`}
             >
-              <ShoppingCart className="w-6 h-6 text-dark-700" />
+              <ShoppingCart
+                className="w-6 h-6 text-dark-700"
+                aria-hidden="true"
+              />
               {totalItems > 0 && (
                 <motion.span
                   className="absolute -top-1 -right-1 bg-primary-500 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center"
@@ -97,14 +108,16 @@ export const Navbar = ({ content }: INavbarProps) => {
             </button>
 
             <button
+              data-testid="navbar_menu-btn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="md:hidden p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              title={isMobileMenuOpen ? "Close menu" : "Open menu"}
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6 text-dark-700" />
+                <X className="w-6 h-6 text-dark-700" aria-hidden="true" />
               ) : (
-                <Menu className="w-6 h-6 text-dark-700" />
+                <Menu className="w-6 h-6 text-dark-700" aria-hidden="true" />
               )}
             </button>
           </div>
@@ -114,6 +127,7 @@ export const Navbar = ({ content }: INavbarProps) => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
+            data-testid="navbar_mobile-menu"
             className="md:hidden bg-white border-t border-dark-100"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
@@ -143,6 +157,10 @@ export const Navbar = ({ content }: INavbarProps) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {!isMobileMenuOpen && (
+        <div data-testid="navbar_mobile-menu-closed" aria-hidden="true" />
+      )}
     </motion.nav>
   );
 };

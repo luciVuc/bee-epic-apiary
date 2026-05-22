@@ -28,6 +28,7 @@ export function ProcessTab({
             <button
               onClick={() => removeProcessStep(i)}
               aria-label={`Remove process step ${i + 1}`}
+              title={`Remove process step ${i + 1}`}
               className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
             >
               <Trash2 className="w-4 h-4" />
