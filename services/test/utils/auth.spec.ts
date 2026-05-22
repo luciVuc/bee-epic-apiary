@@ -1,13 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { checkAuth } from '../../src/utils/auth';
-import type { AuthResult } from '../../src/utils/auth';
+import type { IAuthResult } from '../../src/utils/auth';
 
 describe('checkAuth', () => {
 	it('returns authenticated true when API_SECRET_KEY is not set', () => {
 		const request = new Request('http://example.com', { method: 'POST' });
 		const env = {} as Env;
 
-		const result: AuthResult = checkAuth(request, env);
+		const result: IAuthResult = checkAuth(request, env);
 
 		expect(result.authenticated).toBe(true);
 	});

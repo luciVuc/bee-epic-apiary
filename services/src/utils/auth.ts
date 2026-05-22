@@ -1,6 +1,6 @@
 import { isAllowedOrigin } from '.';
 
-export interface AuthResult {
+export interface IAuthResult {
 	authenticated: boolean;
 	error?: Response;
 }
@@ -16,7 +16,7 @@ function authErrorResponse(message: string, status: number, request: Request, en
 	return new Response(JSON.stringify({ error: message }), { status, headers });
 }
 
-export function checkAuth(request: Request, env: Env): AuthResult {
+export function checkAuth(request: Request, env: Env): IAuthResult {
 	if (!env.API_SECRET_KEY) {
 		return { authenticated: true };
 	}

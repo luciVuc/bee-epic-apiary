@@ -1,7 +1,7 @@
 /**
  * Options for configuring the RateLimiter
  */
-export interface RateLimiterOptions {
+export interface IRateLimiterOptions {
 	/** Maximum number of requests allowed within the window */
 	maxRequests: number;
 	/** Time window in seconds */
@@ -11,7 +11,7 @@ export interface RateLimiterOptions {
 /**
  * Result of a rate limit check
  */
-export interface RateLimiterResult {
+export interface IRateLimiterResult {
 	/** Whether the request is allowed */
 	allowed: boolean;
 	/** Number of requests remaining in the current window */
@@ -36,15 +36,15 @@ export interface RateLimiterResult {
  */
 export class RateLimiter {
 	private kv: KVNamespace;
-	private options: RateLimiterOptions;
+	private options: IRateLimiterOptions;
 
 	/**
 	 * Creates a new RateLimiter instance
 	 *
 	 * @param {KVNamespace} kv - Cloudflare KV namespace for storing request counts
-	 * @param {RateLimiterOptions} options - Configuration options for rate limiting
+	 * @param {IRateLimiterOptions} options - Configuration options for rate limiting
 	 */
-	constructor(kv: KVNamespace, options: RateLimiterOptions) {
+	constructor(kv: KVNamespace, options: IRateLimiterOptions) {
 		this.kv = kv;
 		this.options = options;
 	}
@@ -54,7 +54,7 @@ export class RateLimiter {
 	 * Increments the request count for the key in the current time window.
 	 *
 	 * @param {string} key - Unique identifier for the request (e.g., "IP:method" or "user123")
-	 * @returns {Promise<RateLimiterResult>} Object containing allowed status, remaining requests, and reset time
+	 * @returns {Promise<IRateLimiterResult>} Object containing allowed status, remaining requests, and reset time
 	 *
 	 * @example
 	 * const result = await rateLimiter.check('192.168.1.1:POST');
@@ -66,7 +66,7 @@ export class RateLimiter {
 	 *   console.log(`Rate limit resets at: ${result.resetTime}`);
 	 * }
 	 */
-	async check(key: string): Promise<RateLimiterResult> {
+	async check(key: string): Promise<IRateLimiterResult> {
 		const now = Math.floor(Date.now() / 1000);
 		const windowStart = Math.floor(now / this.options.windowSeconds) * this.options.windowSeconds;
 		const resetTime = windowStart + this.options.windowSeconds;

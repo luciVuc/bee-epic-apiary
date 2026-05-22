@@ -16,11 +16,11 @@ function getStripeInstance(env: Env): Stripe {
 
 type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
 
-interface WithStripeHandlerOptions {
+export interface IWithStripeHandlerOptions {
 	requireAuth?: boolean;
 }
 
-export function withStripeHandler(method: HttpMethod, handler: StripeHandler, options?: WithStripeHandlerOptions) {
+export function withStripeHandler(method: HttpMethod, handler: StripeHandler, options?: IWithStripeHandlerOptions) {
 	return async (request: Request, env: Env): Promise<Response> => {
 		if (request.method === 'OPTIONS') {
 			return handleCORS(request, env, method);
