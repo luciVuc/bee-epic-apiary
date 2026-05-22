@@ -1,4 +1,4 @@
-interface TextAreaFieldProps {
+export interface ITextAreaFieldProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -12,7 +12,7 @@ export function TextAreaField({
   onChange,
   hideLabel,
   name,
-}: TextAreaFieldProps) {
+}: ITextAreaFieldProps) {
   return (
     <div className="w-full">
       {!hideLabel && (

@@ -1,4 +1,4 @@
-interface TextFieldProps {
+export interface ITextFieldProps {
   label: string;
   value: string;
   onChange: (v: string) => void;
@@ -14,7 +14,7 @@ export function TextField({
   placeholder,
   type,
   name,
-}: TextFieldProps) {
+}: ITextFieldProps) {
   return (
     <div>
       <label

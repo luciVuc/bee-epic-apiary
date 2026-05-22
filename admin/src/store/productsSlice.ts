@@ -2,14 +2,14 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { IProduct, IProductInput } from "../types";
 import * as api from "../utils/api";
 
-interface IFetchParams {
+export interface IFetchParams {
   limit?: number;
   starting_after?: string;
   search?: string;
   category?: string;
 }
 
-interface IProductsState {
+export interface IProductsState {
   items: IProduct[];
   loading: boolean;
   error: string | null;

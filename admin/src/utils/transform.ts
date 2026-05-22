@@ -3,8 +3,8 @@ import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL } from "./constants";
 
 import type {
-  StripeProductResponse,
-  StripePriceResponse,
+  IStripeProductResponse,
+  IStripePriceResponse,
 } from "../types/stripe";
 
 const DEFAULT_IMAGES = [DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL];
@@ -16,7 +16,7 @@ const DEFAULT_IMAGES = [DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL];
  * Price is retrieved from the expanded default_price object.
  */
 export function transformStripeProduct(
-  stripeProduct: StripeProductResponse,
+  stripeProduct: IStripeProductResponse,
 ): IProduct {
   const metadata = stripeProduct.metadata || {};
 
@@ -32,7 +32,7 @@ export function transformStripeProduct(
   let recurringIntervalCount: number | undefined = undefined;
   const defaultPrice = stripeProduct.default_price;
   if (defaultPrice && typeof defaultPrice === "object") {
-    const priceObj = defaultPrice as StripePriceResponse;
+    const priceObj = defaultPrice as IStripePriceResponse;
     price = priceObj.unit_amount || 0;
     stripePriceId = priceObj.id;
     if (priceObj.recurring) {
@@ -129,7 +129,7 @@ export function transformToStripePriceParams(
  * Transform Stripe products list response
  */
 export function transformStripeProductsList(
-  response: { data?: StripeProductResponse[] } | null,
+  response: { data?: IStripeProductResponse[] } | null,
 ): IProduct[] {
   if (!response?.data || !Array.isArray(response.data)) {
     return [];

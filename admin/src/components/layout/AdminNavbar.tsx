@@ -1,10 +1,10 @@
 import { Bell, User, Menu } from "lucide-react";
 
-interface AdminNavbarProps {
+export interface IAdminNavbarProps {
   onMenuClick?: () => void;
 }
 
-export function AdminNavbar({ onMenuClick }: AdminNavbarProps) {
+export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   return (
     <header className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 md:px-6 py-4 lg:left-64">
       <div className="flex items-center justify-between">

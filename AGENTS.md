@@ -14,6 +14,10 @@ Monorepo: `web/` (React frontend) + `services/` (Cloudflare Worker).
 
 Root scripts use `npm run <script> --prefix <dir>` to delegate to sub-packages.
 
+## Naming Convention (all packages)
+
+All TypeScript interface definitions must be exported and prefixed with `I` (e.g., `ISpinnerProps`, `IProductFormDialogProps`, `IStripeProductResponse`, `IProduct`). This applies to `admin/`, `web/`, and `services/`.
+
 ## Web App (`web/`)
 
 - **Framework**: React 18 + TypeScript + Vite with Hash Router (for GitHub Pages)
@@ -33,6 +37,13 @@ Key points:
 - Env vars set via Wrangler secrets (not `dotenv`)
 - Run `npm run cf-typegen` after changing `wrangler.jsonc` bindings
 - Tests: `npm run services:test` (Vitest with Cloudflare Workers pool)
+
+## Admin App (`admin/`)
+
+- **Framework**: React 18 + TypeScript + Vite with React Router
+- **State**: Redux Toolkit (`productsSlice`)
+- **API**: Communicates with the Cloudflare Worker for CRUD operations
+- **Tests**: Vitest with React Testing Library; run `npm test` in `admin/`
 
 ## Gotchas
 

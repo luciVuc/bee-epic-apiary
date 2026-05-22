@@ -8,11 +8,11 @@ import {
 import { EProductCategory } from "../../types";
 import { DEFAULT_PRODUCT_IMAGE } from "../constants";
 import type {
-  StripeProductResponse,
-  StripePriceResponse,
+  IStripeProductResponse,
+  IStripePriceResponse,
 } from "../../types/stripe";
 
-const mockPrice: StripePriceResponse = {
+const mockPrice: IStripePriceResponse = {
   id: "price_123",
   product: "prod_123",
   unit_amount: 2999,
@@ -22,7 +22,7 @@ const mockPrice: StripePriceResponse = {
   type: "one_time",
 };
 
-const mockSubscriptionPrice: StripePriceResponse = {
+const mockSubscriptionPrice: IStripePriceResponse = {
   id: "price_456",
   product: "prod_456",
   unit_amount: 1999,
@@ -33,8 +33,8 @@ const mockSubscriptionPrice: StripePriceResponse = {
 };
 
 function makeStripeProduct(
-  overrides: Partial<StripeProductResponse> = {},
-): StripeProductResponse {
+  overrides: Partial<IStripeProductResponse> = {},
+): IStripeProductResponse {
   return {
     id: "prod_123",
     name: "Test Honey",

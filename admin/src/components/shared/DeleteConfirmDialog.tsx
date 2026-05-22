@@ -1,4 +1,4 @@
-interface DeleteConfirmDialogProps {
+export interface IDeleteConfirmDialogProps {
   isOpen: boolean;
   productName: string;
   onCancel: () => void;
@@ -10,7 +10,7 @@ export function DeleteConfirmDialog({
   productName,
   onCancel,
   onConfirm,
-}: DeleteConfirmDialogProps) {
+}: IDeleteConfirmDialogProps) {
   if (!isOpen) return null;
 
   return (

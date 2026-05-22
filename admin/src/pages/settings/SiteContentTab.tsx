@@ -2,7 +2,7 @@ import { Store, Image, Plus, Trash2 } from "lucide-react";
 import type { ISiteContent } from "../../types/settings";
 import { TextField, TextAreaField, Section } from "../../components/forms";
 
-interface SiteContentTabProps {
+export interface ISiteContentTabProps {
   siteContent: ISiteContent;
   updateSite: <K extends keyof ISiteContent>(
     field: K,
@@ -25,7 +25,7 @@ export function SiteContentTab({
   addNavLink,
   updateNavLink,
   removeNavLink,
-}: SiteContentTabProps) {
+}: ISiteContentTabProps) {
   return (
     <div className="space-y-8">
       <Section title="Business Info" icon={<Store className="w-4 h-4" />}>

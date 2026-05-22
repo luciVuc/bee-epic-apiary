@@ -1,11 +1,11 @@
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Package, Settings, Hexagon, X } from "lucide-react";
 
-interface SidebarProps {
+export interface ISidebarProps {
   onClose?: () => void;
 }
 
-export function Sidebar({ onClose }: SidebarProps) {
+export function Sidebar({ onClose }: ISidebarProps) {
   const navItems = [
     {
       to: "/dashboard",

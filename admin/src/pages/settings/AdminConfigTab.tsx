@@ -9,7 +9,7 @@ import {
 import { TextField, Section } from "../../components/forms";
 import type { IAdminSettings } from "../../types";
 
-interface AdminConfigTabProps {
+export interface IAdminConfigTabProps {
   adminSettings: IAdminSettings;
   adminSaved: boolean;
   adminError: string;
@@ -23,7 +23,7 @@ export function AdminConfigTab({
   adminError,
   onAdminChange,
   onAdminSave,
-}: AdminConfigTabProps) {
+}: IAdminConfigTabProps) {
   return (
     <div className="space-y-6">
       {adminError && (

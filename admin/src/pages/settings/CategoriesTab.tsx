@@ -2,7 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import type { ICategory } from "../../types/settings";
 import { TextField } from "../../components/forms";
 
-interface CategoriesTabProps {
+export interface ICategoriesTabProps {
   categoriesContent: ICategory[];
   addCategoryItem: () => void;
   updateCategoryItem: (
@@ -18,7 +18,7 @@ export function CategoriesTab({
   addCategoryItem,
   updateCategoryItem,
   removeCategoryItem,
-}: CategoriesTabProps) {
+}: ICategoriesTabProps) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-dark-500 mb-4">

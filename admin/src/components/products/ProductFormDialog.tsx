@@ -12,7 +12,7 @@ import { EProductCategory } from "../../types";
 import type { ICategory } from "../../types/settings";
 import * as api from "../../utils/api";
 
-interface ProductFormDialogProps {
+export interface IProductFormDialogProps {
   productId?: string;
   onClose: () => void;
 }
@@ -20,7 +20,7 @@ interface ProductFormDialogProps {
 export function ProductFormDialog({
   productId,
   onClose,
-}: ProductFormDialogProps) {
+}: IProductFormDialogProps) {
   const dispatch = useDispatch<AppDispatch>();
   const { selectedProduct, loading } = useSelector(
     (state: RootState) => state.products,

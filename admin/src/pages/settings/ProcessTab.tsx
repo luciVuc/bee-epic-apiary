@@ -2,7 +2,7 @@ import { Plus, Trash2 } from "lucide-react";
 import type { IProcessStep } from "../../types/settings";
 import { TextField, TextAreaField } from "../../components/forms";
 
-interface ProcessTabProps {
+export interface IProcessTabProps {
   processContent: IProcessStep[];
   addProcessStep: () => void;
   updateProcessStep: <K extends keyof IProcessStep>(
@@ -18,7 +18,7 @@ export function ProcessTab({
   addProcessStep,
   updateProcessStep,
   removeProcessStep,
-}: ProcessTabProps) {
+}: IProcessTabProps) {
   return (
     <div className="space-y-4">
       {processContent.map((step, i) => (

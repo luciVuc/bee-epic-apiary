@@ -2,7 +2,7 @@ import { Plus, Trash2, Star } from "lucide-react";
 import type { ITestimonial } from "../../types/settings";
 import { TextField, TextAreaField } from "../../components/forms";
 
-interface TestimonialsTabProps {
+export interface ITestimonialsTabProps {
   testimonialsContent: ITestimonial[];
   addTestimonial: () => void;
   updateTestimonial: <K extends keyof ITestimonial>(
@@ -18,7 +18,7 @@ export function TestimonialsTab({
   addTestimonial,
   updateTestimonial,
   removeTestimonial,
-}: TestimonialsTabProps) {
+}: ITestimonialsTabProps) {
   return (
     <div className="space-y-4">
       {testimonialsContent.map((testimonial, i) => (
