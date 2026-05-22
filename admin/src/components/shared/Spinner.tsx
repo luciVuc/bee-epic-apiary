@@ -1,4 +1,6 @@
+/** Accessible loading spinner with role="status" and sr-only text */
 export interface ISpinnerProps {
+  /** Additional Tailwind height/width classes (default "h-64") */
   className?: string;
 }
 

@@ -1,5 +1,15 @@
 # Bee Epic Apiary - Stripe Services Cloudflare Worker
 
+> **DOCUMENTATION MAINTENANCE**: After making ANY changes to source code in this directory, you MUST update the following:
+>
+> - Source files: Update/add JSDoc comments on new/modified functions, interfaces, and exports
+> - `SOURCE.md`: Keep in sync with function signatures, parameters, return values, and logic
+> - `API.md`: Update endpoint descriptions, request/response shapes, status codes, and auth requirements
+> - `README.md`: Keep commands, environment variables, and setup steps current
+> - `AGENTS.md`: Keep architecture descriptions, gotchas, and testing info accurate
+>
+> Documentation must always be accurate, complete, and consistent with the actual implementation.
+
 This directory contains a Cloudflare Worker providing Stripe checkout session creation and product CRUD (Create, Read, Update, Delete) operations, with CORS handling, rate limiting, and optional API key authentication.
 
 ## Commands

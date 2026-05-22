@@ -1,11 +1,18 @@
+/** Reusable text input with auto-generated label association */
 import { useId } from "react";
 
 export interface ITextFieldProps {
+  /** Visible label text */
   label: string;
+  /** Current input value */
   value: string;
+  /** Change handler receiving the string value */
   onChange: (v: string) => void;
+  /** Placeholder text */
   placeholder?: string;
+  /** Input type attribute (default "text") */
   type?: string;
+  /** Optional name attribute, also used for label association */
   name?: string;
 }
 

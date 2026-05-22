@@ -1,8 +1,10 @@
+/** Recurring billing interval from a Stripe Price */
 export interface IStripePriceRecurring {
   interval: string;
   interval_count: number;
 }
 
+/** Shape of a Stripe Price object returned from the API */
 export interface IStripePriceResponse {
   id: string;
   product: string;
@@ -13,6 +15,7 @@ export interface IStripePriceResponse {
   type: string;
 }
 
+/** Shape of a Stripe Product object returned from the API */
 export interface IStripeProductResponse {
   id: string;
   name: string;
@@ -25,6 +28,7 @@ export interface IStripeProductResponse {
   updated: number;
 }
 
+/** Shape of a paginated Stripe Product list response */
 export interface IStripeProductsListResponse {
   data: IStripeProductResponse[];
   has_more: boolean;

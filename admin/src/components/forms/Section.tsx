@@ -1,8 +1,12 @@
+/** A titled content section with optional icon, used in settings forms */
 import type { ReactNode } from "react";
 
 export interface ISectionProps {
+  /** Section heading text */
   title: string;
+  /** Optional icon element displayed next to the title */
   icon?: ReactNode;
+  /** Content rendered inside the section */
   children: ReactNode;
 }
 

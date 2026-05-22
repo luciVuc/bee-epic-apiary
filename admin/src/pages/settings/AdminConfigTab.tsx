@@ -1,3 +1,4 @@
+/** Tab for configuring API connection, Stripe keys, and admin settings (persisted to localStorage) */
 import {
   Store,
   Globe,

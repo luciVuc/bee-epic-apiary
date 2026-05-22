@@ -10,16 +10,24 @@ This document provides comprehensive documentation for all source code in the `.
    - [src/router.ts](#srcrouterts)
 3. [Stripe Integration](#stripe-integration)
    - [src/stripe/index.ts](#srcstripeindexts)
+   - [Price](#price)
+     - [src/stripe/price/index.ts](#srcstripepriceindexts)
+     - [create-price.ts](#srcstripepricecreate-pricets)
    - [Checkout](#checkout)
      - [src/stripe/checkout/index.ts](#srcstripecheckoutindexts)
      - [src/stripe/checkout/stripe-checkout.ts](#srcstripecheckoutstripe-checkoutts)
    - [Product](#product)
      - [src/stripe/product/index.ts](#srcstripeproductindexts)
+     - [shared.ts](#srcstripeproductsharedts)
      - [create-product.ts](#srcstripeproductcreate-productts)
      - [get-products.ts](#srcstripeproductget-productsts)
+     - [get-products-count.ts](#srcstripeproductget-products-countts)
      - [update-product.ts](#srcstripeproductupdate-productts)
      - [delete-product.ts](#srcstripeproductdelete-productts)
-4. [Utilities](#utilities)
+4. [Settings](#settings)
+   - [src/settings/schemas.ts](#srcsettingsschemasts)
+   - [src/settings/settings-handler.ts](#srcsettingssettings-handlerts)
+5. [Utilities](#utilities)
    - [src/utils/index.ts](#srcutilsindexts)
    - [auth.ts](#srcutilsauthts)
    - [handleCORS.ts](#srcutilshandlecorsts)
@@ -106,7 +114,45 @@ Re-exports all Stripe-related modules for easy importing.
 ```typescript
 export * from './checkout';
 export * from './product';
+export * from './price';
 ```
+
+---
+
+### Price
+
+#### src/stripe/price/index.ts
+
+Re-exports the price handler.
+
+**Code**:
+
+```typescript
+export * from './create-price';
+```
+
+#### src/stripe/price/create-price.ts
+
+Handles `POST /prices` to create a new Stripe Price for a product.
+
+**Dependencies**:
+
+- `withStripeHandler`, `jsonResponse` from `../../utils`
+
+**Exported Object**:
+
+```typescript
+export default {
+	fetch: withStripeHandler('POST', handleCreatePrice, { requireAuth: true }),
+} satisfies ExportedHandler<Env>;
+```
+
+**Handler Logic**:
+
+1. Parses request body as `Stripe.PriceCreateParams`
+2. Validates `product` (required string), `unit_amount` (required, > 0), `currency` (required), `lookup_key` (optional string)
+3. Creates price via Stripe API
+4. Returns created price object with 201 status
 
 ---
 
@@ -166,7 +212,59 @@ export * from './create-product';
 export * from './update-product';
 export * from './delete-product';
 export * from './get-products';
+export * from './get-products-count';
 ```
+
+#### src/stripe/product/shared.ts
+
+Shared helper functions used across multiple product handlers.
+
+**Exported Functions**:
+
+##### `fetchAllActiveProducts(stripe: Stripe, expand?: string[]): Promise<Stripe.Product[]>`
+
+Fetches ALL active products from Stripe by paginating through all pages (100 items per page).
+
+**Parameters**:
+
+- `stripe`: Stripe client instance
+- `expand`: Optional array of fields to expand
+
+**Returns**: Complete array of all active Stripe products
+
+##### `matchesSearch(product: Stripe.Product, search: string): boolean`
+
+Checks if a product matches a search query (case-insensitive). Searches name, description, longDescription metadata, and tags metadata.
+
+**Parameters**:
+
+- `product`: Stripe product object
+- `search`: Search string
+
+**Returns**: `true` if product matches the search query
+
+##### `matchesCategory(product: Stripe.Product, category: string): boolean`
+
+Checks if a product belongs to a given category (read from metadata.category).
+
+**Parameters**:
+
+- `product`: Stripe product object
+- `category`: Category string (or "ALL" to match everything)
+
+**Returns**: `true` if product matches the category
+
+##### `paginateArray<T>(items: T[], limit: number, startingAfter?: string): { data: T[], hasMore: boolean, lastId: string | null }`
+
+Paginates an already-filtered array in-memory (used after search/filter operations).
+
+**Parameters**:
+
+- `items`: Full array of items
+- `limit`: Number of items per page
+- `startingAfter`: Cursor ID for pagination
+
+**Returns**: Paginated slice with hasMore flag and lastId cursor
 
 #### src/stripe/product/create-product.ts
 
@@ -187,23 +285,25 @@ Handles `POST /products` to create a new Stripe product.
 
 #### src/stripe/product/get-products.ts
 
-Handles `GET /products` and `GET /products/:id` to retrieve products.
+Handles `GET /products` and `GET /products/:id` to retrieve products with search, filter, and pagination.
 
 **Dependencies**:
 
 - `withStripeHandler` from `../../utils`
 - `jsonResponse` from `../../utils`
+- `fetchAllActiveProducts`, `matchesSearch`, `matchesCategory`, `paginateArray` from `./shared`
 
 **Handler Logic**:
 
 1. Extracts product ID from URL if present
-2. For `GET /products` (no ID):
-   - Checks Cloudflare cache first (5 minute TTL)
-   - Lists all products via Stripe API
-   - Caches response with `Cache-Control: public, max-age=300`
-3. For `GET /products/:id`:
-   - Retrieves single product via Stripe API
-4. Returns product(s) as response
+2. For `GET /products/:id` (single product):
+   - Retrieves product via Stripe API with optional expand params
+   - Returns 404 if product is not active
+3. For `GET /products` (list):
+   - Parses `search`, `category`, `limit`, and `starting_after` query params
+   - If search or category filter is active: fetches all active products, filters in-memory, then paginates
+   - Otherwise: fetches from Stripe with cursor-based pagination, computes total_count by fetching full list
+4. Returns products list with `has_more`, `total_count`, and `lastId`
 
 #### src/stripe/product/update-product.ts
 
@@ -223,9 +323,28 @@ Handles `PUT /products/:id` to update an existing product.
 5. Updates product via Stripe API
 6. Returns updated product
 
+#### src/stripe/product/get-products-count.ts
+
+Handles `GET /products/count` to retrieve the total product count with optional search/filter.
+
+**Dependencies**:
+
+- `withStripeHandler` from `../../utils`
+- `jsonResponse` from `../../utils`
+- `fetchAllActiveProducts`, `matchesSearch`, `matchesCategory` from `./shared`
+
+**Handler Logic**:
+
+1. Parses `search` and `category` query params
+2. Fetches all active products via `fetchAllActiveProducts`
+3. Filters in-memory by search and/or category if applicable
+4. Returns `{ total: number }`
+
+---
+
 #### src/stripe/product/delete-product.ts
 
-Handles `DELETE /products/:id` to delete a product.
+Handles `DELETE /products/:id` to archive a product (Stripe does not support hard deletion).
 
 **Dependencies**:
 
@@ -235,8 +354,39 @@ Handles `DELETE /products/:id` to delete a product.
 **Handler Logic**:
 
 1. Extracts product ID from URL
-2. Deletes product via Stripe API
-3. Returns delete confirmation
+2. Verifies the product exists (returns 404 if resource_missing)
+3. If already archived, returns early with a message
+4. Clears `default_price` to avoid price archiving conflicts
+5. Deactivates all active prices for the product
+6. Sets `active: false` on the product (archives it)
+7. Returns archived product with list of archived price IDs
+
+---
+
+---
+
+## Settings
+
+### src/settings/schemas.ts
+
+Zod validation schemas for settings data.
+
+**Exported**:
+
+- `categorySchema`: Zod array schema validating `{ id: string, label: string }[]`
+
+### src/settings/settings-handler.ts
+
+Handles `GET` and `PUT` requests for content settings stored in Cloudflare KV (`CONTENT_KV`).
+
+**Supported Types**: `site`, `process`, `testimonials`, `categories`
+
+**Handler Logic**:
+
+1. Parses the settings type from the URL path (`/settings/:type`)
+2. **GET**: Reads value from `CONTENT_KV`, parses JSON, and returns it
+3. **PUT**: Validates origin and auth, validates body (Zod for `categories` type), stores JSON in `CONTENT_KV`
+4. Returns appropriate error responses for missing content, invalid JSON, or validation failures
 
 ---
 
@@ -429,7 +579,7 @@ Wrapper function for Stripe handlers that centralizes CORS, rate limiting, origi
 
 **Exported Function**:
 
-#### `withStripeHandler(method: HttpMethod, handler: StripeHandler): (request: Request, env: Env) => Promise<Response>`
+#### `withStripeHandler(method: HttpMethod, handler: StripeHandler, options?: IWithStripeHandlerOptions): (request: Request, env: Env) => Promise<Response>`
 
 Wraps a Stripe handler function with common middleware.
 
@@ -439,12 +589,21 @@ Wraps a Stripe handler function with common middleware.
 type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
 ```
 
+**Options**:
+
+```typescript
+interface IWithStripeHandlerOptions {
+	requireAuth?: boolean; // If true, API key authentication is required
+}
+```
+
 **Middleware Logic**:
 
 1. Handles CORS preflight (OPTIONS requests)
 2. Validates request method matches `method`
 3. Validates request origin using `isAllowedOrigin`
-4. Applies rate limiting (if KV binding is available)
-5. Initializes/reuses cached Stripe client
-6. Calls the provided handler with Stripe client
-7. Catches Stripe errors and returns appropriate error responses
+4. Applies optional authentication via `checkAuth` (if `requireAuth: true`)
+5. Applies rate limiting (if KV binding is available)
+6. Initializes/reuses cached Stripe client (lazy singleton)
+7. Calls the provided handler with Stripe client
+8. Catches Stripe errors and returns appropriate error responses

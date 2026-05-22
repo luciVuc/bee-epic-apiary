@@ -1,3 +1,4 @@
+/** Tab for managing "From Hive to Table" process steps with title, description, and icon */
 import { Plus, Trash2 } from "lucide-react";
 import type { IProcessStep } from "../../types/settings";
 import { TextField, TextAreaField } from "../../components/forms";

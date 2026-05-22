@@ -1,7 +1,9 @@
+/** Persistent sidebar navigation with Dashboard, Products, and Settings links. Active route is highlighted. */
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, Package, Settings, Hexagon, X } from "lucide-react";
 
 export interface ISidebarProps {
+  /** Callback to close the sidebar (used on mobile after link click) */
   onClose?: () => void;
 }
 

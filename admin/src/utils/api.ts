@@ -1,3 +1,4 @@
+/** API client for communicating with the Cloudflare Worker (Stripe CRUD + settings) */
 import axios from "axios";
 import type { IProductInput } from "../types";
 import { EProductCategory } from "../types";
@@ -18,6 +19,7 @@ const apiClient = axios.create({
   },
 });
 
+/** Retrieve the API secret key from localStorage or VITE_ env fallback */
 function getApiKey(): string | null {
   try {
     const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -31,6 +33,7 @@ function getApiKey(): string | null {
   return import.meta.env.VITE_API_SECRET_KEY || null;
 }
 
+/** Attach Bearer token to every request if an API key is available */
 apiClient.interceptors.request.use((config) => {
   const apiKey = getApiKey();
   if (apiKey) {
@@ -39,6 +42,7 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+/** Create a Stripe Price for a given product */
 async function createStripePrice(
   productId: string,
   price: number,
@@ -58,12 +62,14 @@ async function createStripePrice(
   return priceResponse.data;
 }
 
+/** Update the base URL used by the API client (called when settings are saved) */
 export function updateApiBaseUrl(url: string) {
   apiClient.defaults.baseURL = url;
 }
 
+/** API methods for interacting with the Cloudflare Worker */
 export const api = {
-  // Products
+  /** Fetch paginated list of products (with optional search, category filter, cursor pagination) */
   getProducts: async (params?: {
     limit?: number;
     starting_after?: string;
@@ -87,6 +93,7 @@ export const api = {
     };
   },
 
+  /** Fetch total product count (respects search/filter params) */
   getProductsCount: async (params?: { search?: string; category?: string }) => {
     const response = await apiClient.get("/products/count", {
       params: {
@@ -97,6 +104,7 @@ export const api = {
     return response.data.total;
   },
 
+  /** Fetch a single product by its Stripe ID */
   getProductById: async (id: string) => {
     const response = await apiClient.get(`/products/${id}`, {
       params: { expand: ["default_price"] },
@@ -104,6 +112,7 @@ export const api = {
     return transformStripeProduct(response.data);
   },
 
+  /** Create a product (Stripe product + price). Rolls back on failure. */
   createProduct: async (product: IProductInput) => {
     // Step 1: Create the product in Stripe (without price in metadata)
     const productParams = transformToStripeParams(product);
@@ -140,6 +149,7 @@ export const api = {
     }
   },
 
+  /** Update an existing product (and create a new Stripe Price if price changed) */
   updateProduct: async (id: string, product: Partial<IProductInput>) => {
     // Step 1: Update product fields in Stripe
     const productParams = transformToStripeParams(product);
@@ -171,17 +181,19 @@ export const api = {
     return api.getProductById(id);
   },
 
+  /** Delete (archive) a product by its Stripe ID */
   deleteProduct: async (id: string) => {
     await apiClient.delete(`/products/${id}`);
     return id; // The productsSlice expects the ID to be returned
   },
 
-  // Content Settings
+  /** Fetch content settings (site, process, testimonials, categories) from the worker KV store */
   getSettings: async <T>(type: string): Promise<T> => {
     const response = await apiClient.get(`/settings/${type}`);
     return response.data;
   },
 
+  /** Save content settings to the worker KV store */
   saveSettings: async <T>(type: string, data: T): Promise<void> => {
     await apiClient.put(`/settings/${type}`, data);
   },

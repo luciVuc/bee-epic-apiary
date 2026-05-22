@@ -1,3 +1,4 @@
+/** Admin panel entry point. Mounts the React app with Redux Provider and BrowserRouter. */
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";

@@ -1,5 +1,7 @@
 # Bee Epic Apiary - Stripe Services Cloudflare Worker
 
+> **Documentation**: See `AGENTS.md` for architecture, `API.md` for endpoints, and `SOURCE.md` for source code documentation. Keep these files in sync when making changes.
+
 A lightweight Cloudflare Worker for integrating Stripe into your application, providing:
 
 - Stripe Checkout session creation (one-time payments and subscriptions)
@@ -85,7 +87,7 @@ Detailed documentation for all source code is available in [SOURCE.md](./SOURCE.
 
 ## Testing
 
-- All 55 tests are currently passing.
+- All 65 tests are currently passing.
 - Run tests with `npm run test`.
 - Tests use Vitest with Cloudflare Workers pool for accurate runtime simulation.
 

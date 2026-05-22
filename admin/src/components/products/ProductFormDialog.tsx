@@ -1,3 +1,4 @@
+/** Modal dialog for creating and editing products. Handles Stripe product + price creation in sequence. */
 import { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Plus, Trash2 } from "lucide-react";

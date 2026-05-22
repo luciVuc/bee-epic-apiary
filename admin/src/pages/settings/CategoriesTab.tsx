@@ -1,3 +1,4 @@
+/** Tab for managing product categories with ID and label fields */
 import { Plus, Trash2 } from "lucide-react";
 import type { ICategory } from "../../types/settings";
 import { TextField } from "../../components/forms";

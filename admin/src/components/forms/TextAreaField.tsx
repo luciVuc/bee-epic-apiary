@@ -1,10 +1,16 @@
+/** Reusable textarea with auto-generated label association */
 import { useId } from "react";
 
 export interface ITextAreaFieldProps {
+  /** Visible label text */
   label: string;
+  /** Current textarea value */
   value: string;
+  /** Change handler receiving the string value */
   onChange: (v: string) => void;
+  /** If true, the label element is visually hidden (still accessible) */
   hideLabel?: boolean;
+  /** Optional name attribute, also used for label association */
   name?: string;
 }
 

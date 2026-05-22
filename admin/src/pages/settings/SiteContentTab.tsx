@@ -1,3 +1,4 @@
+/** Tab for editing site-wide content: business info, hero, about, nav links, social links, order confirmation */
 import { Store, Image, Plus, Trash2 } from "lucide-react";
 import type { ISiteContent } from "../../types/settings";
 import { TextField, TextAreaField, Section } from "../../components/forms";

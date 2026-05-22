@@ -1,3 +1,4 @@
+/** Central settings page with tabbed interface for admin config, site content, process steps, testimonials, and categories */
 import { useState, useEffect } from "react";
 import { Save, AlertCircle, CheckCircle } from "lucide-react";
 import {

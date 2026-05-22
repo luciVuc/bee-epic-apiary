@@ -1,7 +1,9 @@
+/** Redux slice for product state management (CRUD + pagination + search) */
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { IProduct, IProductInput } from "../types";
 import * as api from "../utils/api";
 
+/** Parameters for fetching paginated/filtered product lists */
 export interface IFetchParams {
   limit?: number;
   starting_after?: string;
@@ -9,6 +11,7 @@ export interface IFetchParams {
   category?: string;
 }
 
+/** Full shape of the products slice state */
 export interface IProductsState {
   items: IProduct[];
   loading: boolean;
@@ -33,6 +36,7 @@ const initialState: IProductsState = {
   scrollPosition: 0,
 };
 
+/** Fetch paginated products with optional search/filter */
 export const fetchProducts = createAsyncThunk(
   "products/fetchAll",
   async (params?: IFetchParams) => {
@@ -41,6 +45,7 @@ export const fetchProducts = createAsyncThunk(
   },
 );
 
+/** Fetch total product count (with optional search/filter) */
 export const fetchProductsCount = createAsyncThunk(
   "products/fetchCount",
   async (params?: { search?: string; category?: string }) => {
@@ -49,6 +54,7 @@ export const fetchProductsCount = createAsyncThunk(
   },
 );
 
+/** Fetch a single product by Stripe ID */
 export const fetchProductById = createAsyncThunk(
   "products/fetchById",
   async (id: string) => {
@@ -57,6 +63,7 @@ export const fetchProductById = createAsyncThunk(
   },
 );
 
+/** Create a product (Stripe product + price) and refresh the count */
 export const createProduct = createAsyncThunk(
   "products/create",
   async (product: IProductInput, { dispatch, getState, rejectWithValue }) => {
@@ -85,6 +92,7 @@ export const createProduct = createAsyncThunk(
   },
 );
 
+/** Update an existing product (optionally creating a new Stripe Price) */
 export const updateProduct = createAsyncThunk(
   "products/update",
   async (
@@ -116,6 +124,7 @@ export const updateProduct = createAsyncThunk(
   },
 );
 
+/** Delete (archive) a product and refresh the count */
 export const deleteProduct = createAsyncThunk(
   "products/delete",
   async (id: string, { dispatch, getState }) => {

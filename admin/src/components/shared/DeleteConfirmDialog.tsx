@@ -1,7 +1,12 @@
+/** Confirmation modal for destructive delete actions. Accessible with role="dialog" and aria-labelledby. */
 export interface IDeleteConfirmDialogProps {
+  /** Whether the dialog is visible */
   isOpen: boolean;
+  /** Name of the product being deleted (displayed in the confirmation message) */
   productName: string;
+  /** Cancel/close handler */
   onCancel: () => void;
+  /** Confirm delete handler */
   onConfirm: () => void;
 }
 

@@ -1,3 +1,4 @@
+/** Products list page with search, category filtering, desktop table / mobile card view, pagination, and CRUD dialogs */
 import {
   useEffect,
   useLayoutEffect,

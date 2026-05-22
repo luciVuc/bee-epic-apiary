@@ -1,3 +1,4 @@
+/** Tab for managing customer testimonials with name, location, star rating, text, and date */
 import { Plus, Trash2, Star } from "lucide-react";
 import type { ITestimonial } from "../../types/settings";
 import { TextField, TextAreaField } from "../../components/forms";

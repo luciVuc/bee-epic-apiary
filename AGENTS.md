@@ -1,18 +1,35 @@
 # Bee Epic Apiary
 
-> **EXTREMLEY IMPORTANT INSTRUCTION**: Whenever you make a change, fix, update, upgrade, or any modification to this project, you MUST also read this file and update it as necessary to keep it in sync with the project's current structure, conventions, requirements, commands, and gotchas. This is your single source of truth — keep it accurate.
+> **EXTREMELY IMPORTANT INSTRUCTION**: Whenever you make a change, fix, update, upgrade, or any modification to this project, you MUST also read this file and update it as necessary to keep it in sync with the project's current structure, conventions, requirements, commands, and gotchas. This is your single source of truth — keep it accurate.
+>
+> **DOCUMENTATION MAINTENANCE**: After making ANY changes to source code — including adding new files, modifying existing code, renaming, refactoring, or changing interfaces — you MUST update the relevant documentation:
+>
+> - `admin/` source files: Update/add JSDoc comments on functions, interfaces, and exports
+> - `services/` source files: Update/add JSDoc comments on functions, interfaces, and exports
+> - `services/SOURCE.md`: Keep in sync with actual function signatures, parameters, and logic
+> - `services/API.md`: Update endpoint descriptions, request/response shapes, and status codes
+> - `README.md` files: Keep structure, commands, and feature lists current
+> - `AGENTS.md` files: Keep conventions, gotchas, and architecture accurate
+>
+> Code documentation must always be accurate, complete, and consistent with the actual implementation.
 
-Monorepo: `web/` (React frontend) + `services/` (Cloudflare Worker).
+Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/` (public storefront, in development).
 
 ## Commands
 
-| Command                | Purpose                                                |
-| ---------------------- | ------------------------------------------------------ |
-| `npm run dev`          | Start both services and web dev servers (concurrently) |
-| `npm run build`        | Build services (deploy) then web                       |
-| `npm run deploy`       | Deploy services to Cloudflare + web to GitHub Pages    |
-| `npm run web:dev`      | Web dev server only (Vite, port 5173)                  |
-| `npm run services:dev` | Services dev server only (Wrangler)                    |
+| Command                 | Purpose                                              |
+| ----------------------- | ---------------------------------------------------- |
+| `npm run dev`           | Start all dev servers concurrently                   |
+| `npm run dev:all`       | Start all dev servers (same as above)                |
+| `npm run build`         | Build services + web + admin                         |
+| `npm run deploy`        | Deploy services to Cloudflare + web to GitHub Pages  |
+| `npm run admin:dev`     | Admin dev server only (Vite, port 5174)              |
+| `npm run admin:build`   | Build admin for production                           |
+| `npm run admin:test`    | Run admin tests (Vitest + React Testing Library)     |
+| `npm run services:dev`  | Services dev server only (Wrangler, port 8787)       |
+| `npm run services:test` | Services tests (Vitest with Cloudflare Workers pool) |
+| `npm run web:dev`       | Web dev server only (Vite, port 5173)                |
+| `npm run test`          | Run all tests (services then admin)                  |
 
 Root scripts use `npm run <script> --prefix <dir>` to delegate to sub-packages.
 
@@ -37,6 +54,8 @@ Additionally, every component must comply with these accessibility requirements:
 
 ## Web App (`web/`)
 
+> **Status**: In development. Documentation may be incomplete.
+
 - **Framework**: React 18 + TypeScript + Vite with Hash Router (for GitHub Pages)
 - **Data source**: Local JSON files in `src/data/` (products.json, site.json, testimonials.json, process.json)
 - **Stripe**: Client-only checkout via `VITE_STRIPE_PUBLISHABLE_KEY` (must use `VITE_` prefix for Vite)
@@ -54,17 +73,35 @@ Key points:
 - Env vars set via Wrangler secrets (not `dotenv`)
 - Run `npm run cf-typegen` after changing `wrangler.jsonc` bindings
 - Tests: `npm run services:test` (Vitest with Cloudflare Workers pool)
+- 65+ tests covering all endpoints, utils, and auth
+- Coverage thresholds: 90% lines, branches, functions, statements
 
 ## Admin App (`admin/`)
 
 - **Framework**: React 18 + TypeScript + Vite with React Router
-- **State**: Redux Toolkit (`productsSlice`)
-- **API**: Communicates with the Cloudflare Worker for CRUD operations
-- **Tests**: Vitest with React Testing Library; run `npm test` in `admin/`
+- **Styling**: Tailwind CSS with custom `primary` and `dark` color palettes
+- **State**: Redux Toolkit (`productsSlice` for product CRUD + pagination)
+- **API**: Axios client communicating with the Cloudflare Worker for Stripe CRUD + content settings
+- **Pages**: Dashboard, Products (list/detail), Settings (5 sub-tabs)
+- **Tests**: Vitest with React Testing Library (jsdom); run `npm test` in `admin/`
+- **Coverage thresholds**: 88% lines, 85% branches, 45% functions, 88% statements
+- **Dev server**: Port 5174 (Vite proxy `/api` -> `http://localhost:8787`)
+
+Key features:
+
+- **Dashboard**: Stat cards, category breakdown bars, quick actions, recent products
+- **Products**: CRUD with Stripe integration (product + price creation), search, category filter, pagination, desktop table / mobile card views
+- **Product Form**: Modal dialog for add/edit with name, slug, description, price (cents), category, stock, featured, images, tags, subscription support
+- **Settings**: Tabbed interface (Admin Config, Site Content, Process, Testimonials, Categories) — content saved to worker KV, admin config saved to localStorage
+- **Accessibility**: data-testid attributes, aria labels, role attributes on all components
+- **API Auth**: Bearer token from `VITE_API_SECRET_KEY` or localStorage settings
 
 ## Gotchas
 
-- **Env var conventions differ**: Web uses `VITE_` prefix (Vite), services uses Wrangler secrets
+- **Env var conventions differ**: Web uses `VITE_` prefix (Vite), services uses Wrangler secrets; admin uses `VITE_` prefix
 - **Hash Router**: Web uses `HashRouter` for GitHub Pages compatibility (URLs like `/#/products`)
-- **Services KV namespace**: Must create via `npx wrangler kv namespace create "RATE_LIMIT_KV"` before deploying
+- **Services KV namespace**: Must create via `npx wrangler kv namespace create "RATE_LIMIT_KV"` before deploying; also need `CONTENT_KV` for settings
 - **Root tests**: `npm test` runs `services:test` then `admin:test` sequentially
+- **Stripe API version**: Services uses `2026-04-22.dahlia` — update when upgrading Stripe SDK
+- **Admin API proxy**: Vite dev server proxies `/api` to `http://localhost:8787` (rewrites `/api` prefix)
+- **Settings storage**: Admin config (API URL, keys) stored in localStorage; site content (business info, etc.) stored in worker KV

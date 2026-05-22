@@ -1,3 +1,4 @@
+/** Dashboard overview page with stat cards, category breakdown, quick actions, and recent products */
 import { useEffect, useMemo, type ComponentType } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";

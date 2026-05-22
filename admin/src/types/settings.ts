@@ -1,8 +1,10 @@
+/** A product category with ID and display label */
 export interface ICategory {
   id: string;
   label: string;
 }
 
+/** Full site content definition used by the public web app */
 export interface ISiteContent {
   businessName: string;
   tagline: string;
@@ -40,6 +42,7 @@ export interface ISiteContent {
   socialLinks: { instagram: string; facebook: string; etsy: string };
 }
 
+/** A single step in the "From Hive to Table" process */
 export interface IProcessStep {
   id: string;
   step: number;
@@ -48,6 +51,7 @@ export interface IProcessStep {
   icon: string;
 }
 
+/** A customer testimonial entry */
 export interface ITestimonial {
   id: string;
   name: string;
@@ -57,6 +61,7 @@ export interface ITestimonial {
   date: string;
 }
 
+/** Union of available settings tab identifiers */
 export type SettingsTab =
   | "admin"
   | "site"

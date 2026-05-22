@@ -1,3 +1,4 @@
+/** Transform functions for converting between Stripe API shapes and admin UI shapes */
 import type { IProduct, IProductInput } from "../types";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL } from "./constants";

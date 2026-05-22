@@ -1,6 +1,8 @@
+/** Fixed top navigation bar with mobile hamburger menu, title, notifications, and user indicator */
 import { Bell, User, Menu } from "lucide-react";
 
 export interface IAdminNavbarProps {
+  /** Callback when the mobile hamburger menu button is clicked */
   onMenuClick?: () => void;
 }
 

@@ -1,3 +1,4 @@
+/** Single product detail page with images, description, status card, and inline edit/delete actions */
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";

@@ -1,3 +1,4 @@
+/** Root layout wrapping all admin pages. Provides sidebar + navbar shell with responsive mobile overlay. */
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";

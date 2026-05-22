@@ -1,3 +1,4 @@
+/** Product category enum matching Stripe metadata values */
 export enum EProductCategory {
   HONEY = "HONEY",
   BEESWAX = "BEESWAX",
@@ -5,8 +6,10 @@ export enum EProductCategory {
   SUBSCRIPTIONS = "SUBSCRIPTIONS",
 }
 
+/** Union type of product category keys */
 export type ProductCategory = keyof typeof EProductCategory;
 
+/** Full product shape as used by the admin UI, transformed from Stripe */
 export interface IProduct {
   id: string;
   name: string;
@@ -27,6 +30,7 @@ export interface IProduct {
   recurringIntervalCount?: number;
 }
 
+/** Input shape for creating/updating a product (before Stripe transformation) */
 export interface IProductInput {
   name: string;
   slug: string;
@@ -45,6 +49,7 @@ export interface IProductInput {
   recurringIntervalCount?: number;
 }
 
+/** Computed statistics for the dashboard page */
 export interface IDashboardStats {
   totalProducts: number;
   inStockProducts: number;
@@ -56,6 +61,7 @@ export interface IDashboardStats {
   subscriptionProducts: number;
 }
 
+/** Admin panel connection settings (stored in localStorage) */
 export interface IAdminSettings {
   apiUrl: string;
   stripePublishableKey: string;

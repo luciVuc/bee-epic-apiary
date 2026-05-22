@@ -1,3 +1,4 @@
+/** Root admin app component defining all routes inside the AdminLayout shell */
 import { Routes, Route, Navigate } from "react-router-dom";
 import { AdminLayout } from "./components/layout/AdminLayout";
 import { DashboardPage } from "./pages/DashboardPage";
