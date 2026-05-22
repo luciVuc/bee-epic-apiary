@@ -27,7 +27,7 @@ export function SiteContentTab({
   removeNavLink,
 }: ISiteContentTabProps) {
   return (
-    <div className="space-y-8">
+    <div className="space-y-8" data-testid="site-content-tab">
       <Section title="Business Info" icon={<Store className="w-4 h-4" />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <TextField

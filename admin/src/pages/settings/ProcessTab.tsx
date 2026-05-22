@@ -20,7 +20,7 @@ export function ProcessTab({
   removeProcessStep,
 }: IProcessTabProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="process-tab">
       {processContent.map((step, i) => (
         <div key={step.id} className="p-4 border border-gray-200 rounded-lg">
           <div className="flex items-center justify-between mb-3">
@@ -66,6 +66,7 @@ export function ProcessTab({
       ))}
       <button
         onClick={addProcessStep}
+        data-testid="process-tab_add-btn"
         className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
       >
         <Plus className="w-4 h-4" /> Add Step

@@ -16,10 +16,11 @@ export function TextField({
   name,
 }: ITextFieldProps) {
   return (
-    <div>
+    <div data-testid="text-field">
       <label
         htmlFor={name}
         className="block text-sm font-medium text-dark-700 mb-2"
+        data-testid="text-field_label"
       >
         {label}
       </label>
@@ -29,6 +30,7 @@ export function TextField({
         name={name}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
+        data-testid="text-field_input"
         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
       />
     </div>

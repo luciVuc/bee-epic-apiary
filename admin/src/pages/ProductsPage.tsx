@@ -211,13 +211,17 @@ export function ProductsPage() {
   const showingCount = products.length;
 
   return (
-    <div>
+    <div data-testid="products-page">
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h2 className="font-heading text-3xl font-bold text-dark-900">
+        <h2
+          className="font-heading text-3xl font-bold text-dark-900"
+          data-testid="products-page_title"
+        >
           Products Management
         </h2>
         <button
           onClick={handleAddProduct}
+          data-testid="products-page_add-btn"
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -226,7 +230,10 @@ export function ProductsPage() {
       </div>
 
       {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+        <div
+          className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+          data-testid="products-page_error"
+        >
           <AlertCircle className="w-5 h-5 text-red-500" />
           <span className="text-red-700">{error}</span>
         </div>
@@ -243,12 +250,14 @@ export function ProductsPage() {
               placeholder="Search products..."
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
+              data-testid="products-page_search-input"
               className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             />
             {searchTerm && (
               <button
                 onClick={() => handleSearchChange("")}
                 aria-label="Clear search"
+                data-testid="products-page_search-clear"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -263,6 +272,7 @@ export function ProductsPage() {
               value={selectedCategory}
               onChange={(e) => handleCategoryChange(e.target.value)}
               aria-label="Filter by category"
+              data-testid="products-page_category-filter"
               className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             >
               <option value="ALL">All Categories</option>
@@ -289,7 +299,7 @@ export function ProductsPage() {
 
       {/* Products Display */}
       {products.length === 0 && !loading ? (
-        <div className="text-center py-12">
+        <div className="text-center py-12" data-testid="products-page_empty">
           <Package className="w-16 h-16 text-dark-300 mx-auto mb-4" />
           <h3 className="font-heading text-xl font-semibold text-dark-700 mb-2">
             No products found
@@ -530,6 +540,7 @@ export function ProductsPage() {
               <button
                 onClick={handleLoadMore}
                 disabled={loading}
+                data-testid="products-page_load-more-btn"
                 className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Loading..." : "Load More Products"}

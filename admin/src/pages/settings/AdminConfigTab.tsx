@@ -25,7 +25,7 @@ export function AdminConfigTab({
   onAdminSave,
 }: IAdminConfigTabProps) {
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" data-testid="admin-config-tab">
       {adminError && (
         <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
@@ -89,6 +89,7 @@ export function AdminConfigTab({
       <div className="flex justify-end pt-4 border-t border-gray-200">
         <button
           onClick={onAdminSave}
+          data-testid="admin-config-tab_save-btn"
           className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
         >
           <Save className="w-4 h-4" />

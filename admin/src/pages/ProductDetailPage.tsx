@@ -72,7 +72,10 @@ export function ProductDetailPage() {
 
   if (error) {
     return (
-      <div className="text-center py-12">
+      <div
+        className="text-center py-12"
+        data-testid="product-detail-page_error"
+      >
         <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-red-600 mb-4">
           Product Not Found
@@ -101,7 +104,7 @@ export function ProductDetailPage() {
   const backUrl = getBackUrl(location);
 
   return (
-    <div>
+    <div data-testid="product-detail-page">
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           <button
@@ -111,7 +114,10 @@ export function ProductDetailPage() {
           >
             <ArrowLeft className="w-5 h-5 text-dark-600" />
           </button>
-          <h2 className="font-heading text-3xl font-bold text-dark-900">
+          <h2
+            className="font-heading text-3xl font-bold text-dark-900"
+            data-testid="product-detail-page_name"
+          >
             {product.name}
           </h2>
         </div>

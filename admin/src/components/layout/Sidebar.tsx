@@ -25,8 +25,14 @@ export function Sidebar({ onClose }: ISidebarProps) {
   ];
 
   return (
-    <aside className="w-64 bg-white border-r border-gray-200 flex flex-col h-full">
-      <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+    <aside
+      className="w-64 bg-white border-r border-gray-200 flex flex-col h-full"
+      data-testid="sidebar"
+    >
+      <div
+        className="px-6 py-4 border-b border-gray-200 flex items-center justify-between"
+        data-testid="sidebar_header"
+      >
         <NavLink
           to="/dashboard"
           className="flex items-center gap-2"
@@ -43,16 +49,21 @@ export function Sidebar({ onClose }: ISidebarProps) {
           onClick={onClose}
           aria-label="Close sidebar"
           className="lg:hidden p-1 hover:bg-gray-100 rounded"
+          data-testid="sidebar_close-btn"
         >
           <X className="w-5 h-5" />
         </button>
       </div>
-      <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+      <nav
+        className="flex-1 p-4 space-y-2 overflow-y-auto"
+        data-testid="sidebar_nav"
+      >
         {navItems.map((item) => (
           <NavLink
             key={item.to}
             to={item.to}
             onClick={onClose}
+            data-testid={`sidebar_link-${item.label.toLowerCase().replace(/\s+/g, "-")}`}
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive

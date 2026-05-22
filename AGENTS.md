@@ -18,6 +18,10 @@ Root scripts use `npm run <script> --prefix <dir>` to delegate to sub-packages.
 
 All TypeScript interface definitions must be exported and prefixed with `I` (e.g., `ISpinnerProps`, `IProductFormDialogProps`, `IStripeProductResponse`, `IProduct`). This applies to `admin/`, `web/`, and `services/`.
 
+## Data Attributes (all React UI projects)
+
+Every React component must include `data-testid` attributes on its root element and all interactive/important child elements, using kebab-case hierarchical naming. The root gets `data-testid="component-name"` and children get `data-testid="component-name_element"`. This applies to `admin/` and `web/`.
+
 ## Web App (`web/`)
 
 - **Framework**: React 18 + TypeScript + Vite with Hash Router (for GitHub Pages)

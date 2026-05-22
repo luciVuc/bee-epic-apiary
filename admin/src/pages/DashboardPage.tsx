@@ -70,11 +70,15 @@ export function DashboardPage() {
   return (
     <div>
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between">
-        <h2 className="font-heading text-3xl font-bold text-dark-900">
+        <h2
+          className="font-heading text-3xl font-bold text-dark-900"
+          data-testid="dashboard-page_title"
+        >
           Dashboard
         </h2>
         <Link
           to="/products/new"
+          data-testid="dashboard-page_add-product-link"
           className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -285,7 +289,10 @@ function StatCard({
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+    <div
+      className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+      data-testid={`stat-card`}
+    >
       <div className="flex items-center justify-between mb-4">
         <span className="text-dark-500 text-sm">{title}</span>
         <div
@@ -325,7 +332,7 @@ function CategoryBar({
   };
 
   return (
-    <div>
+    <div data-testid={`category-bar`}>
       <div className="flex items-center justify-between mb-1">
         <span className="text-sm font-medium text-dark-700">{label}</span>
         <span className="text-sm text-dark-500">

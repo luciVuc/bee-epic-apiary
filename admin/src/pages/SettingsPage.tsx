@@ -276,9 +276,12 @@ export function SettingsPage() {
   const isSaving = contentStatus === "saving";
 
   return (
-    <div>
+    <div data-testid="settings-page">
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6">
-        <h2 className="font-heading text-3xl font-bold text-dark-900">
+        <h2
+          className="font-heading text-3xl font-bold text-dark-900"
+          data-testid="settings-page_title"
+        >
           Settings
         </h2>
       </div>
@@ -313,6 +316,7 @@ export function SettingsPage() {
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
+                data-testid={`settings-page_tab-${tab}`}
                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab
                     ? "border-primary-500 text-primary-600"
@@ -396,6 +400,7 @@ export function SettingsPage() {
                   <button
                     onClick={handleSaveContent}
                     disabled={isSaving}
+                    data-testid="settings-page_save-content-btn"
                     className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Save className="w-4 h-4" />

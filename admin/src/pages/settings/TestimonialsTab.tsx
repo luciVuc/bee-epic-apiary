@@ -20,7 +20,7 @@ export function TestimonialsTab({
   removeTestimonial,
 }: ITestimonialsTabProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="testimonials-tab">
       {testimonialsContent.map((testimonial, i) => (
         <div
           key={testimonial.id}
@@ -33,6 +33,7 @@ export function TestimonialsTab({
             <button
               onClick={() => removeTestimonial(i)}
               aria-label={`Remove testimonial ${i + 1}`}
+              data-testid={`testimonials-tab_remove-btn-${i}`}
               className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
             >
               <Trash2 className="w-4 h-4" />
@@ -99,6 +100,7 @@ export function TestimonialsTab({
       ))}
       <button
         onClick={addTestimonial}
+        data-testid="testimonials-tab_add-btn"
         className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
       >
         <Plus className="w-4 h-4" /> Add Testimonial

@@ -213,15 +213,28 @@ export function ProductFormDialog({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h2 className="font-heading text-2xl font-bold text-dark-900">
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      data-testid="product-form-dialog"
+    >
+      <div
+        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        data-testid="product-form-dialog_content"
+      >
+        <div
+          className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between"
+          data-testid="product-form-dialog_header"
+        >
+          <h2
+            className="font-heading text-2xl font-bold text-dark-900"
+            data-testid="product-form-dialog_title"
+          >
             {isEditMode ? "Edit Product" : "Add New Product"}
           </h2>
           <button
             onClick={onClose}
             aria-label="Close dialog"
+            data-testid="product-form-dialog_close-btn"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <X className="w-5 h-5 text-dark-500" />
@@ -233,10 +246,14 @@ export function ProductFormDialog({
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <form
+            onSubmit={handleSubmit}
+            className="p-6 space-y-6"
+            data-testid="product-form-dialog_form"
+          >
             {/* Basic Info */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
+              <div data-testid="product-form-dialog_field-name">
                 <label className="block text-sm font-medium text-dark-700 mb-2">
                   Product Name *
                 </label>
@@ -247,9 +264,10 @@ export function ProductFormDialog({
                   onChange={(e) => handleInputChange("name", e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                   placeholder="Enter product name"
+                  data-testid="product-form-dialog_input-name"
                 />
               </div>
-              <div>
+              <div data-testid="product-form-dialog_field-slug">
                 <label className="block text-sm font-medium text-dark-700 mb-2">
                   Slug *
                 </label>
@@ -260,6 +278,7 @@ export function ProductFormDialog({
                   onChange={(e) => handleInputChange("slug", e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
                   placeholder="product-slug"
+                  data-testid="product-form-dialog_input-slug"
                 />
               </div>
             </div>
@@ -564,7 +583,10 @@ export function ProductFormDialog({
 
             {/* Error display */}
             {submitError && (
-              <div className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+              <div
+                className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+                data-testid="product-form-dialog_error"
+              >
                 <span className="text-red-600 text-sm flex-1">
                   {submitError}
                 </span>
@@ -579,10 +601,14 @@ export function ProductFormDialog({
             )}
 
             {/* Actions */}
-            <div className="flex gap-3 justify-end border-t border-gray-200 pt-6">
+            <div
+              className="flex gap-3 justify-end border-t border-gray-200 pt-6"
+              data-testid="product-form-dialog_actions"
+            >
               <button
                 type="button"
                 onClick={onClose}
+                data-testid="product-form-dialog_cancel-btn"
                 className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
@@ -590,6 +616,7 @@ export function ProductFormDialog({
               <button
                 type="submit"
                 disabled={loading}
+                data-testid="product-form-dialog_submit-btn"
                 className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading

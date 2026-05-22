@@ -20,7 +20,7 @@ export function CategoriesTab({
   removeCategoryItem,
 }: ICategoriesTabProps) {
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-testid="categories-tab">
       <p className="text-sm text-dark-500 mb-4">
         Define and manage product categories used across the store.
       </p>
@@ -54,6 +54,7 @@ export function CategoriesTab({
       ))}
       <button
         onClick={addCategoryItem}
+        data-testid="categories-tab_add-btn"
         className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
       >
         <Plus className="w-4 h-4" /> Add Category
