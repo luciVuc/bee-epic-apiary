@@ -10,7 +10,10 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
       className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 md:px-6 py-4 lg:left-64"
       data-testid="admin-navbar"
     >
-      <div className="flex items-center justify-between">
+      <div
+        data-testid="admin-navbar_content"
+        className="flex items-center justify-between"
+      >
         {/* Mobile menu button */}
         <button
           onClick={onMenuClick}
@@ -22,7 +25,11 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="lg:hidden" aria-hidden="true">
+        <div
+          data-testid="admin-navbar_title-mobile"
+          className="lg:hidden"
+          aria-hidden="true"
+        >
           <h1
             className="font-heading text-xl font-bold text-dark-900"
             data-testid="admin-navbar_title"
@@ -31,7 +38,10 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
           </h1>
         </div>
 
-        <div className="hidden lg:block">
+        <div
+          data-testid="admin-navbar_title-desktop"
+          className="hidden lg:block"
+        >
           <h1
             className="font-heading text-2xl font-bold text-dark-900"
             data-testid="admin-navbar_title"
@@ -40,7 +50,10 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
           </h1>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div
+          data-testid="admin-navbar_actions"
+          className="flex items-center gap-4"
+        >
           <button
             aria-label="Notifications"
             title="Notifications"
@@ -55,7 +68,12 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
             data-testid="admin-navbar_user"
           >
             <User className="w-5 h-5 text-dark-600" />
-            <span className="text-sm font-medium text-dark-700">Admin</span>
+            <span
+              className="text-sm font-medium text-dark-700 hidden md:block"
+              data-testid="admin-navbar_user-name"
+            >
+              Admin
+            </span>
           </div>
         </div>
       </div>

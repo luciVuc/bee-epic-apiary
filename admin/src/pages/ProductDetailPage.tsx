@@ -107,11 +107,11 @@ export function ProductDetailPage() {
     <div data-testid="product-detail-page">
       <div
         data-testid="product-detail-page_header"
-        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-center justify-between mb-6"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-start justify-between mb-6"
       >
         <div
           data-testid="product-detail-page_header-content"
-          className="flex items-center gap-4"
+          className="flex items-start gap-4"
         >
           <button
             data-testid="product-detail-page_back-button"
@@ -140,7 +140,12 @@ export function ProductDetailPage() {
             title="Edit Product"
           >
             <Edit className="w-4 h-4" />
-            Edit
+            <span
+              data-testid="product-detail-page_edit-button_text"
+              className="hidden md:block"
+            >
+              Edit
+            </span>
           </button>
           <button
             data-testid="product-detail-page_delete-button"
@@ -149,7 +154,12 @@ export function ProductDetailPage() {
             title="Delete Product"
           >
             <Trash2 className="w-4 h-4" />
-            Delete
+            <span
+              data-testid="product-detail-page_delete-button_text"
+              className="hidden md:block"
+            >
+              Delete
+            </span>
           </button>
         </div>
       </div>
