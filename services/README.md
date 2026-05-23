@@ -90,6 +90,7 @@ Detailed documentation for all source code is available in [SOURCE.md](./SOURCE.
 - All 65 tests are currently passing.
 - Run tests with `npm run test`.
 - Tests use Vitest with Cloudflare Workers pool for accurate runtime simulation.
+- Stripe API functions are properly mocked to prevent actual API calls during testing.
 
 ## Deployment
 

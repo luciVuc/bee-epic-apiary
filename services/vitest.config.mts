@@ -7,6 +7,7 @@ export default defineWorkersConfig({
 				wrangler: { configPath: './wrangler.jsonc' },
 			},
 		},
+		setupFiles: ['./test/setup.ts'],
 		coverage: {
 			provider: 'istanbul',
 			reporter: ['text', 'json', 'html'],

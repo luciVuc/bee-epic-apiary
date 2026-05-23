@@ -69,6 +69,7 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
   - `stripe/`: Unit tests for Stripe handlers
   - `utils/`: Unit tests for utility functions
 - All 65 tests currently passing (includes new auth.ts tests).
+- Stripe API functions are properly mocked to prevent actual API calls during testing.
 - Run tests:
   ```bash
   npm run test
