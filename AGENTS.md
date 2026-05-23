@@ -105,3 +105,4 @@ Key features:
 - **Stripe API version**: Services uses `2026-04-22.dahlia` — update when upgrading Stripe SDK
 - **Admin API proxy**: Vite dev server proxies `/api` to `http://localhost:8787` (rewrites `/api` prefix)
 - **Settings storage**: Admin config (API URL, keys) stored in localStorage; site content (business info, etc.) stored in worker KV
+- **Dynamic navbar title**: `AdminNavbar` fetches `businessName` from `GET /settings/site` and displays `"{businessName} Admin"`. Falls back to `"Admin"` if not loaded yet. Do not hardcode any site-specific display values that exist in `ISiteContent` or other settings types.

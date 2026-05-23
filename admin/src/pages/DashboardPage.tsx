@@ -15,7 +15,10 @@ import { fetchProducts, fetchProductsCount } from "../store/productsSlice";
 import { useState } from "react";
 import type { IDashboardStats } from "../types";
 import { EProductCategory } from "../types";
-import { DEFAULT_PRODUCT_THUMBNAIL } from "../utils/constants";
+import {
+  DEFAULT_PRODUCT_THUMBNAIL,
+  DEFAULT_CATEGORIES,
+} from "../utils/constants";
 import { Spinner } from "../components/shared/Spinner";
 import type { ICategory } from "../types/settings";
 import * as api from "../utils/api";
@@ -122,59 +125,60 @@ export function DashboardPage() {
             Products by Category
           </h3>
           <div className="space-y-3">
-            {categories.length > 0 ? (
-              categories.map((cat, i) => {
-                const count = products.filter(
-                  (p) => p.category === cat.id,
-                ).length;
-                const colors = [
-                  "amber",
-                  "yellow",
-                  "pink",
-                  "blue",
-                  "green",
-                  "indigo",
-                  "purple",
-                  "red",
-                ];
-                return (
-                  <CategoryBar
-                    key={cat.id}
-                    label={cat.label}
-                    count={count}
-                    total={stats.totalProducts}
-                    color={colors[i % colors.length]}
-                  />
-                );
-              })
-            ) : (
-              <>
-                <CategoryBar
-                  label="Honey"
-                  count={stats.honeyProducts}
-                  total={stats.totalProducts}
-                  color="amber"
-                />
-                <CategoryBar
-                  label="Beeswax"
-                  count={stats.beeswaxProducts}
-                  total={stats.totalProducts}
-                  color="yellow"
-                />
-                <CategoryBar
-                  label="Gift Sets"
-                  count={stats.giftProducts}
-                  total={stats.totalProducts}
-                  color="pink"
-                />
-                <CategoryBar
-                  label="Subscriptions"
-                  count={stats.subscriptionProducts}
-                  total={stats.totalProducts}
-                  color="blue"
-                />
-              </>
-            )}
+            {categories.length > 0
+              ? categories.map((cat, i) => {
+                  const count = products.filter(
+                    (p) => p.category === cat.id,
+                  ).length;
+                  const colors = [
+                    "amber",
+                    "yellow",
+                    "pink",
+                    "blue",
+                    "green",
+                    "indigo",
+                    "purple",
+                    "red",
+                  ];
+                  return (
+                    <CategoryBar
+                      key={cat.id}
+                      label={cat.label}
+                      count={count}
+                      total={stats.totalProducts}
+                      color={colors[i % colors.length]}
+                    />
+                  );
+                })
+              : DEFAULT_CATEGORIES.map((cat) => {
+                  const countMap: Record<string, number> = {
+                    HONEY: stats.honeyProducts,
+                    BEESWAX: stats.beeswaxProducts,
+                    GIFTS: stats.giftProducts,
+                    SUBSCRIPTIONS: stats.subscriptionProducts,
+                  };
+                  const colors = [
+                    "amber",
+                    "yellow",
+                    "pink",
+                    "blue",
+                    "green",
+                    "indigo",
+                    "purple",
+                    "red",
+                  ];
+                  return (
+                    <CategoryBar
+                      key={cat.id}
+                      label={cat.label}
+                      count={countMap[cat.id] || 0}
+                      total={stats.totalProducts}
+                      color={
+                        colors[DEFAULT_CATEGORIES.indexOf(cat) % colors.length]
+                      }
+                    />
+                  );
+                })}
           </div>
         </div>
 

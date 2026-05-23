@@ -11,6 +11,7 @@ import {
 import type { IProductInput } from "../../types";
 import { EProductCategory } from "../../types";
 import type { ICategory } from "../../types/settings";
+import { CATEGORIES } from "../../utils/constants";
 import * as api from "../../utils/api";
 
 export interface IProductFormDialogProps {
@@ -394,15 +395,17 @@ export function ProductFormDialog({
                   aria-label="Category"
                   title="Select a category"
                 >
-                  {categories.length === 0 ? (
-                    <option value="HONEY">Honey</option>
-                  ) : (
-                    categories.map((cat) => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.label}
-                      </option>
-                    ))
-                  )}
+                  {categories.length === 0
+                    ? CATEGORIES.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.label}
+                        </option>
+                      ))
+                    : categories.map((cat) => (
+                        <option key={cat.id} value={cat.id}>
+                          {cat.label}
+                        </option>
+                      ))}
                 </select>
               </div>
               <div>

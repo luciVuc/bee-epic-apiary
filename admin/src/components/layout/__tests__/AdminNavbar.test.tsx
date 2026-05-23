@@ -1,14 +1,28 @@
 import { describe, it, expect, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AdminNavbar } from "../AdminNavbar";
 
+const mockGetSettings = vi.fn();
+
+vi.mock("../../../utils/api", () => ({
+  api: {
+    getSettings: (...args: any[]) => mockGetSettings(...args),
+  },
+}));
+
 describe("AdminNavbar", () => {
-  it("renders the title and user info", () => {
+  it("renders fallback title while loading, then business name from API", async () => {
+    mockGetSettings.mockResolvedValue({ businessName: "Test Apiary" });
     render(<AdminNavbar />);
-    const titles = screen.getAllByText("Bee Epic Apiary Admin");
-    expect(titles.length).toBe(2);
-    expect(screen.getByText("Admin")).toBeInTheDocument();
+
+    expect(screen.getAllByText("Admin").length).toBeGreaterThanOrEqual(1);
+
+    await waitFor(() => {
+      const titles = screen.getAllByText("Test Apiary Admin");
+      expect(titles.length).toBe(2);
+    });
+    expect(mockGetSettings).toHaveBeenCalledWith("site");
   });
 
   it("renders notification bell button", () => {

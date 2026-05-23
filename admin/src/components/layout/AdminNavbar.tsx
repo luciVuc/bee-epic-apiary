@@ -1,5 +1,8 @@
-/** Fixed top navigation bar with mobile hamburger menu, title, notifications, and user indicator */
+/** Fixed top navigation bar with mobile hamburger menu, dynamic title from settings, notifications, and user indicator */
+import { useEffect, useState } from "react";
 import { Bell, User, Menu } from "lucide-react";
+import * as api from "../../utils/api";
+import type { ISiteContent } from "../../types/settings";
 
 export interface IAdminNavbarProps {
   /** Callback when the mobile hamburger menu button is clicked */
@@ -7,6 +10,21 @@ export interface IAdminNavbarProps {
 }
 
 export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
+  const [businessName, setBusinessName] = useState<string>("");
+
+  useEffect(() => {
+    api.api
+      .getSettings<ISiteContent>("site")
+      .then((site) => {
+        if (site?.businessName) {
+          setBusinessName(site.businessName);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const title = businessName ? `${businessName} Admin` : "Admin";
+
   return (
     <header
       className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 md:px-6 py-4 lg:left-64"
@@ -36,7 +54,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
             className="font-heading text-xl font-bold text-dark-900"
             data-testid="admin-navbar_title"
           >
-            Bee Epic Apiary Admin
+            {title}
           </h1>
         </div>
 
@@ -48,7 +66,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
             className="font-heading text-2xl font-bold text-dark-900"
             data-testid="admin-navbar_title"
           >
-            Bee Epic Apiary Admin
+            {title}
           </h1>
         </div>
 
