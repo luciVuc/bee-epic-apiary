@@ -84,6 +84,17 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 - Services uses manual route matching in `src/router.ts`
 - Product CRUD in services requires API key auth if `API_SECRET_KEY` set
 
+### UI Development Guidelines
+
+When working on UI features or changes:
+
+- Always test in the browser both before and after making changes using Playwright
+- Before changes: Understand current behavior and context by manually testing in browser
+- After changes: Verify the feature works as expected through browser testing
+- For any UI/UX changes, update or create relevant E2E test plans in the e2e-test-plan skill format
+- When fixing bugs, reproduce them in browser first, then fix, then verify fix works
+- Use Playwright for all browser automation tasks as specified in the agent-browser skill
+
 ### Post-Update Responsibilities
 
 After every code change, agents MUST:
@@ -96,3 +107,4 @@ After every code change, agents MUST:
    - README.md files: Keep structure, commands, and feature lists current
    - API.md/SOURCE.md (in services): Keep endpoint descriptions and function signatures accurate
    - This AGENTS.md file: Update conventions, gotchas, and architecture as needed
+   - E2E test plans: Update or create relevant test plans for UI/UX changes using the e2e-test-plan skill format
