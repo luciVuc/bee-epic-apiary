@@ -1,5 +1,5 @@
 /** Modal dialog for creating and editing products. Handles Stripe product + price creation in sequence. */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Plus, Trash2 } from "lucide-react";
 import type { RootState, AppDispatch } from "../../store";
@@ -50,6 +50,42 @@ export function ProductFormDialog({
   const [tagInput, setTagInput] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fetchingEditData, setFetchingEditData] = useState(false);
+
+  // Check if form has changed compared to original product data (edit mode only)
+  const hasChanges = useMemo(() => {
+    if (!isEditMode || !selectedProduct) return true; // In add mode, always allow submit if valid
+
+    // Deep comparison of formData vs selectedProduct
+    return (
+      formData.name !== selectedProduct.name ||
+      formData.slug !== selectedProduct.slug ||
+      formData.description !== selectedProduct.description ||
+      formData.longDescription !== (selectedProduct.longDescription || "") ||
+      formData.price !== selectedProduct.price ||
+      formData.stripePaymentLinkId !==
+        (selectedProduct.stripePaymentLinkId || "") ||
+      formData.category !== selectedProduct.category ||
+      !arraysEqual(formData.imageUrls, selectedProduct.imageUrls) ||
+      !arraysEqual(formData.thumbnailUrls, selectedProduct.thumbnailUrls) ||
+      formData.inStock !== selectedProduct.inStock ||
+      formData.featured !== selectedProduct.featured ||
+      formData.weight !== selectedProduct.weight ||
+      !arraysEqual(formData.tags, selectedProduct.tags || []) ||
+      formData.recurringInterval !==
+        (selectedProduct.recurringInterval || "") ||
+      formData.recurringIntervalCount !==
+        (selectedProduct.recurringIntervalCount || 1)
+    );
+  }, [isEditMode, selectedProduct, formData]);
+
+  // Helper function to compare arrays
+  function arraysEqual<T>(a: T[], b: T[]): boolean {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (a[i] !== b[i]) return false;
+    }
+    return true;
+  }
 
   useEffect(() => {
     setTagInput("");
@@ -724,8 +760,10 @@ export function ProductFormDialog({
               </button>
               <button
                 type="submit"
-                disabled={loading}
-                data-testid="product-form-dialog_submit-btn"
+                disabled={
+                  loading || (!hasChanges && isEditMode) || !!submitError
+                }
+                data-testid="product-form-dialog_submit_btn"
                 className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading
