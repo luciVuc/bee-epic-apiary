@@ -16,6 +16,7 @@ export interface IAdminConfigTabProps {
   adminError: string;
   onAdminChange: (field: keyof IAdminSettings, value: string) => void;
   onAdminSave: () => void;
+  saveDisabled?: boolean;
 }
 
 export function AdminConfigTab({
@@ -24,6 +25,7 @@ export function AdminConfigTab({
   adminError,
   onAdminChange,
   onAdminSave,
+  saveDisabled,
 }: IAdminConfigTabProps) {
   return (
     <div className="space-y-6" data-testid="admin-config-tab">
@@ -96,8 +98,9 @@ export function AdminConfigTab({
       <div className="flex justify-end pt-4 border-t border-gray-200">
         <button
           onClick={onAdminSave}
+          disabled={saveDisabled}
           data-testid="admin-config-tab_save-btn"
-          className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium"
+          className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Save className="w-4 h-4" />
           Save Admin Settings

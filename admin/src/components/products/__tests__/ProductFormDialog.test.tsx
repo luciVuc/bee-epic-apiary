@@ -152,15 +152,20 @@ describe("ProductFormDialog", () => {
   });
 
   it("validates price must be greater than 0", async () => {
+    const user = userEvent.setup();
     const onClose = vi.fn();
-    const { container } = renderWithProviders(
-      <ProductFormDialog onClose={onClose} />,
-    );
+    renderWithProviders(<ProductFormDialog onClose={onClose} />);
 
     await screen.findByText("Create Product");
-    const form = container.querySelector("form");
-    expect(form).not.toBeNull();
-    fireEvent.submit(form!);
+
+    await user.type(screen.getByLabelText("Product Name *"), "Test");
+    await user.type(screen.getByLabelText("Slug *"), "test");
+    await user.type(screen.getByLabelText("Short Description *"), "desc");
+    await user.type(screen.getByLabelText("Weight *"), "16 oz");
+
+    const submitBtn = screen.getByTestId("product-form-dialog_submit_btn");
+    expect(submitBtn).not.toBeDisabled();
+    fireEvent.click(submitBtn);
 
     expect(
       await screen.findByText("Price must be greater than 0"),
@@ -237,14 +242,18 @@ describe("ProductFormDialog", () => {
 
   it("displays and dismisses submit error", async () => {
     const user = userEvent.setup();
-    const { container } = renderWithProviders(
-      <ProductFormDialog onClose={() => {}} />,
-    );
+    renderWithProviders(<ProductFormDialog onClose={() => {}} />);
 
     await screen.findByText("Create Product");
-    const form = container.querySelector("form");
-    expect(form).not.toBeNull();
-    fireEvent.submit(form!);
+
+    await user.type(screen.getByLabelText("Product Name *"), "Test");
+    await user.type(screen.getByLabelText("Slug *"), "test");
+    await user.type(screen.getByLabelText("Short Description *"), "desc");
+    await user.type(screen.getByLabelText("Weight *"), "16 oz");
+
+    const submitBtn = screen.getByTestId("product-form-dialog_submit_btn");
+    expect(submitBtn).not.toBeDisabled();
+    fireEvent.click(submitBtn);
 
     expect(
       await screen.findByText("Price must be greater than 0"),

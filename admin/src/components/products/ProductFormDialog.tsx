@@ -1,5 +1,5 @@
 /** Modal dialog for creating and editing products. Handles Stripe product + price creation in sequence. */
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Plus, Trash2 } from "lucide-react";
 import type { RootState, AppDispatch } from "../../store";
@@ -19,6 +19,92 @@ export interface IProductFormDialogProps {
   onClose: () => void;
 }
 
+const INITIAL_FORM_DATA: IProductInput = {
+  name: "",
+  slug: "",
+  description: "",
+  longDescription: "",
+  price: 0,
+  stripePaymentLinkId: "",
+  category: EProductCategory.HONEY,
+  imageUrls: [""],
+  thumbnailUrls: [""],
+  inStock: true,
+  featured: false,
+  weight: "",
+  tags: [],
+  recurringInterval: "",
+  recurringIntervalCount: 1,
+};
+
+interface IUrlInputListProps {
+  id: string;
+  urls: string[];
+  label: string;
+  inputLabel: string;
+  placeholder: string;
+  addButtonLabel: string;
+  removeButtonLabelPrefix: string;
+  onUrlChange: (index: number, value: string) => void;
+  onAdd: () => void;
+  onRemove: (index: number) => void;
+}
+
+function UrlInputList({
+  id,
+  urls,
+  label,
+  inputLabel,
+  placeholder,
+  addButtonLabel,
+  removeButtonLabelPrefix,
+  onUrlChange,
+  onAdd,
+  onRemove,
+}: IUrlInputListProps) {
+  return (
+    <div data-testid={`product-form-dialog_url-input-list-${id}`}>
+      <label className="block text-sm font-medium text-dark-700 mb-2">
+        {label}
+      </label>
+      {urls.map((url, index) => (
+        <div key={index} className="flex gap-2 mb-2">
+          <label htmlFor={`${id}-${index}`} className="sr-only">
+            {`${inputLabel} ${index + 1}`}
+          </label>
+          <input
+            id={`${id}-${index}`}
+            type="url"
+            value={url}
+            onChange={(e) => onUrlChange(index, e.target.value)}
+            aria-label={`${inputLabel} ${index + 1}`}
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            placeholder={placeholder}
+          />
+          <button
+            type="button"
+            onClick={() => onRemove(index)}
+            aria-label={`${removeButtonLabelPrefix} ${index + 1}`}
+            title={`${removeButtonLabelPrefix} ${index + 1}`}
+            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={onAdd}
+        className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
+        title={`Add ${inputLabel.toLowerCase()}`}
+      >
+        <Plus className="w-4 h-4" />
+        {addButtonLabel}
+      </button>
+    </div>
+  );
+}
+
 export function ProductFormDialog({
   productId,
   onClose,
@@ -29,24 +115,11 @@ export function ProductFormDialog({
   );
   const isEditMode = !!productId;
 
-  const [formData, setFormData] = useState<IProductInput>({
-    name: "",
-    slug: "",
-    description: "",
-    longDescription: "",
-    price: 0,
-    stripePaymentLinkId: "",
-    category: EProductCategory.HONEY,
-    imageUrls: [""],
-    thumbnailUrls: [""],
-    inStock: true,
-    featured: false,
-    weight: "",
-    tags: [],
-    recurringInterval: "",
-    recurringIntervalCount: 1,
-  });
+  const [formData, setFormData] = useState<IProductInput>(INITIAL_FORM_DATA);
   const [categories, setCategories] = useState<ICategory[]>([]);
+  const [categoryFetchError, setCategoryFetchError] = useState<string | null>(
+    null,
+  );
   const [tagInput, setTagInput] = useState("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [fetchingEditData, setFetchingEditData] = useState(false);
@@ -94,23 +167,7 @@ export function ProductFormDialog({
   useEffect(() => {
     setSubmitError(null);
     if (!productId) {
-      setFormData({
-        name: "",
-        slug: "",
-        description: "",
-        longDescription: "",
-        price: 0,
-        stripePaymentLinkId: "",
-        category: EProductCategory.HONEY,
-        imageUrls: [""],
-        thumbnailUrls: [""],
-        inStock: true,
-        featured: false,
-        weight: "",
-        tags: [],
-        recurringInterval: "",
-        recurringIntervalCount: 1,
-      });
+      setFormData(INITIAL_FORM_DATA);
     }
   }, [productId]);
 
@@ -156,6 +213,7 @@ export function ProductFormDialog({
   }, [isEditMode, selectedProduct]);
 
   useEffect(() => {
+    setCategoryFetchError(null);
     api.api
       .getSettings<ICategory[]>("categories")
       .then((cats) => {
@@ -163,60 +221,94 @@ export function ProductFormDialog({
       })
       .catch(() => {
         setCategories([]);
+        setCategoryFetchError("Failed to load categories. Using defaults.");
       });
   }, []);
 
-  const handleInputChange = <K extends keyof IProductInput>(
-    field: K,
-    value: IProductInput[K],
-  ) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
+  const handleInputChange = useCallback(
+    <K extends keyof IProductInput>(field: K, value: IProductInput[K]) => {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    },
+    [],
+  );
 
-  const handleImageUrlChange = (
-    index: number,
-    value: string,
-    field: "imageUrls" | "thumbnailUrls",
-  ) => {
-    const newUrls = [...formData[field]];
-    newUrls[index] = value;
-    handleInputChange(field, newUrls);
-  };
+  const handleImageUrlChange = useCallback(
+    (index: number, value: string, field: "imageUrls" | "thumbnailUrls") => {
+      setFormData((prev) => {
+        const newUrls = [...prev[field]];
+        newUrls[index] = value;
+        return { ...prev, [field]: newUrls };
+      });
+    },
+    [],
+  );
 
-  const addImageUrl = (field: "imageUrls" | "thumbnailUrls") => {
-    handleInputChange(field, [...formData[field], ""]);
-  };
+  const addImageUrl = useCallback((field: "imageUrls" | "thumbnailUrls") => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: [...prev[field], ""],
+    }));
+  }, []);
 
-  const removeImageUrl = (
-    index: number,
-    field: "imageUrls" | "thumbnailUrls",
-  ) => {
-    const newUrls = formData[field].filter((_, i) => i !== index);
-    handleInputChange(field, newUrls.length > 0 ? newUrls : [""]);
-  };
+  const removeImageUrl = useCallback(
+    (index: number, field: "imageUrls" | "thumbnailUrls") => {
+      setFormData((prev) => {
+        const newUrls = prev[field].filter((_, i) => i !== index);
+        return { ...prev, [field]: newUrls.length > 0 ? newUrls : [""] };
+      });
+    },
+    [],
+  );
 
-  const handleAddTag = () => {
-    if (tagInput.trim() && !formData.tags.includes(tagInput.trim())) {
-      handleInputChange("tags", [...formData.tags, tagInput.trim()]);
+  const handleAddTag = useCallback(() => {
+    const trimmed = tagInput.trim();
+    if (trimmed) {
+      setFormData((prev) => {
+        if (prev.tags.includes(trimmed)) return prev;
+        return { ...prev, tags: [...prev.tags, trimmed] };
+      });
       setTagInput("");
     }
-  };
+  }, [tagInput]);
 
-  const handleRemoveTag = (tag: string) => {
-    handleInputChange(
-      "tags",
-      formData.tags.filter((t) => t !== tag),
-    );
+  const handleRemoveTag = useCallback((tag: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((t) => t !== tag),
+    }));
+  }, []);
+
+  // Validate form data
+  const validateForm = (): string | null => {
+    if (!formData.name.trim()) {
+      return "Product name is required";
+    }
+    if (!formData.slug.trim()) {
+      return "Slug is required";
+    }
+    if (!formData.description.trim()) {
+      return "Short description is required";
+    }
+    if (formData.price <= 0) {
+      return "Price must be greater than 0";
+    }
+    if (!formData.weight.trim()) {
+      return "Weight is required";
+    }
+    if (!formData.category) {
+      return "Category is required";
+    }
+    return null;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubmitError(null);
-
-    if (formData.price <= 0) {
-      setSubmitError("Price must be greater than 0");
+    const validationError = validateForm();
+    if (validationError) {
+      setSubmitError(validationError);
       return;
     }
+    setSubmitError(null);
 
     const productData = {
       ...formData,
@@ -443,6 +535,11 @@ export function ProductFormDialog({
                         </option>
                       ))}
                 </select>
+                {categoryFetchError && (
+                  <p role="alert" className="text-sm text-amber-600 mt-1">
+                    {categoryFetchError}
+                  </p>
+                )}
               </div>
               <div>
                 <label
@@ -563,86 +660,36 @@ export function ProductFormDialog({
             </div>
 
             {/* Image URLs */}
-            <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
-                Image URLs
-              </label>
-              {formData.imageUrls.map((url, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) =>
-                      handleImageUrlChange(index, e.target.value, "imageUrls")
-                    }
-                    aria-label={`Image URL ${index + 1}`}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                    placeholder="https://example.com/image.png"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImageUrl(index, "imageUrls")}
-                    aria-label={`Remove image URL ${index + 1}`}
-                    title={`Remove image URL ${index + 1}`}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => addImageUrl("imageUrls")}
-                className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
-                title="Add image URL"
-              >
-                <Plus className="w-4 h-4" />
-                Add Image URL
-              </button>
-            </div>
+            <UrlInputList
+              id="product-image-url"
+              urls={formData.imageUrls}
+              label="Image URLs"
+              inputLabel="Image URL"
+              placeholder="https://example.com/image.png"
+              addButtonLabel="Add Image URL"
+              removeButtonLabelPrefix="Remove image URL"
+              onUrlChange={(index, value) =>
+                handleImageUrlChange(index, value, "imageUrls")
+              }
+              onAdd={() => addImageUrl("imageUrls")}
+              onRemove={(index) => removeImageUrl(index, "imageUrls")}
+            />
 
             {/* Thumbnail URLs */}
-            <div>
-              <label className="block text-sm font-medium text-dark-700 mb-2">
-                Thumbnail URLs
-              </label>
-              {formData.thumbnailUrls.map((url, index) => (
-                <div key={index} className="flex gap-2 mb-2">
-                  <input
-                    type="url"
-                    value={url}
-                    onChange={(e) =>
-                      handleImageUrlChange(
-                        index,
-                        e.target.value,
-                        "thumbnailUrls",
-                      )
-                    }
-                    aria-label={`Thumbnail URL ${index + 1}`}
-                    className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
-                    placeholder="https://example.com/thumb.png"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => removeImageUrl(index, "thumbnailUrls")}
-                    aria-label={`Remove thumbnail URL ${index + 1}`}
-                    title={`Remove thumbnail URL ${index + 1}`}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={() => addImageUrl("thumbnailUrls")}
-                className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
-                title="Add thumbnail URL"
-              >
-                <Plus className="w-4 h-4" />
-                Add Thumbnail URL
-              </button>
-            </div>
+            <UrlInputList
+              id="product-thumbnail-url"
+              urls={formData.thumbnailUrls}
+              label="Thumbnail URLs"
+              inputLabel="Thumbnail URL"
+              placeholder="https://example.com/thumb.png"
+              addButtonLabel="Add Thumbnail URL"
+              removeButtonLabelPrefix="Remove thumbnail URL"
+              onUrlChange={(index, value) =>
+                handleImageUrlChange(index, value, "thumbnailUrls")
+              }
+              onAdd={() => addImageUrl("thumbnailUrls")}
+              onRemove={(index) => removeImageUrl(index, "thumbnailUrls")}
+            />
 
             {/* Stripe Payment Link ID */}
             <div>
@@ -761,7 +808,9 @@ export function ProductFormDialog({
               <button
                 type="submit"
                 disabled={
-                  loading || (!hasChanges && isEditMode) || !!submitError
+                  loading ||
+                  (isEditMode && !hasChanges) || // In edit mode: disable if no changes
+                  !!submitError
                 }
                 data-testid="product-form-dialog_submit_btn"
                 className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"

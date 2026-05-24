@@ -1,5 +1,5 @@
 /** Central settings page with tabbed interface for admin config, site content, process steps, testimonials, and categories */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Save, AlertCircle, CheckCircle } from "lucide-react";
 import {
   SETTINGS_STORAGE_KEY,
@@ -23,6 +23,25 @@ import { ProcessTab } from "./settings/ProcessTab";
 import { TestimonialsTab } from "./settings/TestimonialsTab";
 import { CategoriesTab } from "./settings/CategoriesTab";
 
+function deepEqual(a: unknown, b: unknown): boolean {
+  if (a === b) return true;
+  if (a == null || b == null) return false;
+  if (typeof a !== typeof b) return false;
+  if (Array.isArray(a) && Array.isArray(b)) {
+    if (a.length !== b.length) return false;
+    return a.every((val, i) => deepEqual(val, b[i]));
+  }
+  if (typeof a === "object" && typeof b === "object") {
+    const aObj = a as Record<string, unknown>;
+    const bObj = b as Record<string, unknown>;
+    const aKeys = Object.keys(aObj);
+    const bKeys = Object.keys(bObj);
+    if (aKeys.length !== bKeys.length) return false;
+    return aKeys.every((key) => deepEqual(aObj[key], bObj[key]));
+  }
+  return false;
+}
+
 type ContentStatus = "idle" | "loading" | "saving" | "error" | "success";
 
 export function SettingsPage() {
@@ -45,18 +64,34 @@ export function SettingsPage() {
     apiSecretKey: "",
   });
   const [adminSaved, setAdminSaved] = useState(false);
-  const [adminError, setAdminError] = useState("");
+
+  const initialAdminRef = useRef<IAdminSettings>({
+    apiUrl: "",
+    stripePublishableKey: "",
+    apiSecretKey: "",
+  });
+
+  const initialContentRef = useRef({
+    site: DEFAULT_SITE,
+    process: DEFAULT_PROCESS,
+    testimonials: DEFAULT_TESTIMONIALS,
+    categories: DEFAULT_CATEGORIES,
+  });
 
   useEffect(() => {
     const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
     if (saved) {
       const parsed = JSON.parse(saved);
       setAdminSettings((prev) => ({ ...prev, ...parsed }));
+      initialAdminRef.current = { ...initialAdminRef.current, ...parsed };
     } else {
-      setAdminSettings((prev) => ({
-        ...prev,
-        apiUrl: import.meta.env.VITE_API_URL || "http://localhost:8787",
-      }));
+      const defaultUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:8787";
+      setAdminSettings((prev) => ({ ...prev, apiUrl: defaultUrl }));
+      initialAdminRef.current = {
+        ...initialAdminRef.current,
+        apiUrl: defaultUrl,
+      };
     }
   }, []);
 
@@ -74,10 +109,32 @@ export function SettingsPage() {
         api.api.getSettings<ITestimonial[]>("testimonials").catch(() => null),
         api.api.getSettings<ICategory[]>("categories").catch(() => null),
       ]);
-      if (site) setSiteContent({ ...DEFAULT_SITE, ...site });
-      if (process) setProcessContent(process);
-      if (testimonials) setTestimonialsContent(testimonials);
-      if (categories && categories.length > 0) setCategoriesContent(categories);
+      if (site) {
+        const merged = { ...DEFAULT_SITE, ...site };
+        setSiteContent(merged);
+        initialContentRef.current = {
+          ...initialContentRef.current,
+          site: merged,
+        };
+      }
+      if (process) {
+        setProcessContent(process);
+        initialContentRef.current = { ...initialContentRef.current, process };
+      }
+      if (testimonials) {
+        setTestimonialsContent(testimonials);
+        initialContentRef.current = {
+          ...initialContentRef.current,
+          testimonials,
+        };
+      }
+      if (categories && categories.length > 0) {
+        setCategoriesContent(categories);
+        initialContentRef.current = {
+          ...initialContentRef.current,
+          categories,
+        };
+      }
       setContentStatus("idle");
     } catch {
       setContentStatus("idle");
@@ -89,21 +146,27 @@ export function SettingsPage() {
     setAdminSaved(false);
   };
 
+  const adminUrlError = !adminSettings.apiUrl
+    ? "API URL is required"
+    : (() => {
+        try {
+          new URL(adminSettings.apiUrl);
+          return "";
+        } catch {
+          return "API URL must be a valid URL";
+        }
+      })();
+
+  const isAdminValid = !adminUrlError;
+  const isAdminDirty = !deepEqual(adminSettings, initialAdminRef.current);
+  const adminSaveDisabled = !isAdminDirty || !isAdminValid;
+
   const handleAdminSave = () => {
-    if (!adminSettings.apiUrl) {
-      setAdminError("API URL is required");
-      return;
-    }
-    try {
-      new URL(adminSettings.apiUrl);
-    } catch {
-      setAdminError("API URL must be a valid URL");
-      return;
-    }
+    if (!isAdminValid) return;
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(adminSettings));
     api.updateApiBaseUrl(adminSettings.apiUrl);
     setAdminSaved(true);
-    setAdminError("");
+    initialAdminRef.current = { ...adminSettings };
     setTimeout(() => setAdminSaved(false), 3000);
   };
 
@@ -118,6 +181,12 @@ export function SettingsPage() {
         await api.api.saveSettings("categories", categoriesContent);
       }
       setContentStatus("success");
+      initialContentRef.current = {
+        site: JSON.parse(JSON.stringify(siteContent)),
+        process: JSON.parse(JSON.stringify(processContent)),
+        testimonials: JSON.parse(JSON.stringify(testimonialsContent)),
+        categories: JSON.parse(JSON.stringify(categoriesContent)),
+      };
       setTimeout(() => setContentStatus("idle"), 3000);
     } catch (err: unknown) {
       const axiosErr = err as {
@@ -276,6 +345,14 @@ export function SettingsPage() {
 
   const isSaving = contentStatus === "saving";
 
+  const isContentDirty =
+    !deepEqual(siteContent, initialContentRef.current.site) ||
+    !deepEqual(processContent, initialContentRef.current.process) ||
+    !deepEqual(testimonialsContent, initialContentRef.current.testimonials) ||
+    !deepEqual(categoriesContent, initialContentRef.current.categories);
+
+  const contentSaveDisabled = !isContentDirty || isSaving;
+
   return (
     <div data-testid="settings-page">
       <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6">
@@ -382,9 +459,10 @@ export function SettingsPage() {
                 <AdminConfigTab
                   adminSettings={adminSettings}
                   adminSaved={adminSaved}
-                  adminError={adminError}
+                  adminError={adminUrlError}
                   onAdminChange={handleAdminChange}
                   onAdminSave={handleAdminSave}
+                  saveDisabled={adminSaveDisabled}
                 />
               )}
 
@@ -411,7 +489,7 @@ export function SettingsPage() {
                 <div className="mt-6 flex justify-end pt-4 border-t border-gray-200">
                   <button
                     onClick={handleSaveContent}
-                    disabled={isSaving}
+                    disabled={contentSaveDisabled}
                     data-testid="settings-page_save-content-btn"
                     className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                   >
