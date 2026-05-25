@@ -4,7 +4,7 @@ Tests for the `web/` sub-project: a React 18 + Vite customer-facing storefront.
 
 **Executor**: AI agent with Playwright browser automation.
 **Base URL**: `http://localhost:5173`
-**Router**: HashRouter — all paths are `/#/...`
+**Router**: BrowserRouter — all paths are `/...`
 **Data source**: Static JSON files (`src/data/`), no API calls for product listing (only for checkout).
 **Requires**: `services/` dev server running on port 8787 (for checkout flow).
 
@@ -81,22 +81,22 @@ localStorage.removeItem("goldenHiveCart");
 
 ## Test 2: Navigation Works (All Routes)
 
-1. Click "Shop" → URL becomes `http://localhost:5173/#/products`
-2. Click "About" → URL is `http://localhost:5173/#/about`
-3. Click "Contact" → URL is `http://localhost:5173/#/contact`
-4. Click brand logo (Home) → URL is `http://localhost:5173/#/`
+1. Click "Shop" → URL becomes `http://localhost:5173/products`
+2. Click "About" → URL is `http://localhost:5173/about`
+3. Click "Contact" → URL is `http://localhost:5173/contact`
+4. Click brand logo (Home) → URL is `http://localhost:5173/`
 
 **Assertions per route**:
 
-- `/#/products`: Title "Our Products" visible, 8 product cards in grid, category filter tabs present (All, Honey, Beeswax, Gift Sets, Subscriptions)
-- `/#/about`: "Our Story" section visible, 5 process steps listed (The Hive, Foraging, The Nectar, Sealing, Harvest)
-- `/#/contact`: Form with name/email/message fields, email "hello@beeepicapiary.com", phone shown
+- `/products`: Title "Our Products" visible, 8 product cards in grid, category filter tabs present (All, Honey, Beeswax, Gift Sets, Subscriptions)
+- `/about`: "Our Story" section visible, 5 process steps listed (The Hive, Foraging, The Nectar, Sealing, Harvest)
+- `/contact`: Form with name/email/message fields, email "hello@beeepicapiary.com", phone shown
 
 ---
 
 ## Test 3: Product Detail Page
 
-1. Navigate to `http://localhost:5173/#/products`
+1. Navigate to `http://localhost:5173/products`
 2. Click "Wildflower Raw Honey" product card
 
 **Assertions**:
@@ -112,7 +112,7 @@ localStorage.removeItem("goldenHiveCart");
 
 ## Test 4: Category Filtering on Products Page
 
-1. Navigate to `http://localhost:5173/#/products`
+1. Navigate to `http://localhost:5173/products`
 2. Click "Honey" → only 3 honey products shown
 3. Click "Beeswax" → only 2 beeswax products shown
 4. Click "Gift Sets" → 2 gift products shown
@@ -123,7 +123,7 @@ localStorage.removeItem("goldenHiveCart");
 
 ## Test 5: Add to Cart Flow
 
-1. Navigate to `http://localhost:5173/#/products`
+1. Navigate to `http://localhost:5173/products`
 2. Click "Add" on "Wildflower Raw Honey"
 
 **Assertions**:
@@ -209,7 +209,7 @@ localStorage.removeItem("goldenHiveCart");
 
 ## Test 12: Success Page
 
-Navigate to `http://localhost:5173/#/success?session_id=cs_test_abc123`
+Navigate to `http://localhost:5173/success?session_id=cs_test_abc123`
 
 **Assertions**:
 
@@ -223,7 +223,7 @@ Navigate to `http://localhost:5173/#/success?session_id=cs_test_abc123`
 
 ## Test 13: Cancel Page
 
-Navigate to `http://localhost:5173/#/cancel?session=cancelled`
+Navigate to `http://localhost:5173/cancel?session=cancelled`
 
 **Assertions**:
 
@@ -233,21 +233,21 @@ Navigate to `http://localhost:5173/#/cancel?session=cancelled`
 
 ---
 
-## Test 14: Success Modal (from URL hash)
+## Test 14: Success Modal (from URL query)
 
-Navigate to `http://localhost:5173/#/?session=success`
+Navigate to `http://localhost:5173/?session=success`
 
 **Assertions**:
 
 - Success modal overlay appears with "Order Confirmed!"
 - Clicking overlay closes it
-- URL hash cleaned (no `?session=success` remains)
+- URL cleaned (no `?session=success` remains)
 
 ---
 
 ## Test 15: Contact Form
 
-Navigate to `http://localhost:5173/#/contact`
+Navigate to `http://localhost:5173/contact`
 
 **Assertions**:
 
@@ -286,7 +286,7 @@ Navigate to `http://localhost:5173/#/contact`
 
 ## Test 18: Footer Content
 
-Navigate to any page (e.g., `/#/products`), scroll to footer.
+Navigate to any page (e.g., `/products`), scroll to footer.
 
 **Assertions**:
 
@@ -307,7 +307,7 @@ Navigate to any page (e.g., `/#/products`), scroll to footer.
 
 ## Test 20: Unknown Route
 
-Navigate to `http://localhost:5173/#/nonexistent-page`
+Navigate to `http://localhost:5173/nonexistent-page`
 
 **Assertion**: App does not crash — Layout renders with empty main content or graceful fallback.
 

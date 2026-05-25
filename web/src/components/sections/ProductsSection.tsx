@@ -5,22 +5,24 @@ import { SectionHeader } from "../ui/SectionHeader";
 import { ProductCard } from "../shop/ProductCard";
 import { Button } from "../ui/Button";
 import { fetchProductsPaginated } from "../../utils/api";
-import type { IProduct, EProductCategory, ISiteContent } from "../../types";
+import type { IProduct, ICategory, ISiteContent } from "../../types";
 
 interface IProductsSectionProps {
   content: ISiteContent;
+  categories: ICategory[];
 }
 
-export const ProductsSection = ({ content }: IProductsSectionProps) => {
+export const ProductsSection = ({
+  content,
+  categories,
+}: IProductsSectionProps) => {
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [lastId, setLastId] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<
-    EProductCategory | "ALL"
-  >("ALL");
+  const [activeCategory, setActiveCategory] = useState<string>("");
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [sortBy, setSortBy] = useState<"name" | "price">("name");
@@ -41,7 +43,7 @@ export const ProductsSection = ({ content }: IProductsSectionProps) => {
     setLoading(true);
     fetchProductsPaginated({
       search: debouncedSearch || undefined,
-      category: activeCategory === "ALL" ? undefined : activeCategory,
+      category: activeCategory || undefined,
       limit: 12,
     })
       .then((result) => {
@@ -81,17 +83,12 @@ export const ProductsSection = ({ content }: IProductsSectionProps) => {
     });
   }, [products, sortBy, sortOrder]);
 
-  const categories = content.categories.map((cat) => ({
-    ...cat,
-    value: cat.id === "ALL" ? "ALL" : cat.id,
-  }));
-
   const handleLoadMore = async () => {
     setLoading(true);
     try {
       const result = await fetchProductsPaginated({
         search: debouncedSearch || undefined,
-        category: activeCategory === "ALL" ? undefined : activeCategory,
+        category: activeCategory || undefined,
         limit: 12,
         starting_after: lastId || undefined,
       });
@@ -177,12 +174,14 @@ export const ProductsSection = ({ content }: IProductsSectionProps) => {
           {categories.map((category) => (
             <button
               key={category.id}
-              data-testid={`products-section_filter-${category.value.toLowerCase()}`}
+              data-testid={`products-section_filter-${category.id.toLowerCase()}`}
               onClick={() =>
-                setActiveCategory(category.value as EProductCategory | "ALL")
+                setActiveCategory(
+                  activeCategory === category.id ? "" : category.id,
+                )
               }
               className={`px-4 py-2 rounded-full font-body text-sm font-medium transition-all duration-200 ${
-                activeCategory === category.value
+                activeCategory === category.id
                   ? "bg-primary-500 text-white shadow-amber"
                   : "bg-primary-50 text-dark-600 hover:bg-primary-100"
               }`}

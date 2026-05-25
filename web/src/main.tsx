@@ -1,7 +1,10 @@
 import { StrictMode, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { Provider } from "react-redux";
 import { CheckCircle } from "lucide-react";
 import App from "./App.tsx";
+import { store } from "./store";
 import "./index.css";
 
 function InstallPrompt() {
@@ -52,7 +55,11 @@ function InstallPrompt() {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <Provider store={store}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </Provider>
     <InstallPrompt />
   </StrictMode>,
 );

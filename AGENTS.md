@@ -30,7 +30,7 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 
 ### Web App Specifics
 
-- Uses `HashRouter` - URLs like `/#/products`
+- Uses `BrowserRouter` - URLs like `/products`
 - Base path: `"/"` in `vite.config.ts` (change for GitHub Pages subpath deploys)
 - Data source: Backend API (`services/` Cloudflare Worker) fetched via `src/utils/api.ts`
   - `GET /settings/site` for site content

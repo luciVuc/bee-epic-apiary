@@ -4,6 +4,7 @@ import type {
   IProduct,
   ITestimonial,
   IProcessStep,
+  ICategory,
 } from "../types";
 import { transformStripeProductsList } from "./transform";
 
@@ -33,6 +34,15 @@ export async function fetchTestimonials(): Promise<ITestimonial[]> {
   const response = await fetch(`${API_BASE_URL}/settings/testimonials`);
   if (!response.ok) {
     throw new Error(`Failed to fetch testimonials: ${response.statusText}`);
+  }
+  return response.json();
+}
+
+/** Fetch categories from GET /settings/categories */
+export async function fetchCategories(): Promise<ICategory[]> {
+  const response = await fetch(`${API_BASE_URL}/settings/categories`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch categories: ${response.statusText}`);
   }
   return response.json();
 }
@@ -82,16 +92,19 @@ export async function fetchProductsPaginated(params: {
   };
 }
 
-/** Fetch all site data in parallel: site content, testimonials, and process steps */
+/** Fetch all site data in parallel: site content, testimonials, process steps, and categories */
 export async function fetchAllSiteData(): Promise<{
   siteContent: ISiteContent;
   testimonials: ITestimonial[];
   processSteps: IProcessStep[];
+  categories: ICategory[];
 }> {
-  const [siteContent, testimonials, processSteps] = await Promise.all([
-    fetchSiteContent(),
-    fetchTestimonials(),
-    fetchProcessSteps(),
-  ]);
-  return { siteContent, testimonials, processSteps };
+  const [siteContent, testimonials, processSteps, categories] =
+    await Promise.all([
+      fetchSiteContent(),
+      fetchTestimonials(),
+      fetchProcessSteps(),
+      fetchCategories(),
+    ]);
+  return { siteContent, testimonials, processSteps, categories };
 }

@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
-import { HashRouter, Routes, Route } from "react-router-dom";
-import { Provider } from "react-redux";
+import { Routes, Route } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { store } from "./store";
 import { Layout } from "./components/layout/Layout";
 import { CartDrawer } from "./components/shop/CartDrawer";
 import { HomePage } from "./components/pages/HomePage";
@@ -14,13 +12,19 @@ import { SuccessPage } from "./components/pages/SuccessPage";
 import { ProductDetailPage } from "./components/pages/ProductDetailPage";
 import { LoadingSpinner } from "./components/ui/LoadingSpinner";
 import { fetchAllSiteData } from "./utils/api";
-import type { ISiteContent, ITestimonial, IProcessStep } from "./types";
+import type {
+  ISiteContent,
+  ITestimonial,
+  IProcessStep,
+  ICategory,
+} from "./types";
 
 function AppContent() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [siteContent, setSiteContent] = useState<ISiteContent | null>(null);
   const [testimonials, setTestimonials] = useState<ITestimonial[]>([]);
   const [processSteps, setProcessSteps] = useState<IProcessStep[]>([]);
+  const [categories, setCategories] = useState<ICategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -30,6 +34,7 @@ function AppContent() {
         setSiteContent(data.siteContent);
         setTestimonials(data.testimonials);
         setProcessSteps(data.processSteps);
+        setCategories(data.categories);
       })
       .catch((err) => {
         setError(err instanceof Error ? err.message : "Failed to load data");
@@ -40,9 +45,7 @@ function AppContent() {
   }, []);
 
   useEffect(() => {
-    const params = new URLSearchParams(
-      window.location.hash.split("?")[1] || "",
-    );
+    const params = new URLSearchParams(window.location.search);
     if (params.get("session") === "success") {
       setShowSuccessModal(true);
       window.history.replaceState(null, "", window.location.pathname);
@@ -84,7 +87,9 @@ function AppContent() {
           />
           <Route
             path="/products"
-            element={<ProductsPage content={siteContent} />}
+            element={
+              <ProductsPage content={siteContent} categories={categories} />
+            }
           />
           <Route
             path="/about"
@@ -167,15 +172,7 @@ function AppContent() {
 }
 
 function App() {
-  return (
-    <Provider store={store}>
-      <HashRouter>
-        <Routes>
-          <Route path="/*" element={<AppContent />} />
-        </Routes>
-      </HashRouter>
-    </Provider>
-  );
+  return <AppContent />;
 }
 
 export default App;
