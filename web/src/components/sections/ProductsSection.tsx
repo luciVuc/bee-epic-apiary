@@ -1,4 +1,12 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+  useLayoutEffect,
+} from "react";
+import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Search, X, ArrowUpDown } from "lucide-react";
 import { SectionHeader } from "../ui/SectionHeader";
@@ -16,62 +24,107 @@ export const ProductsSection = ({
   content,
   categories,
 }: IProductsSectionProps) => {
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const searchTerm = searchParams.get("search") || "";
+  const activeCategory = searchParams.get("category") || "";
+  const sortBy = (searchParams.get("sortBy") || "name") as "name" | "price";
+  const sortOrder = (searchParams.get("sortOrder") || "asc") as "asc" | "desc";
+  const limit = Math.max(1, parseInt(searchParams.get("limit") || "12", 10));
+
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [hasMore, setHasMore] = useState(false);
   const [lastId, setLastId] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
-  const [activeCategory, setActiveCategory] = useState<string>("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "price">("name");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const isInitialMount = useRef(true);
+  const scrollPosRef = useRef(0);
+
+  const updateSearchParams = useCallback(
+    (overrides: Record<string, string | undefined>) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          for (const [key, value] of Object.entries(overrides)) {
+            if (value) next.set(key, value);
+            else next.delete(key);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
 
   const handleSearchChange = (value: string) => {
-    setSearchTerm(value);
-    if (searchTimer.current) clearTimeout(searchTimer.current);
-    searchTimer.current = setTimeout(() => {
-      setDebouncedSearch(value);
-    }, 300);
+    updateSearchParams({
+      search: value || undefined,
+      limit: undefined,
+    });
+  };
+
+  const handleCategoryClick = (categoryId: string) => {
+    updateSearchParams({
+      category: activeCategory === categoryId ? undefined : categoryId,
+      limit: undefined,
+    });
+  };
+
+  const handleSortChange = (value: string) => {
+    const [by, order] = value.split("-") as ["name" | "price", "asc" | "desc"];
+    updateSearchParams({
+      sortBy: by !== "name" ? by : undefined,
+      sortOrder: order !== "asc" ? order : undefined,
+    });
   };
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    fetchProductsPaginated({
-      search: debouncedSearch || undefined,
-      category: activeCategory || undefined,
-      limit: 12,
-    })
-      .then((result) => {
-        if (cancelled) return;
+    if (searchTimer.current) clearTimeout(searchTimer.current);
+
+    const delay = isInitialMount.current ? 0 : 300;
+    isInitialMount.current = false;
+
+    searchTimer.current = setTimeout(async () => {
+      setLoading(true);
+      try {
+        const result = await fetchProductsPaginated({
+          search: searchTerm || undefined,
+          category: activeCategory || undefined,
+          limit,
+        });
         setProducts(result.products);
         setHasMore(result.hasMore);
         setLastId(result.products[result.products.length - 1]?.id || null);
         setTotalCount(result.totalCount);
-      })
-      .catch((err) => {
-        if (cancelled) return;
+      } catch (err) {
         console.error("Failed to fetch products", err);
-      })
-      .finally(() => {
-        if (cancelled) return;
+      } finally {
         setLoading(false);
         setInitialLoading(false);
-      });
+      }
+    }, delay);
+
     return () => {
-      cancelled = true;
+      if (searchTimer.current) clearTimeout(searchTimer.current);
     };
-  }, [debouncedSearch, activeCategory]);
+  }, [searchTerm, activeCategory]);
 
   useEffect(() => {
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
   }, []);
+
+  useLayoutEffect(() => {
+    if (scrollPosRef.current > 0 && !loading) {
+      window.scrollTo(0, scrollPosRef.current);
+      scrollPosRef.current = 0;
+    }
+  }, [loading]);
 
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
@@ -84,18 +137,21 @@ export const ProductsSection = ({
   }, [products, sortBy, sortOrder]);
 
   const handleLoadMore = async () => {
+    scrollPosRef.current = window.scrollY;
     setLoading(true);
     try {
       const result = await fetchProductsPaginated({
-        search: debouncedSearch || undefined,
+        search: searchTerm || undefined,
         category: activeCategory || undefined,
         limit: 12,
         starting_after: lastId || undefined,
       });
-      setProducts((prev) => [...prev, ...result.products]);
+      const newProducts = [...products, ...result.products];
+      setProducts(newProducts);
       setHasMore(result.hasMore);
       setLastId(result.products[result.products.length - 1]?.id || null);
       setTotalCount(result.totalCount);
+      updateSearchParams({ limit: String(newProducts.length) });
     } catch (err) {
       console.error("Failed to load more products", err);
     } finally {
@@ -149,14 +205,7 @@ export const ProductsSection = ({
             <ArrowUpDown className="w-4 h-4 text-dark-400" />
             <select
               value={sortValue}
-              onChange={(e) => {
-                const [by, order] = e.target.value.split("-") as [
-                  "name" | "price",
-                  "asc" | "desc",
-                ];
-                setSortBy(by);
-                setSortOrder(order);
-              }}
+              onChange={(e) => handleSortChange(e.target.value)}
               aria-label="Sort products"
               data-testid="products-section_sort-select"
               className="px-4 py-2.5 border border-dark-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-body text-sm"
@@ -175,11 +224,7 @@ export const ProductsSection = ({
             <button
               key={category.id}
               data-testid={`products-section_filter-${category.id.toLowerCase()}`}
-              onClick={() =>
-                setActiveCategory(
-                  activeCategory === category.id ? "" : category.id,
-                )
-              }
+              onClick={() => handleCategoryClick(category.id)}
               className={`px-4 py-2 rounded-full font-body text-sm font-medium transition-all duration-200 ${
                 activeCategory === category.id
                   ? "bg-primary-500 text-white shadow-amber"
