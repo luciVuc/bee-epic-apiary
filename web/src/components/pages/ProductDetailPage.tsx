@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -11,9 +11,10 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { useCart } from "../../hooks/useCart";
 import { formatPrice } from "../../utils/formatters";
-import productsData from "../../data/products.json";
+import { fetchProducts } from "../../utils/api";
 import type { IProduct } from "../../types";
 
 export function ProductDetailPage() {
@@ -22,9 +23,17 @@ export function ProductDetailPage() {
   const { add, items } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
+  const [product, setProduct] = useState<IProduct | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const products = useMemo(() => productsData as IProduct[], []);
-  const product = products.find((p) => p.slug === slug);
+  useEffect(() => {
+    fetchProducts()
+      .then((products) => {
+        const found = products.find((p) => p.slug === slug);
+        setProduct(found || null);
+      })
+      .finally(() => setLoading(false));
+  }, [slug]);
 
   const cartItem = product
     ? items.find((item) => item.product.id === product.id)
@@ -38,6 +47,17 @@ export function ProductDetailPage() {
       setQuantity(1);
     }
   }, [cartItem]);
+
+  if (loading) {
+    return (
+      <div
+        data-testid="product-detail-page"
+        className="min-h-screen bg-primary-50 flex items-center justify-center"
+      >
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
 
   if (!product) {
     return (

@@ -30,10 +30,17 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 
 ### Web App Specifics
 
-- Uses `HashRouter` (GitHub Pages) - URLs like `/#/products`
-- Base path: `/golden-hive-apiary/` in `vite.config.ts`
-- Data source: Local JSON in `src/data/`
-- Stripe: Client-only via `VITE_STRIPE_PUBLISHABLE_KEY`
+- Uses `HashRouter` - URLs like `/#/products`
+- Base path: `"/"` in `vite.config.ts` (change for GitHub Pages subpath deploys)
+- Data source: Backend API (`services/` Cloudflare Worker) fetched via `src/utils/api.ts`
+  - `GET /settings/site` for site content
+  - `GET /settings/process` for process steps
+  - `GET /settings/testimonials` for testimonials
+  - `GET /products?expand[]=data.default_price` for products (transformed via `src/utils/transform.ts`)
+- Checkout: `POST /checkout` on the services worker (not client-only redirect)
+- API base URL configured via `VITE_API_URL` env var (default `http://localhost:8787`)
+- Stripe publishable key via `VITE_STRIPE_PUBLISHABLE_KEY`
+- Legacy JSON files in `src/data/` are no longer imported
 
 ### Services Specifics (Cloudflare Worker)
 

@@ -85,5 +85,5 @@ export default defineConfig({
       },
     }),
   ],
-  base: "/golden-hive-apiary/",
+  base: "/",
 });

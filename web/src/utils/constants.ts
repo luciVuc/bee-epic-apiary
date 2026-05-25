@@ -4,8 +4,6 @@ export const STRIPE_PUBLISHABLE_KEY =
   import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
 export const FORMSPREE_FORM_ID = import.meta.env.VITE_FORMSPREE_FORM_ID || "";
 
-export const GITHUB_PAGES_BASE = "/golden-hive-apiary/";
-
 export const PRODUCTS_PER_PAGE = 12;
 
 export const CATEGORIES = [

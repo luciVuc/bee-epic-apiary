@@ -12,29 +12,32 @@ import { ContactPage } from "./components/pages/ContactPage";
 import { CancelPage } from "./components/pages/CancelPage";
 import { SuccessPage } from "./components/pages/SuccessPage";
 import { ProductDetailPage } from "./components/pages/ProductDetailPage";
-import siteData from "./data/site.json";
-import productsData from "./data/products.json";
-import testimonialsData from "./data/testimonials.json";
-import processData from "./data/process.json";
-import type {
-  ISiteContent,
-  IProduct,
-  ITestimonial,
-  IProcessStep,
-} from "./types";
-
-type SiteContent = ISiteContent;
-type Product = IProduct;
-type Testimonial = ITestimonial;
-type ProcessStep = IProcessStep;
-
-const siteContent: SiteContent = siteData as SiteContent;
-const products: Product[] = productsData as Product[];
-const testimonials: Testimonial[] = testimonialsData as Testimonial[];
-const processSteps: ProcessStep[] = processData as ProcessStep[];
+import { LoadingSpinner } from "./components/ui/LoadingSpinner";
+import { fetchAllSiteData } from "./utils/api";
+import type { ISiteContent, ITestimonial, IProcessStep } from "./types";
 
 function AppContent() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [siteContent, setSiteContent] = useState<ISiteContent | null>(null);
+  const [testimonials, setTestimonials] = useState<ITestimonial[]>([]);
+  const [processSteps, setProcessSteps] = useState<IProcessStep[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchAllSiteData()
+      .then((data) => {
+        setSiteContent(data.siteContent);
+        setTestimonials(data.testimonials);
+        setProcessSteps(data.processSteps);
+      })
+      .catch((err) => {
+        setError(err instanceof Error ? err.message : "Failed to load data");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(
@@ -45,6 +48,29 @@ function AppContent() {
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-50">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (error || !siteContent) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-primary-50">
+        <div className="text-center">
+          <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
+            Unable to load site
+          </h1>
+          <p className="font-body text-dark-600">
+            {error || "Site content not available"}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -58,7 +84,7 @@ function AppContent() {
           />
           <Route
             path="/products"
-            element={<ProductsPage content={siteContent} products={products} />}
+            element={<ProductsPage content={siteContent} />}
           />
           <Route
             path="/about"

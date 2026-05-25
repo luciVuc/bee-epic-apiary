@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
 import type { IProduct, ICartItem } from "../types";
-import { GITHUB_PAGES_BASE } from "../utils/constants";
 
 interface IUseStripeCheckoutReturn {
   isProcessing: boolean;
@@ -8,6 +7,8 @@ interface IUseStripeCheckoutReturn {
   checkout: (items: ICartItem[]) => Promise<void>;
   clearError: () => void;
 }
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8787";
 
 const isSubscriptionProduct = (product: IProduct): boolean => {
   return product.category?.toUpperCase() === "SUBSCRIPTIONS";
@@ -83,35 +84,40 @@ export const useStripeCheckout = (): IUseStripeCheckoutReturn => {
         return;
       }
 
-      const lineItems = validItems.map((item) => ({
+      const line_items = validItems.map((item) => ({
         price: item.product.stripePriceId,
         quantity: item.quantity,
       }));
 
-      const response = await fetch(
-        import.meta.env.VITE_STRIPE_WORKER_URL + "/create-checkout",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lineItems,
-            successUrl: `${window.location.origin}${GITHUB_PAGES_BASE}#/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancelUrl: `${window.location.origin}${GITHUB_PAGES_BASE}#/cancel?session=cancelled`,
-          }),
+      const success_url = `${window.location.origin}#/success`;
+      const cancel_url = `${window.location.origin}#/cancel`;
+
+      const response = await fetch(`${API_BASE_URL}/checkout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify({
+          line_items,
+          success_url,
+          cancel_url,
+        }),
+      });
 
-      const { url, error: serverError } = await response.json();
+      const data = await response.json();
 
-      if (serverError) {
-        setError(serverError || "Payment failed. Please try again.");
+      if (data.error) {
+        setError(data.error || "Payment failed. Please try again.");
         setIsProcessing(false);
         return;
       }
 
-      window.location.href = url;
+      if (data.sessions && data.sessions.length > 0) {
+        window.location.href = data.sessions[0];
+      } else {
+        setError("No checkout session returned. Please try again.");
+        setIsProcessing(false);
+      }
     } catch (err) {
       setError("An unexpected error occurred. Please try again.");
       console.error("Checkout error:", err);
