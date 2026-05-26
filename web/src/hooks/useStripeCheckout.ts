@@ -89,8 +89,8 @@ export const useStripeCheckout = (): IUseStripeCheckoutReturn => {
         quantity: item.quantity,
       }));
 
-      const success_url = `${window.location.origin}#/success`;
-      const cancel_url = `${window.location.origin}#/cancel`;
+      const success_url = `${window.location.origin}/success`;
+      const cancel_url = `${window.location.origin}/cancel`;
 
       const response = await fetch(`${API_BASE_URL}/checkout`, {
         method: "POST",

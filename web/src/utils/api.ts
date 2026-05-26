@@ -56,7 +56,7 @@ export interface IPaginatedProductsResult {
 /** Fetch products from GET /products (with expanded default_price) and transform into IProduct[] */
 export async function fetchProducts(): Promise<IProduct[]> {
   const response = await fetch(
-    `${API_BASE_URL}/products?expand[]=data.default_price`,
+    `${API_BASE_URL}/products?expand[]=data.default_price&limit=100`,
   );
   if (!response.ok) {
     throw new Error(`Failed to fetch products: ${response.statusText}`);

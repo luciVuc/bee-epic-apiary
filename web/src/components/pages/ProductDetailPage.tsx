@@ -112,7 +112,15 @@ export function ProductDetailPage() {
       <div className="max-w-6xl mx-auto py-12">
         <button
           data-testid="product-detail-page_back-btn"
-          onClick={() => navigate("/products")}
+          onClick={() => {
+            const savedUrl = sessionStorage.getItem("products_page_url");
+            if (savedUrl) {
+              const url = new URL(savedUrl);
+              navigate(url.pathname + url.search + url.hash);
+            } else {
+              navigate("/products");
+            }
+          }}
           className="flex items-center text-dark-600 hover:text-primary-600 transition-colors mb-6 font-body"
           aria-label="Back to products"
           title="Back to products"

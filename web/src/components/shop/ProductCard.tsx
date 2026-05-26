@@ -8,6 +8,8 @@ import { useCart } from "../../hooks/useCart";
 import { formatPrice } from "../../utils/formatters";
 import type { IProduct } from "../../types";
 
+const SCROLL_STORAGE_KEY = "products_page_scroll";
+
 interface IProductCardProps {
   product: IProduct;
 }
@@ -20,6 +22,11 @@ export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
       if (product.inStock) {
         add(product);
       }
+    };
+
+    const handleNavigate = () => {
+      sessionStorage.setItem(SCROLL_STORAGE_KEY, String(window.scrollY));
+      sessionStorage.setItem("products_page_url", window.location.href);
     };
 
     return (
@@ -37,6 +44,7 @@ export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
           <Link
             to={`/products/${product.slug}`}
             aria-label={`View ${product.name}`}
+            onClick={handleNavigate}
           >
             {product.imageUrls && product.imageUrls[0] ? (
               <img
@@ -73,6 +81,7 @@ export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
                 to={`/products/${product.slug}`}
                 data-testid={`product-card_${product.slug}_name-link`}
                 className="hover:text-primary-600 transition-colors"
+                onClick={handleNavigate}
               >
                 {product.name}
               </Link>

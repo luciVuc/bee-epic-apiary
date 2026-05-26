@@ -16,6 +16,8 @@ import { fetchProductsPaginated } from "../../utils/api";
 import type { IProduct, ICategory, ISiteContent } from "../../types";
 import { PRODUCTS_PER_PAGE } from "../../utils/constants";
 
+const SCROLL_STORAGE_KEY = "products_page_scroll";
+
 interface IProductsSectionProps {
   content: ISiteContent;
   categories: ICategory[];
@@ -126,10 +128,6 @@ export const ProductsSection = ({
   }, []);
 
   useLayoutEffect(() => {
-    // if (scrollPosRef.current > 0 && !loading) {
-    //   window.scrollTo(0, scrollPosRef.current);
-    //   scrollPosRef.current = 0;
-    // }
     if (lastProdCardIdRef.current && !loading) {
       const lastProductElement = sectionRef.current?.querySelector(
         `div[data-testid="${lastProdCardIdRef.current}"]`,
@@ -138,8 +136,17 @@ export const ProductsSection = ({
         block: "start",
         behavior: "smooth",
       });
+      return;
     }
-  }, [loading]);
+    if (!initialLoading && !lastProdCardIdRef.current) {
+      const savedScroll = sessionStorage.getItem(SCROLL_STORAGE_KEY);
+      if (savedScroll) {
+        sessionStorage.removeItem(SCROLL_STORAGE_KEY);
+        sessionStorage.removeItem("products_page_url");
+        window.scrollTo(0, Number(savedScroll));
+      }
+    }
+  }, [initialLoading]);
 
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
