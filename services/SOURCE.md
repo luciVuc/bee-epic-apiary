@@ -254,6 +254,17 @@ Checks if a product belongs to a given category (read from metadata.category).
 
 **Returns**: `true` if product matches the category
 
+##### `matchesTag(product: Stripe.Product, tag: string): boolean`
+
+Checks if a product has a given tag in its comma-separated tags metadata (case-sensitive, trims whitespace).
+
+**Parameters**:
+
+- `product`: Stripe product object
+- `tag`: Tag string to match
+
+**Returns**: `true` if product has the tag
+
 ##### `paginateArray<T>(items: T[], limit: number, startingAfter?: string): { data: T[], hasMore: boolean, lastId: string | null }`
 
 Paginates an already-filtered array in-memory (used after search/filter operations).
@@ -291,7 +302,7 @@ Handles `GET /products` and `GET /products/:id` to retrieve products with search
 
 - `withStripeHandler` from `../../utils`
 - `jsonResponse` from `../../utils`
-- `fetchAllActiveProducts`, `matchesSearch`, `matchesCategory`, `paginateArray` from `./shared`
+- `fetchAllActiveProducts`, `matchesSearch`, `matchesCategory`, `matchesTag`, `paginateArray` from `./shared`
 
 **Handler Logic**:
 
@@ -300,8 +311,8 @@ Handles `GET /products` and `GET /products/:id` to retrieve products with search
    - Retrieves product via Stripe API with optional expand params
    - Returns 404 if product is not active
 3. For `GET /products` (list):
-   - Parses `search`, `category`, `limit`, and `starting_after` query params
-   - If search or category filter is active: fetches all active products, filters in-memory, then paginates
+   - Parses `search`, `category`, `tag`, `limit`, and `starting_after` query params
+   - If search, category, or tag filter is active: fetches all active products, filters in-memory using `matchesSearch`, `matchesCategory`, and `matchesTag`, then paginates
    - Otherwise: fetches from Stripe with cursor-based pagination, computes total_count by fetching full list
 4. Returns products list with `has_more`, `total_count`, and `lastId`
 
@@ -331,13 +342,13 @@ Handles `GET /products/count` to retrieve the total product count with optional 
 
 - `withStripeHandler` from `../../utils`
 - `jsonResponse` from `../../utils`
-- `fetchAllActiveProducts`, `matchesSearch`, `matchesCategory` from `./shared`
+- `fetchAllActiveProducts`, `matchesSearch`, `matchesCategory`, `matchesTag` from `./shared`
 
 **Handler Logic**:
 
-1. Parses `search` and `category` query params
+1. Parses `search`, `category`, and `tag` query params
 2. Fetches all active products via `fetchAllActiveProducts`
-3. Filters in-memory by search and/or category if applicable
+3. Filters in-memory by search, category, and/or tag if applicable
 4. Returns `{ total: number }`
 
 ---

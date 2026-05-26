@@ -1,7 +1,7 @@
 import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse } from '../../utils';
-import { fetchAllActiveProducts, matchesSearch, matchesCategory, paginateArray } from './shared';
+import { fetchAllActiveProducts, matchesSearch, matchesCategory, matchesTag, paginateArray } from './shared';
 
 export async function handleGetProducts(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
@@ -14,6 +14,7 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 
 		const search = url.searchParams.get('search') || '';
 		const category = url.searchParams.get('category') || '';
+		const tag = url.searchParams.get('tag') || '';
 
 		if (productId) {
 			const retrieveParams: Stripe.ProductRetrieveParams = {};
@@ -34,10 +35,10 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 
 		let resultData: any;
 
-		if (search || (category && category !== 'ALL')) {
+		if (search || (category && category !== 'ALL') || tag) {
 			const allProducts = await fetchAllActiveProducts(stripe, expand);
 			const filtered = allProducts.filter((p) => {
-				return matchesSearch(p, search) && matchesCategory(p, category);
+				return matchesSearch(p, search) && matchesCategory(p, category) && matchesTag(p, tag);
 			});
 			const paginated = paginateArray(filtered, limit, startingAfter);
 			resultData = {

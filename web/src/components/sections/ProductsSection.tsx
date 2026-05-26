@@ -31,6 +31,7 @@ export const ProductsSection = ({
 
   const searchTerm = searchParams.get("search") || "";
   const activeCategory = searchParams.get("category") || "";
+  const activeTag = searchParams.get("tag") || "";
   const sortBy = (searchParams.get("sortBy") || "name") as "name" | "price";
   const sortOrder = (searchParams.get("sortOrder") || "asc") as "asc" | "desc";
   const limit = Math.max(
@@ -82,6 +83,13 @@ export const ProductsSection = ({
     });
   };
 
+  const handleTagClick = (tag: string) => {
+    updateSearchParams({
+      tag: activeTag === tag ? undefined : tag,
+      limit: undefined,
+    });
+  };
+
   const handleSortChange = (value: string) => {
     const [by, order] = value.split("-") as ["name" | "price", "asc" | "desc"];
     updateSearchParams({
@@ -102,6 +110,7 @@ export const ProductsSection = ({
         const result = await fetchProductsPaginated({
           search: searchTerm || undefined,
           category: activeCategory || undefined,
+          tag: activeTag || undefined,
           limit,
         });
         setProducts(result.products);
@@ -119,7 +128,7 @@ export const ProductsSection = ({
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
-  }, [searchTerm, activeCategory]);
+  }, [searchTerm, activeCategory, activeTag]);
 
   useEffect(() => {
     return () => {
@@ -148,6 +157,16 @@ export const ProductsSection = ({
     }
   }, [initialLoading]);
 
+  const availableTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    for (const product of products) {
+      for (const tag of product.tags) {
+        tagSet.add(tag);
+      }
+    }
+    return Array.from(tagSet).sort();
+  }, [products]);
+
   const sortedProducts = useMemo(() => {
     return [...products].sort((a, b) => {
       const modifier = sortOrder === "asc" ? 1 : -1;
@@ -172,6 +191,7 @@ export const ProductsSection = ({
       const result = await fetchProductsPaginated({
         search: searchTerm || undefined,
         category: activeCategory || undefined,
+        tag: activeTag || undefined,
         limit: PRODUCTS_PER_PAGE,
         starting_after: lastId || undefined,
       });
@@ -270,6 +290,28 @@ export const ProductsSection = ({
             </button>
           ))}
         </div>
+
+        {/* Tag filter pills */}
+        {availableTags.length > 0 && (
+          <div className="flex flex-wrap justify-center gap-2 mb-8">
+            {availableTags.map((tag) => (
+              <button
+                key={tag}
+                data-testid={`products-section_tag-${tag.toLowerCase().replace(/\s+/g, "-")}`}
+                onClick={() => handleTagClick(tag)}
+                className={`px-4 py-2 rounded-full font-body text-sm font-medium transition-all duration-200 ${
+                  activeTag === tag
+                    ? "bg-secondary-500 text-white"
+                    : "bg-secondary-50 text-dark-600 hover:bg-secondary-100"
+                }`}
+                aria-label={`Filter by tag ${tag}`}
+                title={`Filter by tag ${tag}`}
+              >
+                {tag}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Results count */}
         {!initialLoading && (

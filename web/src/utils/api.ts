@@ -65,10 +65,11 @@ export async function fetchProducts(): Promise<IProduct[]> {
   return transformStripeProductsList(data);
 }
 
-/** Fetch paginated products with search, category filter, and cursor-based pagination */
+/** Fetch paginated products with search, category filter, tag filter, and cursor-based pagination */
 export async function fetchProductsPaginated(params: {
   search?: string;
   category?: string;
+  tag?: string;
   limit?: number;
   starting_after?: string;
 }): Promise<IPaginatedProductsResult> {
@@ -76,6 +77,7 @@ export async function fetchProductsPaginated(params: {
   url.searchParams.append("expand[]", "data.default_price");
   if (params.search) url.searchParams.append("search", params.search);
   if (params.category) url.searchParams.append("category", params.category);
+  if (params.tag) url.searchParams.append("tag", params.tag);
   if (params.limit) url.searchParams.append("limit", String(params.limit));
   if (params.starting_after)
     url.searchParams.append("starting_after", params.starting_after);

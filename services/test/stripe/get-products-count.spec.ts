@@ -169,6 +169,24 @@ describe('get-products-count handler', () => {
 		expect(body.total).toBe(1);
 	});
 
+	it('filters count by tag', async () => {
+		const allProducts = [
+			{ id: 'prod_1', name: 'Organic Honey', active: true, description: null, metadata: { tags: 'organic,raw' } },
+			{ id: 'prod_2', name: 'Candles', active: true, description: null, metadata: { tags: 'gift' } },
+		];
+		mockStripe.products.list.mockResolvedValue({ data: allProducts, has_more: false });
+
+		const request = new Request('http://example.com/products/count?tag=organic', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as any;
+		expect(body.total).toBe(1);
+	});
+
 	it('counts all products when category is ALL', async () => {
 		const allProducts = [
 			{ id: 'prod_1', name: 'Honey', active: true, description: null, metadata: { category: 'HONEY' } },

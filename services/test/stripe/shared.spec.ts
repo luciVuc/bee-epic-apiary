@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { fetchAllActiveProducts, matchesSearch, matchesCategory, paginateArray } from '../../src/stripe/product/shared';
+import { fetchAllActiveProducts, matchesSearch, matchesCategory, matchesTag, paginateArray } from '../../src/stripe/product/shared';
 import Stripe from 'stripe';
 
 describe('fetchAllActiveProducts', () => {
@@ -162,6 +162,50 @@ describe('matchesCategory', () => {
 	it('handles null metadata', () => {
 		const product = { ...baseProduct, metadata: null as unknown as Stripe.Metadata } as Stripe.Product;
 		expect(matchesCategory(product, 'HONEY')).toBe(false);
+	});
+});
+
+describe('matchesTag', () => {
+	const baseProduct = {
+		id: 'prod_1',
+		name: 'Wildflower Honey',
+		metadata: { tags: 'organic, raw, wildflower' },
+		active: true,
+	} as Stripe.Product;
+
+	it('returns true for empty tag', () => {
+		expect(matchesTag(baseProduct, '')).toBe(true);
+	});
+
+	it('returns true when tag matches', () => {
+		expect(matchesTag(baseProduct, 'organic')).toBe(true);
+	});
+
+	it('returns true when tag matches with extra spaces', () => {
+		expect(matchesTag(baseProduct, ' raw ')).toBe(true);
+	});
+
+	it('returns false when tag does not match', () => {
+		expect(matchesTag(baseProduct, 'synthetic')).toBe(false);
+	});
+
+	it('is case sensitive (tags are exact match)', () => {
+		expect(matchesTag(baseProduct, 'Organic')).toBe(false);
+	});
+
+	it('handles undefined metadata.tags', () => {
+		const product = { ...baseProduct, metadata: {} } as Stripe.Product;
+		expect(matchesTag(product, 'organic')).toBe(false);
+	});
+
+	it('handles null metadata', () => {
+		const product = { ...baseProduct, metadata: null as unknown as Stripe.Metadata } as Stripe.Product;
+		expect(matchesTag(product, 'organic')).toBe(false);
+	});
+
+	it('handles empty tags string', () => {
+		const product = { ...baseProduct, metadata: { tags: '' } } as Stripe.Product;
+		expect(matchesTag(product, 'organic')).toBe(false);
 	});
 });
 

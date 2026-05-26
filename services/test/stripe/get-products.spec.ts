@@ -281,6 +281,26 @@ describe('get-products handler', () => {
 		expect(body.data[0].name).toBe('Honey');
 	});
 
+	it('filters products by tag', async () => {
+		const allProducts = [
+			{ id: 'prod_1', name: 'Organic Honey', active: true, description: null, metadata: { tags: 'organic,raw' } },
+			{ id: 'prod_2', name: 'Candles', active: true, description: null, metadata: { tags: 'gift' } },
+		];
+		mockStripe.products.list.mockResolvedValue({ data: allProducts, has_more: false });
+
+		const request = new Request('http://example.com/products?tag=organic', {
+			method: 'GET',
+			headers: { Origin: 'https://example.com' },
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetProducts(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		const body = (await response.json()) as any;
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].name).toBe('Organic Honey');
+		expect(body.total_count).toBe(1);
+	});
+
 	it('handles error when fetching all products for total_count', async () => {
 		mockStripe.products.list
 			.mockResolvedValueOnce({ data: [{ id: 'prod_1', name: 'Product 1', active: true }], has_more: false })

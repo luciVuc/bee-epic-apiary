@@ -39,6 +39,16 @@ export function matchesCategory(product: Stripe.Product, category: string): bool
 	return (product.metadata?.category || '') === category;
 }
 
+export function matchesTag(product: Stripe.Product, tag: string): boolean {
+	if (!tag) return true;
+	const trimmedTag = tag.trim();
+	const tags = (product.metadata?.tags || '')
+		.split(',')
+		.map((t) => t.trim())
+		.filter(Boolean);
+	return tags.includes(trimmedTag);
+}
+
 export function paginateArray<T extends { id: string }>(
 	items: T[],
 	limit: number,

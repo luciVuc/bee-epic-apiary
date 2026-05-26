@@ -84,7 +84,18 @@ Returns a list of all Stripe products. Response is cached for 5 minutes.
 
 **Authentication**: Not required.
 
-**Response**: Stripe API response (see [Stripe Products List](https://stripe.com/docs/api/products/list))
+**Query Parameters**:
+
+| Parameter        | Type   | Description                                                                   |
+| ---------------- | ------ | ----------------------------------------------------------------------------- |
+| `search`         | string | Filter products whose name, description, or metadata match (case-insensitive) |
+| `category`       | string | Filter products by metadata.category (use `ALL` to show all)                  |
+| `tag`            | string | Filter products by metadata.tags (comma-separated, case-sensitive)            |
+| `limit`          | number | Number of products per page (default: 10)                                     |
+| `starting_after` | string | Cursor for pagination — product ID to start after                             |
+| `expand[]`       | string | Fields to expand (e.g., `expand[]=data.default_price`)                        |
+
+**Response**: Stripe API response with added `total_count` field (see [Stripe Products List](https://stripe.com/docs/api/products/list))
 
 ---
 
@@ -143,6 +154,32 @@ Updates an existing product.
 - URLs in `images` and `url` are validated
 
 **Response**: Stripe Product object
+
+---
+
+#### Get Product Count
+
+`GET /products/count`
+
+Returns the total count of active products, optionally filtered by search, category, or tag.
+
+**Authentication**: Not required.
+
+**Query Parameters**:
+
+| Parameter  | Type   | Description                                                     |
+| ---------- | ------ | --------------------------------------------------------------- |
+| `search`   | string | Filter count by search term (case-insensitive)                  |
+| `category` | string | Filter count by metadata.category (use `ALL` to show all)       |
+| `tag`      | string | Filter count by metadata.tags (comma-separated, case-sensitive) |
+
+**Response**:
+
+```json
+{
+	"total": 42
+}
+```
 
 ---
 
