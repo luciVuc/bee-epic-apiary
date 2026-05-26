@@ -14,6 +14,7 @@ import { ProductCard } from "../shop/ProductCard";
 import { Button } from "../ui/Button";
 import { fetchProductsPaginated } from "../../utils/api";
 import type { IProduct, ICategory, ISiteContent } from "../../types";
+import { PRODUCTS_PER_PAGE } from "../../utils/constants";
 
 interface IProductsSectionProps {
   content: ISiteContent;
@@ -30,7 +31,10 @@ export const ProductsSection = ({
   const activeCategory = searchParams.get("category") || "";
   const sortBy = (searchParams.get("sortBy") || "name") as "name" | "price";
   const sortOrder = (searchParams.get("sortOrder") || "asc") as "asc" | "desc";
-  const limit = Math.max(1, parseInt(searchParams.get("limit") || "12", 10));
+  const limit = Math.max(
+    1,
+    parseInt(searchParams.get("limit") || `${PRODUCTS_PER_PAGE}`, 10),
+  );
 
   const [products, setProducts] = useState<IProduct[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,7 +45,9 @@ export const ProductsSection = ({
 
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
   const isInitialMount = useRef(true);
-  const scrollPosRef = useRef(0);
+  // const scrollPosRef = useRef(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const lastProdCardIdRef = useRef<string | null>();
 
   const updateSearchParams = useCallback(
     (overrides: Record<string, string | undefined>) => {
@@ -120,9 +126,18 @@ export const ProductsSection = ({
   }, []);
 
   useLayoutEffect(() => {
-    if (scrollPosRef.current > 0 && !loading) {
-      window.scrollTo(0, scrollPosRef.current);
-      scrollPosRef.current = 0;
+    // if (scrollPosRef.current > 0 && !loading) {
+    //   window.scrollTo(0, scrollPosRef.current);
+    //   scrollPosRef.current = 0;
+    // }
+    if (lastProdCardIdRef.current && !loading) {
+      const lastProductElement = sectionRef.current?.querySelector(
+        `div[data-testid="${lastProdCardIdRef.current}"]`,
+      ) as HTMLElement;
+      lastProductElement?.scrollIntoView({
+        block: "start",
+        behavior: "smooth",
+      });
     }
   }, [loading]);
 
@@ -137,13 +152,20 @@ export const ProductsSection = ({
   }, [products, sortBy, sortOrder]);
 
   const handleLoadMore = async () => {
-    scrollPosRef.current = window.scrollY;
+    // scrollPosRef.current = window.scrollY;
+    const lastProductElement = sectionRef.current?.querySelector(
+      "div[data-testid^=product-card]:last-child",
+    ) as HTMLElement;
+    if (lastProductElement) {
+      lastProdCardIdRef.current =
+        lastProductElement.getAttribute("data-testid");
+    }
     setLoading(true);
     try {
       const result = await fetchProductsPaginated({
         search: searchTerm || undefined,
         category: activeCategory || undefined,
-        limit: 12,
+        limit: PRODUCTS_PER_PAGE,
         starting_after: lastId || undefined,
       });
       const newProducts = [...products, ...result.products];
@@ -166,8 +188,12 @@ export const ProductsSection = ({
       id="products"
       data-testid="products-section"
       className="py-20 bg-white"
+      ref={sectionRef}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div
+        data-testid="products-section_content"
+        className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+      >
         <SectionHeader
           title={content.productsTitle}
           subtitle={content.productsSubtitle}
