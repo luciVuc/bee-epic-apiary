@@ -391,6 +391,7 @@ Zod validation schemas for settings data.
 Handles `GET` and `PUT` requests for content settings stored in Cloudflare KV (`CONTENT_KV`).
 
 **Supported Types**: `site`, `process`, `testimonials`, `categories`
+(Note: `site` content includes `formspreeFormId` for the contact form configuration)
 
 **Handler Logic**:
 

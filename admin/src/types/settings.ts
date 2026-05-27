@@ -40,6 +40,7 @@ export interface ISiteContent {
   location: string;
   categories: ICategory[];
   socialLinks: { instagram: string; facebook: string; etsy: string };
+  formspreeFormId: string;
 }
 
 /** A single step in the "From Hive to Table" process */

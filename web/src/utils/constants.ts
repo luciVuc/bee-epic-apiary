@@ -2,7 +2,6 @@ export const SITE_URL =
   import.meta.env.VITE_SITE_URL || "http://localhost:5173";
 export const STRIPE_PUBLISHABLE_KEY =
   import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || "";
-export const FORMSPREE_FORM_ID = import.meta.env.VITE_FORMSPREE_FORM_ID || "";
 
 export const PRODUCTS_PER_PAGE = 12;
 

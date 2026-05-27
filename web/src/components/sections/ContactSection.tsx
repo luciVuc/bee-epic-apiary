@@ -5,7 +5,6 @@ import { SectionHeader } from "../ui/SectionHeader";
 import { Button } from "../ui/Button";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import type { ISiteContent } from "../../types";
-import { FORMSPREE_FORM_ID } from "../../utils/constants";
 import { formatPhoneNumber } from "../../utils/formatters";
 
 interface IContactSectionProps {
@@ -50,10 +49,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!FORMSPREE_FORM_ID || FORMSPREE_FORM_ID === "REPLACE_ME") {
+    const formId = content.formspreeFormId;
+    if (!formId || formId === "REPLACE_ME") {
       setStatus("error");
       setErrorMessage(
-        "Formspree is not configured. Please add VITE_FORMSPREE_FORM_ID to .env",
+        "Formspree is not configured. Please set the Formspree Form ID in the admin settings.",
       );
       return;
     }
@@ -62,16 +62,13 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
     setErrorMessage("");
 
     try {
-      const response = await fetch(
-        `https://formspree.io/f/${FORMSPREE_FORM_ID}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
+      const response = await fetch(`https://formspree.io/f/${formId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
         },
-      );
+        body: JSON.stringify(formData),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to send message");

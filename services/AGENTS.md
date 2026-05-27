@@ -86,10 +86,11 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 
 ### Optional
 
-| Variable         | Description                                                                                 | Default                                  |
-| ---------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `API_SECRET_KEY` | API key for authenticating product CRUD operations. If not set, authentication is disabled. | None (dev mode)                          |
-| `RATE_LIMIT_KV`  | Cloudflare KV namespace binding for rate limiting                                           | None (rate limiting disabled if not set) |
+| Variable            | Description                                                                                 | Default                                  |
+| ------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| `API_SECRET_KEY`    | API key for authenticating product CRUD operations. If not set, authentication is disabled. | None (dev mode)                          |
+| `FORMSPREE_FORM_ID` | Formspree form ID for the contact form (stored in KV via admin settings)                    | None                                     |
+| `RATE_LIMIT_KV`     | Cloudflare KV namespace binding for rate limiting                                           | None (rate limiting disabled if not set) |
 
 ### Local Development
 
@@ -100,6 +101,7 @@ STRIPE_SECRET_KEY=sk_test_...
 ALLOWED_ORIGINS=http://localhost:8787,http://localhost:3000
 # Optional:
 # API_SECRET_KEY=your-secret-key
+# FORMSPREE_FORM_ID=your-formspree-form-id
 ```
 
 ## Gotchas

@@ -21,7 +21,7 @@ React + TypeScript e-commerce storefront. Fetches all data (products, site conte
 - Single product detail page
 - Shopping cart with localStorage persistence
 - Stripe checkout via `POST /checkout` on the services worker
-- Contact form with Formspree
+- Contact form with Formspree (form ID configured via admin settings API)
 - Responsive mobile-first design
 
 ## Getting Started
@@ -46,7 +46,6 @@ Copy `.env.example` to `.env` and configure:
 | ----------------------------- | ------------------------------------------- | ----------------------- |
 | `VITE_API_URL`                | Base URL for the services Cloudflare Worker | `http://localhost:8787` |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for the client       | —                       |
-| `VITE_FORMSPREE_FORM_ID`      | Formspree form ID for the contact form      | —                       |
 
 ### Running
 

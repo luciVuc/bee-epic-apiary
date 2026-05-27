@@ -260,7 +260,8 @@ See [AGENTS.md](./AGENTS.md#environment-variables) for full details.
 3. Update `wrangler.jsonc` with the KV namespace ID
 4. Set secrets: `npx wrangler secret put STRIPE_SECRET_KEY`
 5. (Optional) Set API key: `npx wrangler secret put API_SECRET_KEY`
-6. Deploy: `npm run deploy`
+6. (Optional) Set Formspree form ID: `npx wrangler secret put FORMSPREE_FORM_ID`
+7. Deploy: `npm run deploy`
 
 ---
 
