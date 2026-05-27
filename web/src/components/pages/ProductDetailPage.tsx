@@ -25,12 +25,18 @@ export function ProductDetailPage() {
   const [showLightbox, setShowLightbox] = useState(false);
   const [product, setProduct] = useState<IProduct | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchProducts()
       .then((products) => {
         const found = products.find((p) => p.slug === slug);
         setProduct(found || null);
+      })
+      .catch((err) => {
+        setFetchError(
+          err instanceof Error ? err.message : "Failed to load product",
+        );
       })
       .finally(() => setLoading(false));
   }, [slug]);
@@ -55,6 +61,25 @@ export function ProductDetailPage() {
         className="min-h-screen bg-primary-50 flex items-center justify-center"
       >
         <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  if (fetchError) {
+    return (
+      <div
+        data-testid="product-detail-page"
+        className="min-h-screen bg-primary-50 flex items-center justify-center"
+      >
+        <div className="text-center">
+          <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
+            Unable to load product
+          </h1>
+          <p className="font-body text-dark-600 mb-6">{fetchError}</p>
+          <Button onClick={() => navigate("/products")}>
+            Back to Products
+          </Button>
+        </div>
       </div>
     );
   }

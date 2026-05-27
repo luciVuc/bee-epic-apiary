@@ -57,6 +57,13 @@ export function transformStripeProduct(
     stripePriceId = defaultPrice;
   }
 
+  const rawCategory = metadata.category;
+  const category =
+    rawCategory &&
+    Object.values(EProductCategory).includes(rawCategory as EProductCategory)
+      ? (rawCategory as EProductCategory)
+      : EProductCategory.HONEY;
+
   return {
     id: stripeProduct.id,
     name: stripeProduct.name,
@@ -66,7 +73,7 @@ export function transformStripeProduct(
     price,
     stripePriceId,
     stripePaymentLinkId: metadata.stripePaymentLinkId || undefined,
-    category: (metadata.category as EProductCategory) || EProductCategory.HONEY,
+    category,
     imageUrls,
     thumbnailUrls,
     inStock: metadata.inStock !== "false",

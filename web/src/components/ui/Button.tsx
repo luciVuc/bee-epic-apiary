@@ -40,15 +40,15 @@ export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
     };
 
     const combinedClasses = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`;
+    const buttonProps = { "data-testid": "button" as const, ...props };
 
     return (
       <button
         ref={ref}
-        data-testid="button"
         className={combinedClasses}
         disabled={disabled || isLoading}
         aria-busy={isLoading ? true : undefined}
-        {...props}
+        {...buttonProps}
       >
         {isLoading ? (
           <span className="mr-2" aria-hidden="true">

@@ -4,12 +4,14 @@ interface IBadgeProps {
   children: ReactNode;
   variant?: "default" | "success" | "warning" | "error" | "featured";
   className?: string;
+  "data-testid"?: string;
 }
 
 export const Badge = ({
   children,
   variant = "default",
   className = "",
+  "data-testid": testId = "badge",
 }: IBadgeProps) => {
   const variants = {
     default: "bg-dark-100 text-dark-700",
@@ -21,7 +23,7 @@ export const Badge = ({
 
   return (
     <span
-      data-testid="badge"
+      data-testid={testId}
       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium font-body ${variants[variant]} ${className}`}
     >
       {children}

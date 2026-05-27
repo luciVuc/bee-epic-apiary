@@ -15,8 +15,13 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
       data-testid="hero-section"
       className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-amber-50 via-primary-50 to-white"
     >
-      <div className="absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div
+        data-testid="hero-section_background"
+        className="absolute inset-0 overflow-hidden"
+        aria-hidden="true"
+      >
         <motion.div
+          data-testid="hero-section_animated-bg-1"
           className="absolute -top-20 -right-20 w-96 h-96 bg-primary-200 rounded-full opacity-30"
           animate={{
             scale: [1, 1.1, 1],
@@ -29,6 +34,7 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
           }}
         />
         <motion.div
+          data-testid="hero-section_animated-bg-2"
           className="absolute bottom-20 -left-20 w-64 h-64 bg-amber-200 rounded-full opacity-30"
           animate={{
             scale: [1, 1.2, 1],
@@ -42,13 +48,17 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
         />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+      <div
+        data-testid="hero-section_content"
+        className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center"
+      >
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
         >
           <motion.div
+            data-testid="hero-section_tagline"
             className="inline-flex items-center space-x-2 bg-primary-100 rounded-full px-4 py-1.5 mb-6"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -69,8 +79,12 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link to="/products">
-              <Button size="lg" className="group">
+            <Link to="/products" data-testid="hero-section_shop-link">
+              <Button
+                size="lg"
+                className="group"
+                data-testid="hero-section_shop-btn"
+              >
                 Shop Our Honey
                 <ArrowRight
                   className="ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform"
@@ -78,8 +92,12 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
                 />
               </Button>
             </Link>
-            <Link to="/about">
-              <Button variant="outline" size="lg">
+            <Link to="/about" data-testid="hero-section_story-link">
+              <Button
+                variant="outline"
+                size="lg"
+                data-testid="hero-section_story-btn"
+              >
                 Our Story
               </Button>
             </Link>

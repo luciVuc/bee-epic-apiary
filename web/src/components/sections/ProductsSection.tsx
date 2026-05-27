@@ -48,7 +48,6 @@ export const ProductsSection = ({
 
   const searchTimer = useRef<ReturnType<typeof setTimeout>>();
   const isInitialMount = useRef(true);
-  // const scrollPosRef = useRef(0);
   const sectionRef = useRef<HTMLElement>(null);
   const lastProdCardIdRef = useRef<string | null>();
 
@@ -178,7 +177,6 @@ export const ProductsSection = ({
   }, [products, sortBy, sortOrder]);
 
   const handleLoadMore = async () => {
-    // scrollPosRef.current = window.scrollY;
     const lastProductElement = sectionRef.current?.querySelector(
       "div[data-testid^=product-card]:last-child",
     ) as HTMLElement;

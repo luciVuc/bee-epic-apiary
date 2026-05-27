@@ -72,6 +72,7 @@ export const Navbar = ({ content }: INavbarProps) => {
                 <Link
                   key={link.id}
                   to={getPath(link.id)}
+                  data-testid={`navbar_link-${link.id}`}
                   className={`font-body text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded ${
                     isActive(link.id)
                       ? "text-primary-600"
@@ -83,7 +84,10 @@ export const Navbar = ({ content }: INavbarProps) => {
               ))}
           </div>
 
-          <div className="flex items-center space-x-4">
+          <div
+            data-testid="navbar_cart-container"
+            className="flex items-center space-x-4"
+          >
             <button
               data-testid="navbar_cart-btn"
               onClick={open}
@@ -144,6 +148,7 @@ export const Navbar = ({ content }: INavbarProps) => {
                     key={link.id}
                     to={getPath(link.id)}
                     onClick={() => setIsMobileMenuOpen(false)}
+                    data-testid={`navbar_mobile-link-${link.id}`}
                     className={`block w-full text-left py-2 px-4 rounded-lg font-body font-medium transition-colors duration-200 ${
                       isActive(link.id)
                         ? "bg-primary-50 text-primary-600"

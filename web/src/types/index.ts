@@ -94,6 +94,8 @@ export interface ISiteContent {
   questionsContact: string;
   continueShopping: string;
   categories: ICategory[];
+  checkoutCancelledTitle?: string;
+  checkoutCancelledMessage?: string;
   email: string;
   phone: string;
   location: string;

@@ -54,7 +54,10 @@ function AppContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-primary-50">
+      <div
+        data-testid="app-loading"
+        className="min-h-screen flex items-center justify-center bg-primary-50"
+      >
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -62,7 +65,10 @@ function AppContent() {
 
   if (error || !siteContent) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-primary-50">
+      <div
+        data-testid="app-error"
+        className="min-h-screen flex items-center justify-center bg-primary-50"
+      >
         <div className="text-center">
           <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
             Unable to load site
@@ -77,7 +83,7 @@ function AppContent() {
 
   return (
     <>
-      <Layout siteContent={siteContent}>
+      <Layout data-testid="app-layout" siteContent={siteContent}>
         <Routes>
           <Route
             path="/"
