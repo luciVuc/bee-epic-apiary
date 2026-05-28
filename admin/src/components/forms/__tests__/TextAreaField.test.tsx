@@ -47,6 +47,7 @@ describe("TextAreaField", () => {
 
   it("handles null value by showing empty string", () => {
     render(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       <TextAreaField label="Desc" value={null as any} onChange={() => {}} />,
     );
     expect(screen.getByRole("textbox")).toHaveValue("");

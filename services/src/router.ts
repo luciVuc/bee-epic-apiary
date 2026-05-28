@@ -57,8 +57,6 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 	// Route: /settings/:type
 	const settingsMatch = pathname.match(/^\/settings\/(site|process|testimonials|categories)$/);
 	if (settingsMatch) {
-		const type = settingsMatch[1];
-
 		if (request.method === 'GET') return settingsHandler.fetch(request, env);
 		if (request.method === 'PUT') {
 			if (!isAllowedOrigin(origin, env)) {

@@ -1,20 +1,21 @@
 import Stripe from 'stripe';
 import { handleCORS, isAllowedOrigin, jsonResponse, RateLimiter, checkAuth } from '.';
 import type { HttpMethod } from './handleCORS';
+import { IAPIResponseError } from '../types';
 
 let stripeInstance: Stripe | null = null;
 
 function getStripeInstance(env: Env): Stripe {
 	if (!stripeInstance) {
 		stripeInstance = new Stripe(env.STRIPE_SECRET_KEY, {
-			apiVersion: '2026-04-22.dahlia',
+			apiVersion: '2026-05-27.dahlia',
 			httpClient: Stripe.createFetchHttpClient(),
 		});
 	}
 	return stripeInstance;
 }
 
-type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
+export type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
 
 export interface IWithStripeHandlerOptions {
 	requireAuth?: boolean;
@@ -57,9 +58,10 @@ export function withStripeHandler(method: HttpMethod, handler: StripeHandler, op
 		try {
 			const stripe = getStripeInstance(env);
 			return await handler(stripe, request, env, origin);
-		} catch (error: any) {
-			console.error('Stripe error:', error);
-			const statusCode = error.statusCode || 500;
+		} catch (error: unknown) {
+			const err = error as IAPIResponseError;
+			console.error('Stripe error:', err);
+			const statusCode = err.statusCode || 500;
 			return jsonResponse({ error: 'An error occurred' }, statusCode, origin, env);
 		}
 	};

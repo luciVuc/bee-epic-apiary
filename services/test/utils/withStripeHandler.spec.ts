@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { withStripeHandler } from '../../src/utils/withStripeHandler';
-import { handleCORS, isAllowedOrigin, jsonResponse } from '../../src/utils';
+import { StripeHandler, withStripeHandler } from '../../src/utils/withStripeHandler';
+import { jsonResponse } from '../../src/utils';
 import type { HttpMethod } from '../../src/utils/handleCORS';
 
 describe('withStripeHandler', () => {
-	let mockHandler: any;
+	let mockHandler: StripeHandler;
 	let mockStripeInstance: any;
 
 	beforeEach(() => {
@@ -29,7 +30,7 @@ describe('withStripeHandler', () => {
 	});
 
 	it('returns 405 for wrong method', async () => {
-		const handler = withStripeHandler('POST' as HttpMethod, mockHandler);
+		const handler = withStripeHandler('POST' as HttpMethod, mockHandler as StripeHandler);
 		const request = new Request('http://example.com/checkout', { method: 'GET' });
 		const env = { ALLOWED_ORIGINS: 'https://example.com', STRIPE_SECRET_KEY: 'sk_test_123' } as Env;
 		const response = await handler(request, env);

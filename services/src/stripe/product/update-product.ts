@@ -1,6 +1,6 @@
-import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
-import { jsonResponse, isValidUrl } from '../../utils';
+import { jsonResponse, isValidUrl, withStripeHandler } from '../../utils';
+import { IAPIResponseError } from '../../types';
 
 export async function handleUpdateProduct(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
@@ -33,10 +33,11 @@ export async function handleUpdateProduct(stripe: Stripe, request: Request, env:
 		const product = await stripe.products.update(productId, updates);
 
 		return jsonResponse(product, 200, origin, env);
-	} catch (error: any) {
-		console.error('Update product error:', error);
-		const statusCode = error.statusCode || 500;
-		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+	} catch (error: unknown) {
+		const err = error as IAPIResponseError;
+		console.error('Update product error:', err);
+		const statusCode = err.statusCode || 500;
+		const message = statusCode < 500 ? err.message || 'An error occurred' : 'An error occurred';
 		return jsonResponse({ error: message }, statusCode, origin, env);
 	}
 }

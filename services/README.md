@@ -120,4 +120,4 @@ See [AGENTS.md](./AGENTS.md) for architecture details and contribution guideline
 
 ## License
 
-[Add your license here]
+MIT

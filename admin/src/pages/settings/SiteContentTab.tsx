@@ -1,5 +1,5 @@
 /** Tab for editing site-wide content: business info, hero, about, nav links, social links, order confirmation */
-import { Store, Image, Plus, Trash2, Send } from "lucide-react";
+import { Store, Image, Plus, Trash2 } from "lucide-react";
 import type { ISiteContent } from "../../types/settings";
 import { TextField, TextAreaField, Section } from "../../components/forms";
 
@@ -313,11 +313,8 @@ export function SiteContentTab({
             placeholder="Formspree Form ID..."
           />
           <p className="text-xs text-dark-400">
-            The Formspree form ID used by the contact form. Set this in the
-            production worker as a Wrangler secret:{" "}
-            <code className="bg-dark-100 px-1 rounded">
-              npx wrangler secret put FORMSPREE_FORM_ID
-            </code>
+            The Formspree form ID used by the contact form. This is stored in KV
+            as part of site content (not an environment secret).
           </p>
         </div>
       </Section>

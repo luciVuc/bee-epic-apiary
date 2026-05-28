@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { jsonResponse, withStripeHandler } from '../../utils';
+import { IAPIResponseError } from '../../types';
 
 export async function handleCreatePrice(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
@@ -23,10 +24,11 @@ export async function handleCreatePrice(stripe: Stripe, request: Request, env: E
 
 		const price = await stripe.prices.create(priceData);
 		return jsonResponse(price, 201, origin, env);
-	} catch (error: any) {
-		console.error('Create price error:', error);
-		const statusCode = error.statusCode || 500;
-		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+	} catch (error: unknown) {
+		const err = error as IAPIResponseError;
+		console.error('Create price error:', err);
+		const statusCode = err.statusCode || 500;
+		const message = statusCode < 500 ? err.message || 'An error occurred' : 'An error occurred';
 		return jsonResponse({ error: message }, statusCode, origin, env);
 	}
 }

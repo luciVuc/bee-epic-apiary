@@ -122,7 +122,7 @@ Navigate to `http://localhost:5174/products/new`. Wait for "Add New Product" dia
 
 **Fill form**:
 
-```
+```text
 Product Name:       E2E Test Honey
 Slug:               e2e-test-honey
 Short Description:  Created by automated E2E test
@@ -171,7 +171,7 @@ From the product detail page, click "Edit". URL becomes `http://localhost:5174/p
 
 **Make changes**:
 
-```
+```text
 Product Name:     E2E Test Honey (Updated)
 Price (cents):    3000
 In Stock:         ✓ (keep checked)
@@ -317,7 +317,7 @@ Navigate to `http://localhost:5174/products/new`.
 
 **Fill form**:
 
-```
+```text
 Name:       E2E Subscription Test
 Slug:       e2e-subscription-test
 Description: E2E test subscription

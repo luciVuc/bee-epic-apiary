@@ -1,6 +1,6 @@
-import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
-import { isValidUrl, jsonResponse } from '../../utils';
+import { isValidUrl, jsonResponse, withStripeHandler } from '../../utils';
+import { IAPIResponseError } from '../../types';
 
 /**
  * Stripe Checkout Session Handler
@@ -113,10 +113,11 @@ export async function handleCheckout(stripe: Stripe, request: Request, env: Env,
 			origin,
 			env,
 		);
-	} catch (error: any) {
-		console.error('Checkout error:', error);
-		const statusCode = error.statusCode || 500;
-		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+	} catch (error: unknown) {
+		const err = error as IAPIResponseError;
+		console.error('Checkout error:', err);
+		const statusCode = err.statusCode || 500;
+		const message = statusCode < 500 ? err.message || 'An error occurred' : 'An error occurred';
 		return jsonResponse({ error: message }, statusCode, origin, env);
 	}
 }

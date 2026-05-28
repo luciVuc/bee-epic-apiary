@@ -1,6 +1,6 @@
 # Bee Epic Apiary
 
-Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/` (public storefront).
+Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/` (public storefront PWA).
 
 ## Critical Conventions Agents Often Miss
 
@@ -66,30 +66,62 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 
 ### Commands
 
-| Command                 | Purpose                                                     |
-| ----------------------- | ----------------------------------------------------------- |
-| `npm run dev`           | Start all dev servers (admin:5174, services:8787, web:5173) |
-| `npm run services:test` | Worker tests (Vitest + Cloudflare Workers pool)             |
-| `npm run admin:test`    | Admin tests (Vitest + React Testing Library)                |
-| `npm run test`          | Run services then admin tests                               |
-| `npm run lint`          | Lint admin + web (ESLint)                                   |
-| `npm run format`        | Format all code (Prettier)                                  |
-| `npm run build`         | Build all sub-projects                                      |
-| `npm run deploy`        | Deploy services to Cloudflare + web to GitHub Pages         |
+| Command                 | Purpose                                                       |
+| ----------------------- | ------------------------------------------------------------- |
+| `npm run dev`           | Start all 3 dev servers (admin:5174, services:8787, web:5173) |
+| `npm run test`          | services tests → admin tests (Vitest)                         |
+| `npm run services:test` | Worker tests (Vitest + `@cloudflare/vitest-pool-workers`)     |
+| `npm run admin:test`    | Admin tests (Vitest + jsdom + React Testing Library)          |
+| `npm run lint`          | ESLint on web + admin                                         |
+| `npm run format`        | Prettier on entire repo                                       |
+| `npm run build`         | `services:deploy && web:build && admin:build`                 |
 
 ### Testing Thresholds
 
-- **services**: 90% lines/branches/functions/statements
-- **admin**: 88% lines, 85% branches, 45% functions, 88% statements
+- **services**: 90% lines/branches/functions/statements (istanbul, `@cloudflare/vitest-pool-workers`)
+- **admin**: 88% lines, 85% branches, 45% functions, 88% statements (v8, jsdom)
 
-### Gotchas
+### Services Architecture
 
-- Stripe integration in all three parts (admin CRUD, services backend, web frontend)
-- Root scripts use `npm run <script> --prefix <dir>` delegation
-- Web has no test framework configured
-- Admin uses Redux Toolkit (`productsSlice` for CRUD + pagination)
-- Services uses manual route matching in `src/router.ts`
-- Product CRUD in services requires API key auth if `API_SECRET_KEY` set
+- **`src/router.ts`**: Manual route matching (no framework)
+- All handlers follow `{ fetch(request, env): Promise<Response> }` interface via `withStripeHandler` wrapper
+- Stripe API version: `2026-04-22.dahlia` (in `withStripeHandler.ts`)
+- Rate limiting: KV-based, 100 req/min per IP
+- API key auth for mutating product endpoints if `API_SECRET_KEY` set
+- **Routes**: `POST /checkout`, `POST /prices`, `GET|POST /products`, `GET /products/count`, `GET|PUT|DELETE /products/:id`, `GET|PUT /settings/:type` (site\|process\|testimonials\|categories)
+- After changing `wrangler.jsonc` bindings: `npm run services:cf-typegen`
+- KV namespaces: `CONTENT_KV` (settings storage), `RATE_LIMIT_KV`
+- Env vars: `STRIPE_SECRET_KEY`, `ALLOWED_ORIGINS`, `API_SECRET_KEY` (Wrangler secrets); `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW` (wrangler.jsonc vars)
+
+### Admin Specifics
+
+- Dev server proxies `/api` → `http://localhost:8787` (strips `/api` prefix)
+- API Auth: Bearer token from localStorage settings or `VITE_API_SECRET_KEY` fallback
+- Settings saved to localStorage (admin config) or worker KV (site content)
+- `AdminNavbar` fetches `businessName` from `GET /settings/site` — never hardcode
+- Products use Redux Toolkit `productsSlice` (async thunks for CRUD + cursor-based pagination)
+
+### Web Specifics
+
+- Uses **BrowserRouter** (not HashRouter despite outdated README)
+- Data fetched from services API at mount: `GET /settings/site`, `/settings/process`, `/settings/testimonials`, `/products?expand[]=data.default_price`
+- Checkout: `POST /checkout` on services worker (not client-side Stripe redirect)
+- Cart persisted to localStorage under key `goldenHiveCart`
+- Legacy JSON in `src/data/` no longer imported
+- Has `vitest` in devDependencies but **no vitest config or test files** — treat as untested
+- PWA via `vite-plugin-pwa` (auto-update service worker, manifest for "Golden Hive Apiary")
+- GitHub Pages deploy via `npm run web:deploy` (gh-pages) + `.github/workflows/deploy.yml` CI on `main`
+
+## Gotchas
+
+- root `package.json` delegates to sub-packages via `npm run <script> --prefix <dir>`
+- Stripe touches all 3 packages (admin CRUD, services backend, web checkout)
+- `admin/src/utils/api.ts` uses axios; `web/src/utils/api.ts` uses native fetch
+- Local dev requires KV namespaces created (`npx wrangler kv namespace create "RATE_LIMIT_KV"` etc.)
+- services has observability + source maps enabled in wrangler config
+- `npm run build` includes `services:deploy` (= actual Cloudflare deploy, not just build)
+- web and admin both use `tsc && vite build` (type-check before bundling)
+- `services/AGENTS.md`, `services/API.md`, `services/SOURCE.md` are maintained separately
 
 ### UI Development Guidelines
 

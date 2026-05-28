@@ -1,6 +1,6 @@
-import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
-import { jsonResponse } from '../../utils';
+import { jsonResponse, withStripeHandler } from '../../utils';
+import { IAPIResponseError } from '../../types';
 
 export async function handleDeleteProduct(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
@@ -15,8 +15,9 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 		let product;
 		try {
 			product = await stripe.products.retrieve(productId);
-		} catch (error: any) {
-			if (error.code === 'resource_missing') {
+		} catch (error: unknown) {
+			const retrieveErr = error as IAPIResponseError;
+			if (retrieveErr.code === 'resource_missing') {
 				return jsonResponse({ error: 'Product not found' }, 404, origin, env);
 			}
 			throw error;
@@ -49,8 +50,9 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 			try {
 				const archivedPrice = await stripe.prices.update(price.id, { active: false });
 				archivedPrices.push(archivedPrice.id);
-			} catch (priceError: any) {
-				if (priceError.message?.includes('default price')) {
+			} catch (priceError: unknown) {
+				const priceErr = priceError as IAPIResponseError;
+				if (priceErr.message?.includes('default price')) {
 					await stripe.products.update(productId, { default_price: null as unknown as string });
 					const archivedPrice = await stripe.prices.update(price.id, { active: false });
 					archivedPrices.push(archivedPrice.id);
@@ -75,10 +77,11 @@ export async function handleDeleteProduct(stripe: Stripe, request: Request, env:
 			origin,
 			env,
 		);
-	} catch (error: any) {
-		console.error('Archive product error:', { message: error.message, statusCode: error.statusCode, stack: error.stack });
-		const statusCode = error.statusCode || error.status || 500;
-		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+	} catch (error: unknown) {
+		const archiveErr = error as IAPIResponseError;
+		console.error('Archive product error:', { message: archiveErr.message, statusCode: archiveErr.statusCode, stack: archiveErr.stack });
+		const statusCode = archiveErr.statusCode || archiveErr.status || 500;
+		const message = statusCode < 500 ? archiveErr.message || 'An error occurred' : 'An error occurred';
 
 		return jsonResponse({ error: message }, statusCode, origin, env);
 	}

@@ -33,7 +33,7 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		const limit = parseInt(url.searchParams.get('limit') || '10', 10);
 		const startingAfter = url.searchParams.get('starting_after') || undefined;
 
-		let resultData: any;
+		let resultData: Record<string, unknown>;
 
 		if (search || (category && category !== 'ALL') || tag) {
 			const allProducts = await fetchAllActiveProducts(stripe, expand);
@@ -72,10 +72,11 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		}
 
 		return jsonResponse(resultData, 200, origin, env);
-	} catch (error: any) {
-		console.error('Get products error:', error);
-		const statusCode = error.statusCode || 500;
-		const message = statusCode < 500 ? error.message || 'An error occurred' : 'An error occurred';
+	} catch (error: unknown) {
+		const err = error as { statusCode?: number; message?: string };
+		console.error('Get products error:', err);
+		const statusCode = err.statusCode || 500;
+		const message = statusCode < 500 ? err.message || 'An error occurred' : 'An error occurred';
 		return jsonResponse({ error: message }, statusCode, origin, env);
 	}
 }

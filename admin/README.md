@@ -55,7 +55,7 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 
 3. Update `.env` with your configuration:
 
-   ```
+   ```bash
    VITE_API_URL=http://localhost:8787
    VITE_API_SECRET_KEY=dev-api-key-change-me
    VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
@@ -105,7 +105,7 @@ The admin module communicates with the Cloudflare Worker (services) for product 
 
 ## Project Structure
 
-```
+```text
 admin/
 ├── src/
 │   ├── components/

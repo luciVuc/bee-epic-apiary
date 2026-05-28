@@ -19,7 +19,12 @@ const apiClient = axios.create({
   },
 });
 
-/** Retrieve the API secret key from localStorage or VITE_ env fallback */
+/**
+ * Retrieve the API secret key from localStorage or VITE_ env fallback.
+ *
+ * ⚠️ VITE_API_SECRET_KEY gets baked into the JS bundle at build time.
+ * Prefer setting the key via the Admin Config page (→ localStorage).
+ */
 function getApiKey(): string | null {
   try {
     const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
@@ -157,20 +162,15 @@ export const api = {
 
     // Step 2: If price changed, create a new price and update default_price
     if (product.price !== undefined) {
-      let priceData;
-      try {
-        const isSubscription =
-          product.category === EProductCategory.SUBSCRIPTIONS;
-        priceData = await createStripePrice(
-          id,
-          product.price,
-          undefined,
-          isSubscription ? product.recurringInterval : undefined,
-          isSubscription ? product.recurringIntervalCount : undefined,
-        );
-      } catch (err) {
-        throw err;
-      }
+      const isSubscription =
+        product.category === EProductCategory.SUBSCRIPTIONS;
+      const priceData = await createStripePrice(
+        id,
+        product.price,
+        undefined,
+        isSubscription ? product.recurringInterval : undefined,
+        isSubscription ? product.recurringIntervalCount : undefined,
+      );
 
       await apiClient.put(`/products/${id}`, {
         default_price: priceData.id,

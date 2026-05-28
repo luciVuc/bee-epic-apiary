@@ -1,8 +1,6 @@
+import { ESettingsType, SettingsType } from '../types';
 import { jsonResponse, checkAuth, isAllowedOrigin } from '../utils';
 import { categorySchema } from './schemas';
-
-const VALID_TYPES = ['site', 'process', 'testimonials', 'categories'] as const;
-type SettingsType = (typeof VALID_TYPES)[number];
 
 async function settingsHandler(request: Request, env: Env): Promise<Response> {
 	const url = new URL(request.url);
@@ -41,10 +39,10 @@ async function settingsHandler(request: Request, env: Env): Promise<Response> {
 			return jsonResponse({ error: 'Invalid JSON body' }, 400, origin, env);
 		}
 
-		if (type === 'categories') {
+		if (type === ESettingsType.CATEGORIES) {
 			const result = categorySchema.safeParse(body);
 			if (!result.success) {
-				return jsonResponse({ error: 'Invalid categories data', details: result.error.errors }, 400, origin, env);
+				return jsonResponse({ error: 'Invalid categories data', details: result.error }, 400, origin, env);
 			}
 		}
 

@@ -5,7 +5,7 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { store } from "./store";
-// @ts-ignore: allow side-effect CSS import without explicit type declarations
+// @ts-expect-error: allow side-effect CSS import without explicit type declarations
 import "./index.css";
 
 history.scrollRestoration = "manual";

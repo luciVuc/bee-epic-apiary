@@ -50,6 +50,7 @@ describe("TextField", () => {
   });
 
   it("handles null value by showing empty string", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     render(<TextField label="Name" value={null as any} onChange={() => {}} />);
     expect(screen.getByRole("textbox")).toHaveValue("");
   });

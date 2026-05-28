@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import settingsHandler from '../../src/settings/settings-handler';
-import { checkAuth, isAllowedOrigin } from '../../src/utils';
+import { ESettingsType } from '../../src/types';
 
 describe('settings-handler', () => {
 	const env = {
@@ -137,7 +137,7 @@ describe('settings-handler', () => {
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
 		expect(body.success).toBe(true);
-		expect(body.type).toBe('site');
+		expect(body.type).toBe(ESettingsType.SITE);
 	});
 
 	it('returns 200 for PUT with valid categories data', async () => {

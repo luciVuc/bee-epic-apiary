@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import { fetch } from 'undici';
 import { router } from '../../src/router';
-import { Env } from '../../worker-configuration';
+import { ESettingsType } from '../../src/types';
 
 const TEST_CATEGORIES = [
 	{ id: 'HONEY', label: 'Honey' },
@@ -11,14 +10,13 @@ const TEST_CATEGORIES = [
 describe('categories settings endpoint', () => {
 	const env = {
 		CONTENT_KV: {
-			get: vi.fn((key: string) => Promise.resolve(key === 'categories' ? JSON.stringify({ name: 'Test Category' }) : null)),
+			get: vi.fn((key: string) => Promise.resolve(key === ESettingsType.CATEGORIES ? JSON.stringify({ name: 'Test Category' }) : null)),
 			put: vi.fn(() => Promise.resolve()),
 		} as unknown as KVNamespace,
 		STRIPE_SECRET_KEY: 'sk_test_123',
-		STRIPE_WEBHOOK_SECRET: 'whsec_123',
 		ALLOWED_ORIGINS: 'http://localhost:3000',
 		API_SECRET_KEY: 'test-secret-key',
-	} satisfies Env;
+	} as Env;
 
 	const createRequest = (method: string, body?: unknown, headers?: Record<string, string>) => {
 		return new Request(`http://localhost/settings/categories`, {
@@ -50,7 +48,7 @@ describe('categories settings endpoint', () => {
 		});
 		const response = await router(request, env);
 		expect(response.status).toBe(400);
-		const data = await response.json();
+		const data = (await response.json()) as any;
 		expect(data.error).toBe('Invalid JSON body');
 	});
 
@@ -65,7 +63,7 @@ describe('categories settings endpoint', () => {
 		);
 		const response = await router(request, env);
 		expect(response.status).toBe(400);
-		const data = await response.json();
+		const data = (await response.json()) as any;
 		expect(data.error).toBe('Invalid categories data');
 	});
 
@@ -85,16 +83,16 @@ describe('categories settings endpoint', () => {
 		});
 		const response = await router(request, env);
 		expect(response.status).toBe(200);
-		const data = await response.json();
+		const data = (await response.json()) as any;
 		expect(data.success).toBe(true);
-		expect(data.type).toBe('categories');
+		expect(data.type).toBe(ESettingsType.CATEGORIES);
 	});
 
 	it('should return 200 for GET request', async () => {
 		const request = createRequest('GET');
 		const response = await router(request, env);
 		expect(response.status).toBe(200);
-		const data = await response.json();
+		const data = (await response.json()) as any;
 		expect(data.name).toBe('Test Category');
 	});
 

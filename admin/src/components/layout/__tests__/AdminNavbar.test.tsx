@@ -7,7 +7,7 @@ const mockGetSettings = vi.fn();
 
 vi.mock("../../../utils/api", () => ({
   api: {
-    getSettings: (...args: any[]) => mockGetSettings(...args),
+    getSettings: (...args: unknown[]) => mockGetSettings(...args),
   },
 }));
 
