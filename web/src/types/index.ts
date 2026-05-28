@@ -56,6 +56,8 @@ export interface ISocialLinks {
   instagram?: string;
   facebook?: string;
   etsy?: string;
+  twitter?: string;
+  youtube?: string;
 }
 
 export interface INavLink {

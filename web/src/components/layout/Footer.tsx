@@ -1,5 +1,11 @@
 import { Mail, Phone, MapPin } from "lucide-react";
-import { SiFacebook, SiInstagram, SiEtsy } from "../icons/BrandIcons";
+import {
+  SiFacebook,
+  SiInstagram,
+  SiEtsy,
+  SiTwitter,
+  SiYouTube,
+} from "../icons/BrandIcons";
 import type { ISiteContent } from "../../types";
 
 interface IFooterProps {
@@ -14,7 +20,7 @@ export const Footer = ({ content }: IFooterProps) => {
     .slice(1)
     .map((link) => ({
       label: link.label,
-      href: `#${link.id}`,
+      href: `${link.id}`,
     }));
 
   return (
@@ -66,6 +72,32 @@ export const Footer = ({ content }: IFooterProps) => {
                   title="Etsy"
                 >
                   <SiEtsy className="w-5 h-5" />
+                </a>
+              )}
+              {content.socialLinks.twitter && (
+                <a
+                  href={content.socialLinks.twitter}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="footer_twitter-link"
+                  className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  aria-label="Twitter"
+                  title="Twitter"
+                >
+                  <SiTwitter className="w-5 h-5" />
+                </a>
+              )}
+              {content.socialLinks.youtube && (
+                <a
+                  href={content.socialLinks.youtube}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="footer_youtube-link"
+                  className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  aria-label="YouTube"
+                  title="YouTube"
+                >
+                  <SiYouTube className="w-5 h-5" />
                 </a>
               )}
             </div>

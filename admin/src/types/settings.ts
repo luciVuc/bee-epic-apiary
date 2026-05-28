@@ -1,7 +1,28 @@
+/** Union of available settings tab identifiers */
+export type SettingsTab =
+  | "admin"
+  | "site"
+  | "process"
+  | "testimonials"
+  | "categories";
+
 /** A product category with ID and display label */
 export interface ICategory {
   id: string;
   label: string;
+}
+
+export interface INavLink {
+  id: string;
+  label: string;
+}
+
+export interface ISocialLinks {
+  instagram?: string;
+  facebook?: string;
+  etsy?: string;
+  twitter?: string;
+  youtube?: string;
 }
 
 /** Full site content definition used by the public web app */
@@ -30,7 +51,7 @@ export interface ISiteContent {
   californiaProudLabel: string;
   sinceYear: string;
   sinceYearLabel: string;
-  navLinks: { id: string; label: string }[];
+  navLinks: INavLink[];
   orderConfirmed: string;
   orderConfirmationMessage: string;
   questionsContact: string;
@@ -39,7 +60,7 @@ export interface ISiteContent {
   phone: string;
   location: string;
   categories: ICategory[];
-  socialLinks: { instagram: string; facebook: string; etsy: string };
+  socialLinks: ISocialLinks;
   formspreeFormId: string;
 }
 
@@ -61,11 +82,3 @@ export interface ITestimonial {
   text: string;
   date: string;
 }
-
-/** Union of available settings tab identifiers */
-export type SettingsTab =
-  | "admin"
-  | "site"
-  | "process"
-  | "testimonials"
-  | "categories";

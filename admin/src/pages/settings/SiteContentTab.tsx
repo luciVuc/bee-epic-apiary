@@ -241,7 +241,7 @@ export function SiteContentTab({
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TextField
             label="Instagram URL"
-            value={siteContent.socialLinks.instagram}
+            value={siteContent.socialLinks.instagram as string}
             onChange={(v) =>
               updateSite("socialLinks", {
                 ...siteContent.socialLinks,
@@ -251,7 +251,7 @@ export function SiteContentTab({
           />
           <TextField
             label="Facebook URL"
-            value={siteContent.socialLinks.facebook}
+            value={siteContent.socialLinks.facebook as string}
             onChange={(v) =>
               updateSite("socialLinks", {
                 ...siteContent.socialLinks,
@@ -261,9 +261,29 @@ export function SiteContentTab({
           />
           <TextField
             label="Etsy URL"
-            value={siteContent.socialLinks.etsy}
+            value={siteContent.socialLinks.etsy as string}
             onChange={(v) =>
               updateSite("socialLinks", { ...siteContent.socialLinks, etsy: v })
+            }
+          />
+          <TextField
+            label="Twitter URL"
+            value={siteContent.socialLinks.twitter as string}
+            onChange={(v) =>
+              updateSite("socialLinks", {
+                ...siteContent.socialLinks,
+                twitter: v,
+              })
+            }
+          />
+          <TextField
+            label="YouTube URL"
+            value={siteContent.socialLinks.youtube as string}
+            onChange={(v) =>
+              updateSite("socialLinks", {
+                ...siteContent.socialLinks,
+                youtube: v,
+              })
             }
           />
         </div>
