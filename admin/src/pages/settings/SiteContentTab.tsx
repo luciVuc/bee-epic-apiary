@@ -306,16 +306,6 @@ export function SiteContentTab({
             value={siteContent.footerTagline}
             onChange={(v) => updateSite("footerTagline", v)}
           />
-          <TextField
-            label="Formspree Form ID"
-            value={siteContent.formspreeFormId}
-            onChange={(v) => updateSite("formspreeFormId", v)}
-            placeholder="Formspree Form ID..."
-          />
-          <p className="text-xs text-dark-400">
-            The Formspree form ID used by the contact form. This is stored in KV
-            as part of site content (not an environment secret).
-          </p>
         </div>
       </Section>
     </div>

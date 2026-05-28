@@ -12,6 +12,7 @@
     "services:test:watch": "npm run test:watch --prefix services",
     "services:test:coverage": "npm run test:coverage --prefix services",
     "services:install": "npm install --prefix services",
+    "services:lint": "npm run lint --prefix services",
     "web:deploy": "npm run deploy --prefix web",
     "web:dev": "npm run dev --prefix web",
     "web:build": "npm run build --prefix web",
@@ -30,25 +31,20 @@
     "admin:test": "npm run test --prefix admin",
     "admin:test:watch": "npm run test:watch --prefix admin",
     "admin:test:coverage": "npm run test:coverage --prefix admin",
-    "dev": "concurrently \"npm run services:dev\" \"npm run admin:dev\" \"npm run web:dev\"",
-    "dev:all": "concurrently \"npm run services:dev\" \"npm run web:dev\" \"npm run admin:dev\"",
+    "dev": "npx -y concurrently \"npm run services:dev\" \"npm run admin:dev\" \"npm run web:dev\"",
+    "dev:all": "npx -y concurrently \"npm run services:dev\" \"npm run web:dev\" \"npm run admin:dev\"",
     "build": "npm run services:deploy && npm run web:build && npm run admin:build",
-    "lint": "npm run web:lint && npm run admin:lint",
+    "lint": "npm run web:lint && npm run admin:lint && npm run services:lint",
     "preview": "npm run web:preview",
     "predeploy": "npm run build",
     "preinstall": "npm run services:install && npm run web:install && npm run admin:install",
     "deploy": "npm run services:deploy && npm run web:deploy && npm run admin:build",
-    "format": "prettier --write .",
-    "format:staged": "pretty-quick --staged --no-restage --verbose",
+    "format": "npx -y prettier --write .",
+    "format:staged": "npx -y pretty-quick --staged --no-restage --verbose",
     "test": "npm run services:test && npm run admin:test",
     "test:watch": "npm run services:test:watch && npm run admin:test:watch",
     "test:coverage": "npm run services:test:coverage && npm run admin:test:coverage"
   },
   "author": "",
-  "license": "ISC",
-  "devDependencies": {
-    "concurrently": "^9.2.1",
-    "prettier": "^3.8.3",
-    "pretty-quick": "^4.2.2"
-  }
+  "license": "ISC"
 }

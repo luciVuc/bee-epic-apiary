@@ -3,6 +3,7 @@ import {
   Store,
   Globe,
   Key,
+  Send,
   Save,
   AlertCircle,
   CheckCircle,
@@ -51,9 +52,9 @@ export function AdminConfigTab({
       )}
 
       <p className="text-sm text-dark-500">
-        These settings configure how the admin panel connects to the API.
-        Business information and site content are managed on the Site Content
-        tab and stored in the backend.
+        These settings configure API connections, third-party service keys, and
+        other admin configuration. Business information and site content are
+        managed on the Site Content tab and stored in the backend.
       </p>
 
       <Section title="API Configuration" icon={<Globe className="w-4 h-4" />}>
@@ -92,6 +93,22 @@ export function AdminConfigTab({
         <p className="mt-2 text-xs text-dark-400">
           The Stripe secret key must be set as a Wrangler secret on the
           Cloudflare Worker (not stored client-side).
+        </p>
+      </Section>
+
+      <Section
+        title="Formspree Configuration"
+        icon={<Send className="w-4 h-4" />}
+      >
+        <TextField
+          label="Formspree Form ID"
+          value={adminSettings.formspreeFormId}
+          onChange={(v) => onAdminChange("formspreeFormId", v)}
+          placeholder="xoqblgva"
+        />
+        <p className="mt-2 text-xs text-dark-400">
+          The Formspree form ID used by the contact form on the public web app.
+          Stored in browser localStorage alongside other admin settings.
         </p>
       </Section>
 

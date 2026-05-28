@@ -61,7 +61,7 @@ The site will be available at `http://localhost:5173`.
 
 ## Project Structure
 
-```
+```text
 web/
 ├── public/images/products/   # Product images
 ├── src/

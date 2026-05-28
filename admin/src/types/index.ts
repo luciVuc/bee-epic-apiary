@@ -66,4 +66,5 @@ export interface IAdminSettings {
   apiUrl: string;
   stripePublishableKey: string;
   apiSecretKey?: string;
+  formspreeFormId: string;
 }
