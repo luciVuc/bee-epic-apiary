@@ -2,6 +2,16 @@ interface IIconProps {
   className?: string;
 }
 
+/**
+ * For the social media and brand icons, we define custom SVG components to avoid adding a full icon library dependency.
+ * Each component accepts an optional `className` prop for styling.
+ * This approach keeps our bundle size smaller while still allowing us to easily include the necessary icons for our social media links.
+ * If we wanted to add more icons in the future, we could simply create additional components following the same pattern.
+ * Sources for SVG paths:
+ * https://github.com/simple-icons/simple-icons.git
+ * https://simpleicons.org/
+ */
+
 export const SiFacebook = ({ className }: IIconProps) => (
   <svg
     className={className}
