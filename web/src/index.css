@@ -1,29 +1,71 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+@import "tailwindcss";
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  html {
-    scroll-behavior: smooth;
-  }
-
-  body {
-    @apply font-body text-dark-900 antialiased;
-  }
+@theme {
+  --color-primary-50: #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
+  --color-primary-950: #451b03;
+  --color-secondary-50: #f7fee7;
+  --color-secondary-100: #ecfccb;
+  --color-secondary-200: #d9f99d;
+  --color-secondary-300: #bef264;
+  --color-secondary-400: #a3e635;
+  --color-secondary-500: #84cc16;
+  --color-secondary-600: #65a30d;
+  --color-secondary-700: #4d7c0f;
+  --color-secondary-800: #3f6212;
+  --color-secondary-900: #365314;
+  --color-secondary-950: #1a2e05;
+  --color-accent-50: #fffbeb;
+  --color-accent-100: #fef3c7;
+  --color-accent-200: #fde68a;
+  --color-accent-300: #fcd34d;
+  --color-accent-400: #fbbf24;
+  --color-dark-50: #fafaf9;
+  --color-dark-100: #f5f5f4;
+  --color-dark-200: #e7e5e4;
+  --color-dark-300: #d6d3d1;
+  --color-dark-400: #a8a29e;
+  --color-dark-500: #78716c;
+  --color-dark-600: #57534e;
+  --color-dark-700: #44403c;
+  --color-dark-800: #292524;
+  --color-dark-900: #1c1917;
+  --color-dark-950: #0c0a09;
+  --font-family-heading: Inter, system-ui, sans-serif;
+  --font-family-body: Inter, system-ui, sans-serif;
+  --shadow-amber: 0 4px 14px 0 rgba(245, 158, 11, 0.15);
+  --shadow-amber-lg: 0 10px 25px 0 rgba(245, 158, 11, 0.15);
 }
 
-@layer utilities {
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
-/* Custom honey drip animation */
+body {
+  /* eslint-disable css/no-invalid-properties */
+  font-family: var(--font-family-body);
+  /* eslint-disable css/no-invalid-properties */
+  color: var(--color-dark-900);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
 @keyframes honey-drip {
   0% {
     transform: translateY(-100%) rotate(0deg);
@@ -38,19 +80,22 @@
   }
 }
 
-/* Smooth scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-primary-50;
+  /* eslint-disable css/no-invalid-properties */
+  background-color: var(--color-primary-50);
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-primary-300 rounded-full;
+  /* eslint-disable css/no-invalid-properties */
+  background-color: var(--color-primary-300);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-primary-400;
+  /* eslint-disable css/no-invalid-properties */
+  background-color: var(--color-primary-400);
 }
