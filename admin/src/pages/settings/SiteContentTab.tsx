@@ -12,6 +12,9 @@ export interface ISiteContentTabProps {
   addAboutParagraph: () => void;
   updateAboutParagraph: (index: number, value: string) => void;
   removeAboutParagraph: (index: number) => void;
+  addAboutImage: () => void;
+  updateAboutImage: (index: number, value: string) => void;
+  removeAboutImage: (index: number) => void;
   addNavLink: () => void;
   updateNavLink: (index: number, field: "id" | "label", value: string) => void;
   removeNavLink: (index: number) => void;
@@ -23,6 +26,9 @@ export function SiteContentTab({
   addAboutParagraph,
   updateAboutParagraph,
   removeAboutParagraph,
+  addAboutImage,
+  updateAboutImage,
+  removeAboutImage,
   addNavLink,
   updateNavLink,
   removeNavLink,
@@ -108,6 +114,38 @@ export function SiteContentTab({
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
           >
             <Plus className="w-4 h-4" /> Add Paragraph
+          </button>
+        </div>
+        <div className="mt-6 space-y-3">
+          <label className="block text-sm font-medium text-dark-700">
+            About Images (URLs)
+          </label>
+          {siteContent.aboutImages.map((image, i) => (
+            <div key={i} className="flex gap-2">
+              <div className="flex-1">
+                <TextField
+                  name={`about-image-${i}`}
+                  label={`Image URL ${i + 1}`}
+                  value={image}
+                  onChange={(v) => updateAboutImage(i, v)}
+                  hideLabel
+                />
+              </div>
+              <button
+                onClick={() => removeAboutImage(i)}
+                aria-label={`Remove image ${i + 1}`}
+                title={`Remove image ${i + 1}`}
+                className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
+              >
+                <Trash2 className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+          <button
+            onClick={addAboutImage}
+            className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+          >
+            <Plus className="w-4 h-4" /> Add Image
           </button>
         </div>
       </Section>

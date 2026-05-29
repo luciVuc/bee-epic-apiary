@@ -33,6 +33,7 @@ export interface ISiteContent {
   heroSubheadline: string;
   aboutTitle: string;
   aboutText: string[];
+  aboutImages: string[];
   processTitle: string;
   processSubtitle: string;
   productsTitle: string;

@@ -243,6 +243,28 @@ export function SettingsPage() {
     }));
   };
 
+  const addAboutImage = () => {
+    setSiteContent((prev) => ({
+      ...prev,
+      aboutImages: [...prev.aboutImages, ""],
+    }));
+  };
+
+  const updateAboutImage = (index: number, value: string) => {
+    setSiteContent((prev) => {
+      const updated = [...prev.aboutImages];
+      updated[index] = value;
+      return { ...prev, aboutImages: updated };
+    });
+  };
+
+  const removeAboutImage = (index: number) => {
+    setSiteContent((prev) => ({
+      ...prev,
+      aboutImages: prev.aboutImages.filter((_, i) => i !== index),
+    }));
+  };
+
   const addNavLink = () => {
     setSiteContent((prev) => ({
       ...prev,
@@ -454,6 +476,9 @@ export function SettingsPage() {
                   addAboutParagraph={addAboutParagraph}
                   updateAboutParagraph={updateAboutParagraph}
                   removeAboutParagraph={removeAboutParagraph}
+                  addAboutImage={addAboutImage}
+                  updateAboutImage={updateAboutImage}
+                  removeAboutImage={removeAboutImage}
                   addNavLink={addNavLink}
                   updateNavLink={updateNavLink}
                   removeNavLink={removeNavLink}

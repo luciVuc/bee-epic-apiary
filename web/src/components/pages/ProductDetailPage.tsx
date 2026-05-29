@@ -154,9 +154,18 @@ export function ProductDetailPage() {
           Back to Products
         </button>
 
-        <div className="bg-white rounded-3xl shadow-sm overflow-hidden">
-          <div className="grid grid-cols-1 lg:grid-cols-2">
-            <div className="relative aspect-square bg-primary-50">
+        <div
+          data-testid="product-detail-page_content"
+          className="bg-white rounded-3xl shadow-sm overflow-hidden"
+        >
+          <div
+            data-testid="product-detail-page_image-grid"
+            className="grid grid-cols-1 lg:grid-cols-2"
+          >
+            <div
+              data-testid="product-detail-page_image"
+              className="relative aspect-square bg-primary-50"
+            >
               {images.length > 0 ? (
                 <>
                   <motion.img
@@ -196,10 +205,14 @@ export function ProductDetailPage() {
                           aria-hidden="true"
                         />
                       </button>
-                      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+                      <div
+                        data-testid="product-detail-page_image-indicators"
+                        className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2"
+                      >
                         {images.map((_, idx) => (
                           <button
                             key={idx}
+                            data-testid={`product-detail-page_image-indicator-${idx}`}
                             onClick={() => setCurrentImageIndex(idx)}
                             className={`w-2 h-2 rounded-full transition-colors ${
                               idx === currentImageIndex

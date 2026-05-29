@@ -29,6 +29,7 @@ export const DEFAULT_SITE: ISiteContent = {
   heroSubheadline:
     "Small-batch, raw honey harvested with care from our California apiary. Every jar captures the essence of wild California flowers.",
   aboutTitle: "Our Story",
+  aboutImages: [],
   aboutText: [
     "Bee Epic Apiary was founded in 2009 when beekeeper Sarah Mitchell received her first two hives as a wedding gift. What started as a quiet hobby in the meadows of rural California has grown into a beloved local business dedicated to sustainable beekeeping and exceptional honey.",
     "Our bees forage among the pristine wildflowers of the Green Mountain State, away from pesticides and industrial agriculture. We believe in letting nature do its work — our honey is never heated, filtered, or processed. It goes from hive to jar just as the bees made it.",
