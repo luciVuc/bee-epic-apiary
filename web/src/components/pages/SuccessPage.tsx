@@ -1,8 +1,15 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { motion } from "framer-motion";
-import { ShoppingBag, Mail, Clock, ArrowLeft } from "lucide-react";
+import {
+  ShoppingBag,
+  Mail,
+  Clock,
+  ArrowLeft,
+  Clipboard,
+  Check,
+} from "lucide-react";
 import { clearCart } from "../../store/cartSlice";
 import { Button } from "../ui/Button";
 import type { ISiteContent } from "../../types";
@@ -15,6 +22,17 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
   const hasClearedCart = useRef(false);
+  const [copied, setCopied] = useState(false);
+
+  const copySessionId = async (id: string) => {
+    try {
+      await navigator.clipboard.writeText(id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // Clipboard API not available
+    }
+  };
 
   useEffect(() => {
     if (!hasClearedCart.current) {
@@ -68,10 +86,26 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
         {sessionId && (
           <p
             data-testid="success-page_session-id"
-            className="font-body text-sm text-dark-500 mb-6"
+            className="font-body text-sm text-dark-500 mb-6 flex items-center justify-center gap-1"
           >
-            Order ID:{" "}
-            <span className="font-mono">{sessionId.slice(0, 12)}...</span>
+            <span data-testid="success-page_session-id-label">Order ID:</span>
+            <button
+              onClick={() => copySessionId(sessionId)}
+              className="font-mono inline-flex items-center gap-1 hover:text-primary-600 transition-colors cursor-pointer"
+              title="Click to copy"
+              aria-label="Copy order ID to clipboard"
+              data-testid="success-page_session-id-value"
+            >
+              {sessionId.slice(0, 12)}...
+              {copied ? (
+                <Check
+                  className="w-3.5 h-3.5 text-green-500"
+                  aria-hidden="true"
+                />
+              ) : (
+                <Clipboard className="w-3.5 h-3.5" aria-hidden="true" />
+              )}
+            </button>
           </p>
         )}
 
