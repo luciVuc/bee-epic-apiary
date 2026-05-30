@@ -4,6 +4,8 @@ import { AdminLayout } from "./components/layout/AdminLayout";
 import { DashboardPage } from "./pages/DashboardPage";
 import { ProductsPage } from "./pages/ProductsPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
+import { OrdersPage } from "./pages/OrdersPage";
+import { OrderDetailPage } from "./pages/OrderDetailPage";
 import { SettingsPage } from "./pages/SettingsPage";
 
 function App() {
@@ -15,6 +17,8 @@ function App() {
         <Route path="products" element={<ProductsPage />} />
         <Route path="products/new" element={<ProductsPage />} />
         <Route path="products/:id/*" element={<ProductDetailPage />} />
+        <Route path="orders" element={<OrdersPage />} />
+        <Route path="orders/:id/*" element={<OrderDetailPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
     </Routes>

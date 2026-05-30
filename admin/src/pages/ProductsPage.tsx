@@ -57,7 +57,7 @@ export function ProductsPage() {
     totalCount,
   } = useSelector((state: RootState) => state.products);
 
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
   const searchTerm = searchParams.get("search") || "";
   const selectedCategory = searchParams.get("category") || "ALL";

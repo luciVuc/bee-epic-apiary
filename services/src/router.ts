@@ -5,8 +5,10 @@ import getProductsCountHandler from './stripe/product/get-products-count';
 import updateProductHandler from './stripe/product/update-product';
 import deleteProductHandler from './stripe/product/delete-product';
 import createPriceHandler from './stripe/price/create-price';
+import getOrdersHandler from './stripe/order/get-orders';
+import updateOrderHandler from './stripe/order/update-order';
 import settingsHandler from './settings/settings-handler';
-import { jsonResponse, handleCORS, checkAuth, isAllowedOrigin } from './utils';
+import { jsonResponse, handleCORS } from './utils';
 
 export const router = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
@@ -54,17 +56,31 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 
+	// Route: /orders
+	if (pathname === '/orders' || pathname === '/orders/') {
+		if (request.method === 'GET') return getOrdersHandler.fetch(request, env);
+		if (request.method === 'OPTIONS') return getOrdersHandler.fetch(request, env);
+		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
+	}
+
+	// Route: /orders/:id
+	const orderIdMatch = pathname.match(/^\/orders\/([^/]+)$/);
+	if (orderIdMatch) {
+		if (request.method === 'GET') return getOrdersHandler.fetch(request, env);
+		if (request.method === 'PUT') return updateOrderHandler.fetch(request, env);
+		if (request.method === 'OPTIONS') {
+			const response = handleCORS(request, env, 'OPTIONS');
+			response.headers.set('Access-Control-Allow-Methods', 'GET, PUT, OPTIONS');
+			return response;
+		}
+		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
+	}
+
 	// Route: /settings/:type
 	const settingsMatch = pathname.match(/^\/settings\/(site|process|testimonials|categories)$/);
 	if (settingsMatch) {
 		if (request.method === 'GET') return settingsHandler.fetch(request, env);
 		if (request.method === 'PUT') {
-			if (!isAllowedOrigin(origin, env)) {
-				return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
-			}
-			const auth = checkAuth(request, env);
-			if (!auth.authenticated) return auth.error!;
-
 			const clonedRequest = new Request(request.clone());
 			return settingsHandler.fetch(clonedRequest, env);
 		}

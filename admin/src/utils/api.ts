@@ -5,6 +5,9 @@ import { EProductCategory } from "../types";
 import {
   transformStripeProduct,
   transformStripeProductsList,
+  transformStripeSession,
+  transformStripeSessionsList,
+  transformStripeLineItemsList,
   transformToStripeParams,
   transformToStripePriceParams,
 } from "./transform";
@@ -196,6 +199,49 @@ export const api = {
   /** Save content settings to the worker KV store */
   saveSettings: async <T>(type: string, data: T): Promise<void> => {
     await apiClient.put(`/settings/${type}`, data);
+  },
+
+  /** Fetch paginated list of orders (checkout sessions) with optional search/filter */
+  getOrders: async (params?: {
+    limit?: number;
+    starting_after?: string;
+    search?: string;
+    status?: string;
+    payment_status?: string;
+  }) => {
+    const response = await apiClient.get("/orders", {
+      params: {
+        limit: params?.limit || 10,
+        starting_after: params?.starting_after || undefined,
+        search: params?.search || undefined,
+        status: params?.status || undefined,
+        payment_status: params?.payment_status || undefined,
+      },
+    });
+    return {
+      orders: transformStripeSessionsList(response.data),
+      hasMore: response.data.has_more,
+      lastId: response.data.data?.[response.data.data.length - 1]?.id,
+      totalCount: response.data.total_count ?? 0,
+    };
+  },
+
+  /** Fetch a single order by its Stripe Checkout Session ID (includes line items) */
+  getOrderById: async (id: string) => {
+    const response = await apiClient.get(`/orders/${id}`);
+    return {
+      order: transformStripeSession(response.data.session),
+      lineItems: transformStripeLineItemsList(response.data.line_items),
+    };
+  },
+
+  /** Update an order's metadata */
+  updateOrder: async (
+    id: string,
+    data: { metadata?: Record<string, string> },
+  ) => {
+    const response = await apiClient.put(`/orders/${id}`, data);
+    return transformStripeSession(response.data);
   },
 };
 export default api;

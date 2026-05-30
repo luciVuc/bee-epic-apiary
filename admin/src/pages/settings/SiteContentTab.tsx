@@ -128,7 +128,6 @@ export function SiteContentTab({
                   label={`Image URL ${i + 1}`}
                   value={image}
                   onChange={(v) => updateAboutImage(i, v)}
-                  hideLabel
                 />
               </div>
               <button

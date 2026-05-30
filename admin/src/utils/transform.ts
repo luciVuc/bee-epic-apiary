@@ -1,5 +1,5 @@
 /** Transform functions for converting between Stripe API shapes and admin UI shapes */
-import type { IProduct, IProductInput } from "../types";
+import type { IProduct, IProductInput, IOrder, IOrderLineItem } from "../types";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL } from "./constants";
 
@@ -129,6 +129,74 @@ export function transformToStripePriceParams(
 /**
  * Transform Stripe products list response
  */
+export function transformStripeSession(
+  session: Record<string, unknown>,
+): IOrder {
+  return {
+    id: (session.id as string) || "",
+    created: (session.created as number) || 0,
+    customerEmail:
+      ((session.customer_details as Record<string, unknown> | null)
+        ?.email as string) ||
+      (session.customer_email as string) ||
+      null,
+    customerName:
+      ((session.customer_details as Record<string, unknown> | null)
+        ?.name as string) || null,
+    customerPhone:
+      ((session.customer_details as Record<string, unknown> | null)
+        ?.phone as string) || null,
+    amountTotal: (session.amount_total as number) || 0,
+    amountSubtotal: (session.amount_subtotal as number) || 0,
+    currency: (session.currency as string) || "usd",
+    status: (session.status as IOrder["status"]) || "open",
+    paymentStatus:
+      (session.payment_status as IOrder["paymentStatus"]) || "unpaid",
+    mode: (session.mode as IOrder["mode"]) || "payment",
+    metadata: (session.metadata as Record<string, string>) || {},
+    url: (session.url as string) || null,
+  };
+}
+
+export function transformStripeLineItem(
+  item: Record<string, unknown>,
+): IOrderLineItem {
+  const price = item.price as Record<string, unknown> | null;
+  return {
+    id: (item.id as string) || "",
+    description: (item.description as string) || "",
+    amountTotal: (item.amount_total as number) || 0,
+    amountSubtotal: (item.amount_subtotal as number) || 0,
+    currency: (item.currency as string) || "usd",
+    quantity: (item.quantity as number) || null,
+    price: price
+      ? {
+          id: (price.id as string) || "",
+          unitAmount: (price.unit_amount as number) || null,
+          currency: (price.currency as string) || "usd",
+        }
+      : null,
+  };
+}
+
+export function transformStripeSessionsList(
+  response: { data?: Record<string, unknown>[] } | null,
+): IOrder[] {
+  if (!response?.data || !Array.isArray(response.data)) {
+    return [];
+  }
+  return response.data.map(transformStripeSession);
+}
+
+export function transformStripeLineItemsList(
+  items: Record<string, unknown>[] | null | undefined,
+): IOrderLineItem[] {
+  if (!items || !Array.isArray(items)) {
+    return [];
+  }
+  return items.map(transformStripeLineItem);
+}
+
 export function transformStripeProductsList(
   response: { data?: IStripeProductResponse[] } | null,
 ): IProduct[] {

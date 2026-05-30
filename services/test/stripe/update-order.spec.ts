@@ -1,0 +1,114 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { handleUpdateOrder } from '../../src/stripe/order/update-order';
+import Stripe from 'stripe';
+
+describe('handleUpdateOrder', () => {
+	let mockStripe: any;
+
+	beforeEach(() => {
+		vi.restoreAllMocks();
+
+		mockStripe = {
+			checkout: {
+				sessions: {
+					update: vi.fn(),
+				},
+			},
+		};
+	});
+
+	it('returns 400 when order ID is missing', async () => {
+		const request = new Request('http://example.com/orders/', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ metadata: { key: 'value' } }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(400);
+
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('Order ID is required');
+	});
+
+	it('updates metadata successfully', async () => {
+		const mockSession = { id: 'cs_test_123', metadata: { key: 'value' } };
+		mockStripe.checkout.sessions.update.mockResolvedValue(mockSession);
+
+		const request = new Request('http://example.com/orders/cs_test_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ metadata: { key: 'value' } }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+
+		const body = (await response.json()) as any;
+		expect(body.metadata.key).toBe('value');
+		expect(mockStripe.checkout.sessions.update).toHaveBeenCalledWith('cs_test_123', { metadata: { key: 'value' } });
+	});
+
+	it('calls update with empty params when no metadata provided', async () => {
+		const mockSession = { id: 'cs_test_123' };
+		mockStripe.checkout.sessions.update.mockResolvedValue(mockSession);
+
+		const request = new Request('http://example.com/orders/cs_test_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+
+		expect(mockStripe.checkout.sessions.update).toHaveBeenCalledWith('cs_test_123', {});
+	});
+
+	it('returns generic error on Stripe failure', async () => {
+		mockStripe.checkout.sessions.update.mockRejectedValue({ statusCode: 400, message: 'No such checkout session' });
+
+		const request = new Request('http://example.com/orders/cs_bad', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ metadata: { key: 'value' } }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(400);
+
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
+	it('returns 500 and generic error for unexpected errors', async () => {
+		mockStripe.checkout.sessions.update.mockRejectedValue(new Error('Unexpected'));
+
+		const request = new Request('http://example.com/orders/cs_test_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ metadata: { key: 'value' } }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(500);
+
+		const body = (await response.json()) as any;
+		expect(body.error).toBe('An error occurred');
+	});
+
+	it('updates with empty metadata object', async () => {
+		const mockSession = { id: 'cs_test_123', metadata: {} };
+		mockStripe.checkout.sessions.update.mockResolvedValue(mockSession);
+
+		const request = new Request('http://example.com/orders/cs_test_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ metadata: {} }),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		expect(mockStripe.checkout.sessions.update).toHaveBeenCalledWith('cs_test_123', { metadata: {} });
+	});
+});
