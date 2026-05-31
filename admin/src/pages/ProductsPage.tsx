@@ -22,6 +22,7 @@ import {
   Package,
   AlertCircle,
   X,
+  ChevronDown,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
 import {
@@ -67,6 +68,9 @@ export function ProductsPage() {
 
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [showFilters, setShowFilters] = useState(
+    () => (searchParams.get("category") || "ALL") !== "ALL",
+  );
 
   const updateSearchParams = useCallback(
     (search: string, category: string) => {
@@ -281,40 +285,60 @@ export function ProductsPage() {
             )}
           </div>
 
-          {/* Filters Panel */}
-          <div
-            data-testid="products-page_filters-panel"
-            className="flex items-center gap-4"
+          {/* Filter Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            data-testid="products-page_filter-toggle"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
           >
-            {/* Category Filter */}
-            <div
-              data-testid="products-page_category-filter-container"
-              className="flex items-center gap-2"
-            >
-              <Filter
-                data-testid="products-page_category-filter-icon"
-                className="w-4 h-4 text-dark-400"
-              />
-              <select
-                value={selectedCategory}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-                aria-label="Filter by category"
-                data-testid="products-page_category-filter"
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            <Filter className="w-4 h-4 text-dark-600" />
+            <span className="text-sm font-medium text-dark-700">Filters</span>
+            <ChevronDown
+              className={`w-4 h-4 text-dark-400 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`}
+            />
+          </button>
+        </div>
+
+        {/* Collapsible Filters Panel */}
+        <div
+          data-testid="products-page_filters-panel"
+          className={`overflow-hidden transition-all duration-200 ease-in-out ${showFilters ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"}`}
+        >
+          <div className="pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Category Filter */}
+              <div
+                data-testid="products-page_category-filter-container"
+                className="flex flex-col gap-1.5"
               >
-                <option value="ALL">All Categories</option>
-                {categories.length === 0 ? (
-                  <option value="ALL" disabled>
-                    No categories available
-                  </option>
-                ) : (
-                  categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.label}
+                <label
+                  htmlFor="products-category-filter"
+                  className="text-sm font-medium text-dark-700"
+                >
+                  Category
+                </label>
+                <select
+                  id="products-category-filter"
+                  value={selectedCategory}
+                  onChange={(e) => handleCategoryChange(e.target.value)}
+                  aria-label="Filter by category"
+                  data-testid="products-page_category-filter"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  <option value="ALL">All Categories</option>
+                  {categories.length === 0 ? (
+                    <option value="ALL" disabled>
+                      No categories available
                     </option>
-                  ))
-                )}
-              </select>
+                  ) : (
+                    categories.map((cat) => (
+                      <option key={cat.id} value={cat.id}>
+                        {cat.label}
+                      </option>
+                    ))
+                  )}
+                </select>
+              </div>
             </div>
           </div>
         </div>

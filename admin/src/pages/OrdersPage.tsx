@@ -1,8 +1,21 @@
 /** Orders list page with search, status/ payment status filtering, desktop table / mobile card view, and pagination */
-import { useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useCallback,
+  useState,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { Search, Filter, ShoppingCart, AlertCircle, X } from "lucide-react";
+import {
+  Search,
+  Filter,
+  ShoppingCart,
+  AlertCircle,
+  X,
+  ChevronDown,
+} from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
 import { fetchOrders } from "../store/ordersSlice";
 import { Spinner } from "../components/shared/Spinner";
@@ -49,6 +62,12 @@ export function OrdersPage() {
     hasMore,
     totalCount,
   } = useSelector((state: RootState) => state.orders);
+  const [showFilters, setShowFilters] = useState(
+    () =>
+      (searchParams.get("status") || "ALL") !== "ALL" ||
+      (searchParams.get("payment_status") || "ALL") !== "ALL" ||
+      (searchParams.get("order_status") || "ALL") !== "ALL",
+  );
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(null);
   const prevParamsKey = useRef(
     `${searchParams.get("search") || ""}|${searchParams.get("status") || "ALL"}|${searchParams.get("payment_status") || "ALL"}|${searchParams.get("order_status") || "ALL"}`,
@@ -273,78 +292,107 @@ export function OrdersPage() {
             )}
           </div>
 
-          {/* Filters Panel */}
-          <div
-            data-testid="orders-page_filters-panel"
-            className="flex items-center gap-4 flex-wrap"
+          {/* Filter Toggle */}
+          <button
+            onClick={() => setShowFilters(!showFilters)}
+            data-testid="orders-page_filter-toggle"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
           >
-            <div
-              data-testid="orders-page_status-filter-container"
-              className="flex items-center gap-2"
-            >
-              <Filter
-                data-testid="orders-page_status-filter-icon"
-                className="w-4 h-4 text-dark-400"
-              />
-              <select
-                value={selectedStatus}
-                onChange={(e) => handleStatusChange(e.target.value)}
-                aria-label="Filter by status"
-                data-testid="orders-page_status-filter"
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              >
-                {STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Filter className="w-4 h-4 text-dark-600" />
+            <span className="text-sm font-medium text-dark-700">Filters</span>
+            <ChevronDown
+              className={`w-4 h-4 text-dark-400 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`}
+            />
+          </button>
+        </div>
 
-            <div
-              data-testid="orders-page_payment-status-filter-container"
-              className="flex items-center gap-2"
-            >
-              <Filter
-                data-testid="orders-page_payment-status-filter-icon"
-                className="w-4 h-4 text-dark-400"
-              />
-              <select
-                value={selectedPaymentStatus}
-                onChange={(e) => handlePaymentStatusChange(e.target.value)}
-                aria-label="Filter by payment status"
-                data-testid="orders-page_payment-status-filter"
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+        {/* Collapsible Filters Panel */}
+        <div
+          data-testid="orders-page_filters-panel"
+          className={`overflow-hidden transition-all duration-200 ease-in-out ${showFilters ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"}`}
+        >
+          <div className="pt-4 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-4">
+              {/* Status Filter */}
+              <div
+                data-testid="orders-page_status-filter-container"
+                className="flex flex-col gap-1.5"
               >
-                {PAYMENT_STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
+                <label
+                  htmlFor="orders-status-filter"
+                  className="text-sm font-medium text-dark-700"
+                >
+                  Status
+                </label>
+                <select
+                  id="orders-status-filter"
+                  value={selectedStatus}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  aria-label="Filter by status"
+                  data-testid="orders-page_status-filter"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-            <div
-              data-testid="orders-page_order-status-filter-container"
-              className="flex items-center gap-2"
-            >
-              <Filter
-                data-testid="orders-page_order-status-filter-icon"
-                className="w-4 h-4 text-dark-400"
-              />
-              <select
-                value={selectedOrderStatus}
-                onChange={(e) => handleOrderStatusChange(e.target.value)}
-                aria-label="Filter by order status"
-                data-testid="orders-page_order-status-filter"
-                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              {/* Payment Status Filter */}
+              <div
+                data-testid="orders-page_payment-status-filter-container"
+                className="flex flex-col gap-1.5"
               >
-                {ORDER_STATUS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                <label
+                  htmlFor="orders-payment-status-filter"
+                  className="text-sm font-medium text-dark-700"
+                >
+                  Payment Status
+                </label>
+                <select
+                  id="orders-payment-status-filter"
+                  value={selectedPaymentStatus}
+                  onChange={(e) => handlePaymentStatusChange(e.target.value)}
+                  aria-label="Filter by payment status"
+                  data-testid="orders-page_payment-status-filter"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {PAYMENT_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Order Status Filter */}
+              <div
+                data-testid="orders-page_order-status-filter-container"
+                className="flex flex-col gap-1.5"
+              >
+                <label
+                  htmlFor="orders-order-status-filter"
+                  className="text-sm font-medium text-dark-700"
+                >
+                  Order Status
+                </label>
+                <select
+                  id="orders-order-status-filter"
+                  value={selectedOrderStatus}
+                  onChange={(e) => handleOrderStatusChange(e.target.value)}
+                  aria-label="Filter by order status"
+                  data-testid="orders-page_order-status-filter"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                >
+                  {ORDER_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
         </div>
