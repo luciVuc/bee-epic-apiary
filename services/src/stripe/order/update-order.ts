@@ -1,6 +1,11 @@
 import { withStripeHandler, jsonResponse } from '../../utils';
 import Stripe from 'stripe';
 
+interface IUpdateOrderBody {
+	metadata?: Record<string, string>;
+	collected_information?: Stripe.Checkout.SessionUpdateParams.CollectedInformation;
+}
+
 export async function handleUpdateOrder(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
 		const url = new URL(request.url);
@@ -11,11 +16,14 @@ export async function handleUpdateOrder(stripe: Stripe, request: Request, env: E
 			return jsonResponse({ error: 'Order ID is required' }, 400, origin, env);
 		}
 
-		const body = (await request.json()) as { metadata?: Record<string, string> };
+		const body = (await request.json()) as IUpdateOrderBody;
 
 		const updateParams: Stripe.Checkout.SessionUpdateParams = {};
 		if (body.metadata) {
 			updateParams.metadata = body.metadata;
+		}
+		if (body.collected_information) {
+			updateParams.collected_information = body.collected_information;
 		}
 
 		const session = await stripe.checkout.sessions.update(orderId, updateParams);
@@ -24,7 +32,8 @@ export async function handleUpdateOrder(stripe: Stripe, request: Request, env: E
 		const err = error as { statusCode?: number; message?: string };
 		console.error('Update order error:', err);
 		const statusCode = err.statusCode || 500;
-		return jsonResponse({ error: 'An error occurred' }, statusCode, origin, env);
+		const message = statusCode < 500 ? err.message || 'An error occurred' : 'An error occurred';
+		return jsonResponse({ error: message }, statusCode, origin, env);
 	}
 }
 

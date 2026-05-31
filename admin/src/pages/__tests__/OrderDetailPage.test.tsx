@@ -30,8 +30,15 @@ const mockOrder: IOrder = {
   status: "open",
   paymentStatus: "unpaid",
   mode: "payment",
-  metadata: { order_ref: "ORD-001" },
+  metadata: {
+    order_ref: "ORD-001",
+    order_status: "new",
+    description: "Test order",
+  },
   url: "https://checkout.stripe.com/cs_test_1",
+  orderStatus: "new",
+  description: "Test order",
+  shippingAddress: null,
 };
 
 const mockLineItems: IOrderLineItem[] = [
@@ -204,8 +211,17 @@ describe("OrderDetailPage", () => {
       initialEntries: ["/orders/cs_test_1/edit"],
     });
 
-    expect(await screen.findByText("Edit Order Metadata")).toBeInTheDocument();
+    expect(await screen.findByText("Edit Order")).toBeInTheDocument();
     expect(await screen.findByTestId("order-edit-dialog")).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("order-edit-dialog_status-select"),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("order-edit-dialog_description-input"),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByTestId("order-edit-dialog_customer-name-input"),
+    ).toBeInTheDocument();
   });
 
   it("shows checkout URL button when order has URL", async () => {
@@ -252,7 +268,12 @@ describe("OrderDetailPage", () => {
   });
 
   it("does not show metadata section when metadata is empty", () => {
-    const orderNoMeta = { ...mockOrder, metadata: {} };
+    const orderNoMeta = {
+      ...mockOrder,
+      metadata: {},
+      orderStatus: null,
+      description: null,
+    };
     const store = createStore({
       orders: {
         items: [],
@@ -269,5 +290,49 @@ describe("OrderDetailPage", () => {
     renderWithProviders(<OrderDetailPage />, { store });
 
     expect(screen.queryByText("Order Metadata")).not.toBeInTheDocument();
+  });
+
+  it("displays order status in the status card", async () => {
+    const store = createStore({
+      orders: {
+        items: [],
+        loading: false,
+        error: null,
+        selectedOrder: mockOrder,
+        selectedOrderLineItems: mockLineItems,
+        hasMore: false,
+        lastId: null,
+        totalCount: 0,
+        lastFetchParams: null,
+      },
+    });
+    renderWithProviders(<OrderDetailPage />, { store });
+
+    expect(await screen.findByText("Order Status")).toBeInTheDocument();
+    expect(await screen.findByText("New")).toBeInTheDocument();
+  });
+
+  it("displays description section when description is present", async () => {
+    const store = createStore({
+      orders: {
+        items: [],
+        loading: false,
+        error: null,
+        selectedOrder: mockOrder,
+        selectedOrderLineItems: mockLineItems,
+        hasMore: false,
+        lastId: null,
+        totalCount: 0,
+        lastFetchParams: null,
+      },
+    });
+    renderWithProviders(<OrderDetailPage />, { store });
+
+    expect(
+      await screen.findByTestId("order-detail-page_description"),
+    ).toBeInTheDocument();
+    expect(
+      (await screen.findAllByText("Test order")).length,
+    ).toBeGreaterThanOrEqual(1);
   });
 });

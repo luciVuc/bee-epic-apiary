@@ -21,6 +21,15 @@ function createMockSession(overrides: Record<string, unknown> = {}): Stripe.Chec
 	} as unknown as Stripe.Checkout.Session;
 }
 
+function createMockSearchResult(data: Stripe.Checkout.Session[], has_more = false, next_page: string | null = null) {
+	return {
+		data,
+		has_more,
+		next_page,
+		total_details: { total_count: data.length },
+	};
+}
+
 describe('handleGetOrders', () => {
 	let mockStripe: any;
 
@@ -34,6 +43,7 @@ describe('handleGetOrders', () => {
 					list: vi.fn(),
 					listLineItems: vi.fn(),
 					update: vi.fn(),
+					search: vi.fn(),
 				},
 			},
 		};
@@ -96,13 +106,14 @@ describe('handleGetOrders', () => {
 		expect(mockStripe.checkout.sessions.list).toHaveBeenCalledWith({ limit: 1, starting_after: 'cs_2' });
 	});
 
-	it('filters by status client-side when filter is active', async () => {
+	it('filters by status server-side via Search API', async () => {
 		const sessions = [
 			createMockSession({ id: 'cs_1', status: 'open' }),
 			createMockSession({ id: 'cs_2', status: 'complete' }),
 			createMockSession({ id: 'cs_3', status: 'open' }),
 		];
-		mockStripe.checkout.sessions.list.mockResolvedValue({ data: sessions, has_more: false });
+		const openSessions = sessions.filter((s) => s.status === 'open');
+		mockStripe.checkout.sessions.search.mockResolvedValue(createMockSearchResult(openSessions));
 
 		const request = new Request('http://example.com/orders?status=open', { method: 'GET' });
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
@@ -113,14 +124,17 @@ describe('handleGetOrders', () => {
 		expect(body.data).toHaveLength(2);
 		expect(body.data[0].id).toBe('cs_1');
 		expect(body.data[1].id).toBe('cs_3');
+		expect(mockStripe.checkout.sessions.search).toHaveBeenCalledWith(
+			expect.objectContaining({ query: expect.stringContaining("status:'open'") }),
+		);
 	});
 
-	it('filters by search term (email, name, or ID)', async () => {
+	it('filters by search term via Search API + client-side name/ID fallback', async () => {
 		const sessions = [
 			createMockSession({ id: 'cs_1', customer_details: { email: 'alice@test.com', name: 'Alice' } }),
 			createMockSession({ id: 'cs_2', customer_details: { email: 'bob@test.com', name: 'Bob' } }),
 		];
-		mockStripe.checkout.sessions.list.mockResolvedValue({ data: sessions, has_more: false });
+		mockStripe.checkout.sessions.search.mockResolvedValue(createMockSearchResult(sessions));
 
 		const request = new Request('http://example.com/orders?search=alice', { method: 'GET' });
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
@@ -130,14 +144,18 @@ describe('handleGetOrders', () => {
 		const body = (await response.json()) as any;
 		expect(body.data).toHaveLength(1);
 		expect(body.data[0].id).toBe('cs_1');
+		expect(mockStripe.checkout.sessions.search).toHaveBeenCalledWith(
+			expect.objectContaining({ query: expect.stringContaining("customer_details.email:'alice'") }),
+		);
 	});
 
-	it('filters by payment status', async () => {
+	it('filters by payment status via Search API', async () => {
 		const sessions = [
 			createMockSession({ id: 'cs_1', payment_status: 'paid' }),
 			createMockSession({ id: 'cs_2', payment_status: 'unpaid' }),
 		];
-		mockStripe.checkout.sessions.list.mockResolvedValue({ data: sessions, has_more: false });
+		const paidSessions = sessions.filter((s) => s.payment_status === 'paid');
+		mockStripe.checkout.sessions.search.mockResolvedValue(createMockSearchResult(paidSessions));
 
 		const request = new Request('http://example.com/orders?payment_status=paid', { method: 'GET' });
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
@@ -150,8 +168,7 @@ describe('handleGetOrders', () => {
 	});
 
 	it('returns empty data when no sessions match search', async () => {
-		const sessions = [createMockSession({ id: 'cs_1', customer_details: { email: 'alice@test.com', name: 'Alice' } })];
-		mockStripe.checkout.sessions.list.mockResolvedValue({ data: sessions, has_more: false });
+		mockStripe.checkout.sessions.search.mockResolvedValue(createMockSearchResult([]));
 
 		const request = new Request('http://example.com/orders?search=nonexistent', { method: 'GET' });
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
@@ -163,7 +180,7 @@ describe('handleGetOrders', () => {
 		expect(body.total_count).toBe(0);
 	});
 
-	it('returns generic error on Stripe failure', async () => {
+	it('returns Stripe error message for 4xx errors', async () => {
 		mockStripe.checkout.sessions.retrieve.mockRejectedValue({ statusCode: 404, message: 'No such checkout session' });
 
 		const request = new Request('http://example.com/orders/cs_invalid', { method: 'GET' });
@@ -172,7 +189,7 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(404);
 
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.error).toBe('No such checkout session');
 	});
 
 	it('returns 500 and generic error for unexpected errors', async () => {
@@ -187,20 +204,21 @@ describe('handleGetOrders', () => {
 		expect(body.error).toBe('An error occurred');
 	});
 
-	it('caps sessions at MAX_SESSIONS limit', async () => {
+	it('caps sessions at MAX_SESSIONS limit via Search API', async () => {
 		const manySessions = Array.from({ length: 100 }, (_, i) => createMockSession({ id: `cs_${i}` }));
-		mockStripe.checkout.sessions.list
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValueOnce({ data: manySessions, has_more: true })
-			.mockResolvedValue({ data: manySessions, has_more: true });
+		const searchResult = (hasMore: boolean, nextPage: string | null) => createMockSearchResult(manySessions, hasMore, nextPage);
+		mockStripe.checkout.sessions.search
+			.mockResolvedValueOnce(searchResult(true, 'page_1'))
+			.mockResolvedValueOnce(searchResult(true, 'page_2'))
+			.mockResolvedValueOnce(searchResult(true, 'page_3'))
+			.mockResolvedValueOnce(searchResult(true, 'page_4'))
+			.mockResolvedValueOnce(searchResult(true, 'page_5'))
+			.mockResolvedValueOnce(searchResult(true, 'page_6'))
+			.mockResolvedValueOnce(searchResult(true, 'page_7'))
+			.mockResolvedValueOnce(searchResult(true, 'page_8'))
+			.mockResolvedValueOnce(searchResult(true, 'page_9'))
+			.mockResolvedValueOnce(searchResult(true, 'page_10'))
+			.mockResolvedValue(searchResult(true, null));
 
 		const request = new Request('http://example.com/orders?search=test', { method: 'GET' });
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
@@ -208,7 +226,7 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		// Should have stopped fetching after 10 calls (1000 sessions = 10 * 100)
-		expect(mockStripe.checkout.sessions.list).toHaveBeenCalledTimes(10);
+		expect(mockStripe.checkout.sessions.search).toHaveBeenCalledTimes(10);
 	});
 
 	it('filters with status ALL returns all sessions', async () => {

@@ -195,6 +195,101 @@ Deletes a product.
 
 ---
 
+### Orders (Checkout Sessions)
+
+#### List Orders
+
+`GET /orders`
+
+Returns a paginated list of Stripe Checkout Sessions with optional search and filter support.
+
+**Authentication**: Required (if `API_SECRET_KEY` is set).
+
+**Query Parameters**:
+
+| Parameter        | Type   | Description                                                                          |
+| ---------------- | ------ | ------------------------------------------------------------------------------------ |
+| `search`         | string | Filter by customer email, name, or session ID (case-insensitive substring match)     |
+| `status`         | string | Filter by session status (`open`, `complete`, `expired`, or `ALL` for all)           |
+| `payment_status` | string | Filter by payment status (`paid`, `unpaid`, `no_payment_required`, or `ALL` for all) |
+| `limit`          | number | Number of orders per page (default: 10)                                              |
+| `starting_after` | string | Cursor for pagination — session ID to start after                                    |
+
+When filter parameters are active, the API uses Stripe's Search API for server-side filtering with client-side name/ID fallback. Without filters, cursor-based pagination via Stripe's list API is used.
+
+**Response**:
+
+```json
+{
+  "data": [{ "id": "cs_test_...", "object": "checkout.session", ... }],
+  "has_more": false,
+  "total_count": 42
+}
+```
+
+---
+
+#### Get Single Order
+
+`GET /orders/:id`
+
+Returns a single Stripe Checkout Session with expanded line items.
+
+**Authentication**: Required (if `API_SECRET_KEY` is set).
+
+**Response**:
+
+```json
+{
+  "session": { "id": "cs_test_...", ... },
+  "line_items": [{ "id": "li_...", ... }]
+}
+```
+
+---
+
+#### Update Order
+
+`PUT /orders/:id`
+
+Updates a Stripe Checkout Session's metadata and/or collected information (shipping details).
+
+**Authentication**: Required (if `API_SECRET_KEY` is set).
+
+**Request Body**:
+
+```json
+{
+	"metadata": {
+		"order_status": "pending",
+		"description": "Special instructions",
+		"customer_name": "Jane Doe"
+	},
+	"collected_information": {
+		"shipping_details": {
+			"name": "Jane Doe",
+			"address": {
+				"line1": "123 Main St",
+				"city": "Springfield",
+				"state": "IL",
+				"postal_code": "62701",
+				"country": "US"
+			}
+		}
+	}
+}
+```
+
+**Notes**:
+
+- `metadata` updates work for all session types (hosted, embedded, custom)
+- `collected_information` updates only apply to embedded/custom sessions
+- For 4xx Stripe errors, the raw Stripe error message is surfaced; 5xx errors return a generic message
+
+**Response**: Updated Stripe Checkout Session object
+
+---
+
 ## CORS
 
 - Configured via `ALLOWED_ORIGINS` environment variable

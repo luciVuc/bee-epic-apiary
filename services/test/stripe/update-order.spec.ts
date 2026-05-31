@@ -111,4 +111,62 @@ describe('handleUpdateOrder', () => {
 		expect(response.status).toBe(200);
 		expect(mockStripe.checkout.sessions.update).toHaveBeenCalledWith('cs_test_123', { metadata: {} });
 	});
+
+	it('updates collected_information with shipping details', async () => {
+		const mockSession = {
+			id: 'cs_test_123',
+			metadata: { order_status: 'pending' },
+			shipping_details: { name: 'Alice', address: { line1: '123 Main St', city: 'Springfield', country: 'US' } },
+		};
+		mockStripe.checkout.sessions.update.mockResolvedValue(mockSession);
+
+		const request = new Request('http://example.com/orders/cs_test_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				metadata: { order_status: 'pending' },
+				collected_information: {
+					shipping_details: {
+						name: 'Alice',
+						address: { line1: '123 Main St', city: 'Springfield', country: 'US' },
+					},
+				},
+			}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		expect(mockStripe.checkout.sessions.update).toHaveBeenCalledWith('cs_test_123', {
+			metadata: { order_status: 'pending' },
+			collected_information: {
+				shipping_details: {
+					name: 'Alice',
+					address: { line1: '123 Main St', city: 'Springfield', country: 'US' },
+				},
+			},
+		});
+	});
+
+	it('updates with only collected_information and no metadata', async () => {
+		const mockSession = { id: 'cs_test_123', shipping_details: { name: 'Bob' } };
+		mockStripe.checkout.sessions.update.mockResolvedValue(mockSession);
+
+		const request = new Request('http://example.com/orders/cs_test_123', {
+			method: 'PUT',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({
+				collected_information: {
+					shipping_details: { name: 'Bob' },
+				},
+			}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleUpdateOrder(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+		expect(mockStripe.checkout.sessions.update).toHaveBeenCalledWith('cs_test_123', {
+			collected_information: {
+				shipping_details: { name: 'Bob' },
+			},
+		});
+	});
 });

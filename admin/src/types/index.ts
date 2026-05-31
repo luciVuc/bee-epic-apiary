@@ -1,4 +1,4 @@
-export type { IOrder, IOrderLineItem } from "./order";
+export * from "./order";
 
 /** Product category enum matching Stripe metadata values */
 export enum EProductCategory {

@@ -1,6 +1,6 @@
-/** Redux slice for orders state management (list + detail + update metadata) */
+/** Redux slice for orders state management (list + detail + update) */
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import type { IOrder, IOrderLineItem } from "../types";
+import type { IOrder, IOrderLineItem, IOrderUpdate } from "../types";
 import * as api from "../utils/api";
 
 export interface IOrdersState {
@@ -54,12 +54,10 @@ export const fetchOrderById = createAsyncThunk(
 
 export const updateOrder = createAsyncThunk(
   "orders/update",
-  async (
-    { id, metadata }: { id: string; metadata: Record<string, string> },
-    { rejectWithValue },
-  ) => {
+  async (payload: IOrderUpdate, { rejectWithValue }) => {
     try {
-      const updatedOrder = await api.api.updateOrder(id, { metadata });
+      const { id, ...data } = payload;
+      const updatedOrder = await api.api.updateOrder(id, data);
       return updatedOrder;
     } catch (err: unknown) {
       const axiosErr = err as {

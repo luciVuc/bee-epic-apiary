@@ -62,21 +62,29 @@ export function OrdersPage() {
     [setSearchParams],
   );
 
-  const buildFetchParams = () => {
+  const buildFetchParams = (includeLimit?: boolean) => {
     const params: {
       search?: string;
       status?: string;
       payment_status?: string;
+      limit?: number;
     } = {};
     if (searchTerm) params.search = searchTerm;
     if (selectedStatus !== "ALL") params.status = selectedStatus;
     if (selectedPaymentStatus !== "ALL")
       params.payment_status = selectedPaymentStatus;
+    if (includeLimit) {
+      const limitParam = searchParams.get("limit");
+      if (limitParam) {
+        const parsed = parseInt(limitParam, 10);
+        if (!isNaN(parsed) && parsed > 0) params.limit = parsed;
+      }
+    }
     return params;
   };
 
   useLayoutEffect(() => {
-    dispatch(fetchOrders(buildFetchParams()));
+    dispatch(fetchOrders(buildFetchParams(true)));
   }, []);
 
   useLayoutEffect(() => {
@@ -121,6 +129,8 @@ export function OrdersPage() {
 
   const handleLoadMore = () => {
     if (orders.length === 0) return;
+    const lastOrder = orders.at(-1);
+    if (!lastOrder?.id) return;
     const newLimit = orders.length + 10;
     const params: Record<string, string> = {};
     if (searchTerm) params.search = searchTerm;
@@ -133,7 +143,7 @@ export function OrdersPage() {
     saveScroll();
     dispatch(
       fetchOrders({
-        starting_after: orders[orders.length - 1]?.id,
+        starting_after: lastOrder.id,
         limit: 10,
         search: searchTerm,
         status: selectedStatus,

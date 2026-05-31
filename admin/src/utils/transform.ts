@@ -126,12 +126,37 @@ export function transformToStripePriceParams(
   return params;
 }
 
+function extractShippingAddress(session: Record<string, unknown>): {
+  line1: string | null;
+  line2: string | null;
+  city: string | null;
+  state: string | null;
+  postalCode: string | null;
+  country: string | null;
+} | null {
+  const shippingDetails = session.shipping_details as Record<
+    string,
+    unknown
+  > | null;
+  const address = shippingDetails?.address as Record<string, string> | null;
+  if (!shippingDetails && !address) return null;
+  return {
+    line1: address?.line1 || null,
+    line2: address?.line2 || null,
+    city: address?.city || null,
+    state: address?.state || null,
+    postalCode: address?.postal_code || null,
+    country: address?.country || null,
+  };
+}
+
 /**
- * Transform Stripe products list response
+ * Transform Stripe session to admin order format
  */
 export function transformStripeSession(
   session: Record<string, unknown>,
 ): IOrder {
+  const metadata = (session.metadata as Record<string, string>) || {};
   return {
     id: (session.id as string) || "",
     created: (session.created as number) || 0,
@@ -142,10 +167,14 @@ export function transformStripeSession(
       null,
     customerName:
       ((session.customer_details as Record<string, unknown> | null)
-        ?.name as string) || null,
+        ?.name as string) ||
+      metadata.customer_name ||
+      null,
     customerPhone:
       ((session.customer_details as Record<string, unknown> | null)
-        ?.phone as string) || null,
+        ?.phone as string) ||
+      metadata.customer_phone ||
+      null,
     amountTotal: (session.amount_total as number) || 0,
     amountSubtotal: (session.amount_subtotal as number) || 0,
     currency: (session.currency as string) || "usd",
@@ -153,8 +182,11 @@ export function transformStripeSession(
     paymentStatus:
       (session.payment_status as IOrder["paymentStatus"]) || "unpaid",
     mode: (session.mode as IOrder["mode"]) || "payment",
-    metadata: (session.metadata as Record<string, string>) || {},
+    metadata,
     url: (session.url as string) || null,
+    orderStatus: metadata.order_status || null,
+    description: metadata.description || null,
+    shippingAddress: extractShippingAddress(session),
   };
 }
 

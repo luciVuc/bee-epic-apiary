@@ -235,10 +235,25 @@ export const api = {
     };
   },
 
-  /** Update an order's metadata */
+  /** Update an order's metadata, collected information, and shipping details */
   updateOrder: async (
     id: string,
-    data: { metadata?: Record<string, string> },
+    data: {
+      metadata?: Record<string, string>;
+      collected_information?: {
+        shipping_details?: {
+          name?: string;
+          address?: {
+            line1?: string;
+            line2?: string;
+            city?: string;
+            state?: string;
+            postal_code?: string;
+            country?: string;
+          };
+        };
+      };
+    },
   ) => {
     const response = await apiClient.put(`/orders/${id}`, data);
     return transformStripeSession(response.data);

@@ -11,7 +11,7 @@ import {
   setSelectedOrder,
 } from "../store/ordersSlice";
 import { Spinner } from "../components/shared/Spinner";
-import type { IOrder } from "../types";
+import type { IOrder, IOrderUpdate } from "../types";
 import {
   orderStatusBadge,
   orderStatusLabel,
@@ -257,6 +257,24 @@ export function OrderDetailPage() {
             )}
           </div>
 
+          {/* Description */}
+          {order.description && (
+            <div
+              data-testid="order-detail-page_description"
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            >
+              <h3
+                data-testid="order-detail-page_description_header"
+                className="font-heading text-xl font-semibold mb-4"
+              >
+                Description
+              </h3>
+              <p className="text-dark-700 whitespace-pre-wrap">
+                {order.description}
+              </p>
+            </div>
+          )}
+
           {/* Metadata */}
           {Object.keys(order.metadata).length > 0 && (
             <div
@@ -326,6 +344,15 @@ export function OrderDetailPage() {
                   {orderModeLabel(order.mode)}
                 </span>
               </div>
+              {order.orderStatus && (
+                <div className="flex items-center justify-between">
+                  <span className="text-dark-600">Order Status</span>
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                    {order.orderStatus.charAt(0).toUpperCase() +
+                      order.orderStatus.slice(1)}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
 
@@ -358,6 +385,29 @@ export function OrderDetailPage() {
                 <span className="text-sm text-dark-500">Phone</span>
                 <p className="text-dark-700">{order.customerPhone || "—"}</p>
               </div>
+              {order.shippingAddress && (
+                <div className="pt-2 border-t border-gray-100">
+                  <span className="text-sm text-dark-500 block mb-1">
+                    Shipping Address
+                  </span>
+                  <p className="text-dark-700 text-sm">
+                    {order.shippingAddress.line1}
+                    {order.shippingAddress.line2 && (
+                      <>, {order.shippingAddress.line2}</>
+                    )}
+                    <br />
+                    {[
+                      order.shippingAddress.city,
+                      order.shippingAddress.state,
+                      order.shippingAddress.postalCode,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                    {order.shippingAddress.country &&
+                      `, ${order.shippingAddress.country}`}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
 
@@ -414,6 +464,12 @@ export function OrderDetailPage() {
   );
 }
 
+const ORDER_STATUS_OPTIONS = [
+  { label: "New", value: "new" },
+  { label: "Pending", value: "pending" },
+  { label: "Fulfilled", value: "fulfilled" },
+];
+
 function OrderEditDialog({
   order,
   onClose,
@@ -422,8 +478,26 @@ function OrderEditDialog({
   onClose: () => void;
 }) {
   const dispatch = useDispatch<AppDispatch>();
-  const [metadataJson, setMetadataJson] = useState(
-    JSON.stringify(order.metadata, null, 2),
+  const [orderStatus, setOrderStatus] = useState(order.orderStatus || "new");
+  const [description, setDescription] = useState(order.description || "");
+  const [customerName, setCustomerName] = useState(order.customerName || "");
+  const [addressLine1, setAddressLine1] = useState(
+    order.shippingAddress?.line1 || "",
+  );
+  const [addressLine2, setAddressLine2] = useState(
+    order.shippingAddress?.line2 || "",
+  );
+  const [addressCity, setAddressCity] = useState(
+    order.shippingAddress?.city || "",
+  );
+  const [addressState, setAddressState] = useState(
+    order.shippingAddress?.state || "",
+  );
+  const [addressPostalCode, setAddressPostalCode] = useState(
+    order.shippingAddress?.postalCode || "",
+  );
+  const [addressCountry, setAddressCountry] = useState(
+    order.shippingAddress?.country || "",
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -432,28 +506,48 @@ function OrderEditDialog({
     try {
       setSaving(true);
       setError(null);
-      const parsed = JSON.parse(metadataJson);
-      if (
-        typeof parsed !== "object" ||
-        parsed === null ||
-        Array.isArray(parsed)
-      ) {
-        setError("Metadata must be a JSON object");
-        setSaving(false);
-        return;
+
+      const metadata: Record<string, string> = {
+        ...order.metadata,
+        order_status: orderStatus,
+        description,
+        customer_name: customerName,
+      };
+
+      if (addressLine1) metadata.address_line1 = addressLine1;
+      if (addressLine2) metadata.address_line2 = addressLine2;
+      if (addressCity) metadata.address_city = addressCity;
+      if (addressState) metadata.address_state = addressState;
+      if (addressPostalCode) metadata.address_postal_code = addressPostalCode;
+      if (addressCountry) metadata.address_country = addressCountry;
+
+      const hasCompleteAddress = !!(addressLine1 && addressCountry);
+
+      const payload: IOrderUpdate = {
+        id: order.id,
+        metadata,
+      };
+
+      if (hasCompleteAddress) {
+        payload.collected_information = {
+          shipping_details: {
+            name: customerName || order.customerName || "",
+            address: {
+              line1: addressLine1,
+              ...(addressLine2 ? { line2: addressLine2 } : {}),
+              ...(addressCity ? { city: addressCity } : {}),
+              ...(addressState ? { state: addressState } : {}),
+              ...(addressPostalCode ? { postal_code: addressPostalCode } : {}),
+              country: addressCountry,
+            },
+          },
+        };
       }
-      const clean: Record<string, string> = {};
-      for (const [k, v] of Object.entries(parsed)) {
-        clean[k] = String(v);
-      }
-      await dispatch(updateOrder({ id: order.id, metadata: clean })).unwrap();
+
+      await dispatch(updateOrder(payload)).unwrap();
       onClose();
-    } catch (err) {
-      if (err instanceof SyntaxError) {
-        setError("Invalid JSON format");
-      } else {
-        setError("Failed to update order metadata");
-      }
+    } catch {
+      setError("Failed to update order");
     } finally {
       setSaving(false);
     }
@@ -467,13 +561,13 @@ function OrderEditDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       data-testid="order-edit-dialog"
     >
-      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
           <h3
             id="order-edit-title"
             className="font-heading text-xl font-semibold text-dark-900"
           >
-            Edit Order Metadata
+            Edit Order
           </h3>
           <button
             onClick={onClose}
@@ -483,9 +577,9 @@ function OrderEditDialog({
             <ArrowLeft className="w-5 h-5" />
           </button>
         </div>
-        <div className="px-6 py-4 space-y-4">
+        <div className="px-6 py-4 space-y-6">
           <p className="text-sm text-dark-500">
-            Update metadata for order{" "}
+            Update details for order{" "}
             <span className="font-mono">{order.id.slice(0, 20)}...</span>
           </p>
           {error && (
@@ -496,22 +590,174 @@ function OrderEditDialog({
               {error}
             </div>
           )}
+
+          {/* Order Status */}
           <div>
             <label
-              htmlFor="order-metadata"
+              htmlFor="order-status"
               className="block text-sm font-medium text-dark-700 mb-1"
             >
-              Metadata (JSON)
+              Order Status
+            </label>
+            <select
+              id="order-status"
+              value={orderStatus}
+              onChange={(e) => setOrderStatus(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              data-testid="order-edit-dialog_status-select"
+            >
+              {ORDER_STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label
+              htmlFor="order-description"
+              className="block text-sm font-medium text-dark-700 mb-1"
+            >
+              Description
             </label>
             <textarea
-              id="order-metadata"
-              value={metadataJson}
-              onChange={(e) => setMetadataJson(e.target.value)}
-              rows={10}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg font-mono text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-              data-testid="order-edit-dialog_metadata-input"
+              id="order-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              data-testid="order-edit-dialog_description-input"
             />
           </div>
+
+          {/* Customer Name */}
+          <div>
+            <label
+              htmlFor="order-customer-name"
+              className="block text-sm font-medium text-dark-700 mb-1"
+            >
+              Customer Name
+            </label>
+            <input
+              id="order-customer-name"
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              data-testid="order-edit-dialog_customer-name-input"
+            />
+          </div>
+
+          {/* Shipping Address */}
+          <fieldset>
+            <legend className="text-sm font-medium text-dark-700 mb-2">
+              Shipping Address
+            </legend>
+            <div className="grid grid-cols-1 gap-3">
+              <div>
+                <label
+                  htmlFor="order-address-line1"
+                  className="block text-xs text-dark-500 mb-0.5"
+                >
+                  Address Line 1
+                </label>
+                <input
+                  id="order-address-line1"
+                  type="text"
+                  value={addressLine1}
+                  onChange={(e) => setAddressLine1(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  data-testid="order-edit-dialog_address-line1-input"
+                />
+              </div>
+              <div>
+                <label
+                  htmlFor="order-address-line2"
+                  className="block text-xs text-dark-500 mb-0.5"
+                >
+                  Address Line 2
+                </label>
+                <input
+                  id="order-address-line2"
+                  type="text"
+                  value={addressLine2}
+                  onChange={(e) => setAddressLine2(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  data-testid="order-edit-dialog_address-line2-input"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="order-address-city"
+                    className="block text-xs text-dark-500 mb-0.5"
+                  >
+                    City
+                  </label>
+                  <input
+                    id="order-address-city"
+                    type="text"
+                    value={addressCity}
+                    onChange={(e) => setAddressCity(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    data-testid="order-edit-dialog_address-city-input"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="order-address-state"
+                    className="block text-xs text-dark-500 mb-0.5"
+                  >
+                    State
+                  </label>
+                  <input
+                    id="order-address-state"
+                    type="text"
+                    value={addressState}
+                    onChange={(e) => setAddressState(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    data-testid="order-edit-dialog_address-state-input"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label
+                    htmlFor="order-address-postal-code"
+                    className="block text-xs text-dark-500 mb-0.5"
+                  >
+                    Postal Code
+                  </label>
+                  <input
+                    id="order-address-postal-code"
+                    type="text"
+                    value={addressPostalCode}
+                    onChange={(e) => setAddressPostalCode(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    data-testid="order-edit-dialog_address-postal-code-input"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="order-address-country"
+                    className="block text-xs text-dark-500 mb-0.5"
+                  >
+                    Country
+                  </label>
+                  <input
+                    id="order-address-country"
+                    type="text"
+                    value={addressCountry}
+                    onChange={(e) => setAddressCountry(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    data-testid="order-edit-dialog_address-country-input"
+                  />
+                </div>
+              </div>
+            </div>
+          </fieldset>
         </div>
         <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
           <button
@@ -526,7 +772,7 @@ function OrderEditDialog({
             className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50"
             data-testid="order-edit-dialog_save-btn"
           >
-            {saving ? "Saving..." : "Save Metadata"}
+            {saving ? "Saving..." : "Save Changes"}
           </button>
         </div>
       </div>

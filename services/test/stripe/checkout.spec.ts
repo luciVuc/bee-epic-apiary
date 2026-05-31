@@ -153,6 +153,12 @@ describe('stripe-checkout handler', () => {
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
 		expect(body.sessions).toContain('https://checkout.stripe.com/cs_123');
+
+		// Verify custom_fields are passed with the order status dropdown
+		const createCall = mockStripe.checkout.sessions.create.mock.calls[0][0];
+		expect(createCall.custom_fields).toBeDefined();
+		expect(createCall.custom_fields[0].key).toBe('order_status');
+		expect(createCall.custom_fields[0].dropdown.options).toHaveLength(3);
 	});
 
 	it('creates separate sessions for recurring and one-time items', async () => {
@@ -182,6 +188,12 @@ describe('stripe-checkout handler', () => {
 		const body = (await response.json()) as any;
 		expect(body.sessions).toHaveLength(2);
 		expect(body.message).toBe('Multiple checkout sessions created');
+
+		// Both sessions receive custom_fields
+		const subCall = mockStripe.checkout.sessions.create.mock.calls[0][0];
+		const payCall = mockStripe.checkout.sessions.create.mock.calls[1][0];
+		expect(subCall.custom_fields).toBeDefined();
+		expect(payCall.custom_fields).toBeDefined();
 	});
 
 	it('handles Stripe errors gracefully', async () => {

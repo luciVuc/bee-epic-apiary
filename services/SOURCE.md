@@ -334,6 +334,67 @@ Handles `PUT /products/:id` to update an existing product.
 5. Updates product via Stripe API
 6. Returns updated product
 
+---
+
+#### src/stripe/order/get-orders.ts
+
+Handles `GET /orders` and `GET /orders/:id` to retrieve Stripe Checkout Sessions with search, filter, and pagination.
+
+**Dependencies**:
+
+- `withStripeHandler` from `../../utils`
+- `jsonResponse` from `../../utils`
+
+**Internal Functions**:
+
+##### `matchesSearch(session: Stripe.Checkout.Session, search: string): boolean`
+
+Case-insensitive substring match against `customer_details.email`, `customer_email`, `customer_details.name`, and session `id`.
+
+##### `buildSearchQuery(search: string, status: string, paymentStatus: string): string`
+
+Constructs a Stripe Search API query string from the given filter parameters. Escapes single quotes in search terms to prevent query injection.
+
+##### `searchAllMatchingSessions(stripe: Stripe, query: string, max?: number): Promise<Stripe.Checkout.Session[]>`
+
+Fetches sessions matching the Search API query, paginating automatically up to `max` sessions (default 1000). Uses `stripe.checkout.sessions.search()` with `page` tokens for cursor-based pagination.
+
+##### `paginateArray<T>(items: T[], limit: number, startingAfter?: string): { data: T[], hasMore: boolean, lastId: string | null }`
+
+Client-side pagination of an in-memory array by cursor (item ID). Used to slice Search API results into requested page sizes.
+
+**Handler Logic**:
+
+1. Extracts order ID from URL if present
+2. For `GET /orders/:id` (single order):
+   - Retrieves session via `stripe.checkout.sessions.retrieve` with `customer` and `payment_intent` expansion
+   - Fetches line items via `stripe.checkout.sessions.listLineItems`
+   - Returns combined session + line items response
+3. For `GET /orders` (list):
+   - Parses `search`, `status`, `payment_status`, `limit`, and `starting_after` query params
+   - If any filter is active: builds Search API query, fetches matching sessions server-side, applies client-side name/ID fallback filter, then paginates
+   - Otherwise: fetches from Stripe with cursor-based pagination via `list()`
+4. Returns orders list with `data`, `has_more`, and `total_count`
+
+#### src/stripe/order/update-order.ts
+
+Handles `PUT /orders/:id` to update a Stripe Checkout Session's metadata and collected information.
+
+**Dependencies**:
+
+- `withStripeHandler` from `../../utils`
+- `jsonResponse` from `../../utils`
+
+**Handler Logic**:
+
+1. Extracts order ID from URL
+2. Parses request body for `metadata` and `collected_information` fields
+3. Updates session via `stripe.checkout.sessions.update()`
+4. For 4xx Stripe errors, passes through the Stripe error message; for 5xx returns generic message
+5. Returns updated session object
+
+---
+
 #### src/stripe/product/get-products-count.ts
 
 Handles `GET /products/count` to retrieve the total product count with optional search/filter.

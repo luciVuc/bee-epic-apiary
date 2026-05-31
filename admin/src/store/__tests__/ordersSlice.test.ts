@@ -38,6 +38,9 @@ const mockOrder: IOrder = {
   mode: "payment",
   metadata: {},
   url: "https://checkout.stripe.com/cs_test_1",
+  orderStatus: null,
+  description: null,
+  shippingAddress: null,
 };
 
 describe("ordersSlice", () => {
@@ -234,14 +237,32 @@ describe("ordersSlice", () => {
 
         await store.dispatch(fetchOrders({}));
 
-        const updated = { ...mockOrder, metadata: { shipped: "true" } };
+        const updated = {
+          ...mockOrder,
+          metadata: {
+            shipped: "true",
+            order_status: "new",
+            description: "Test",
+          },
+          orderStatus: "new",
+          description: "Test",
+        };
         vi.mocked(apiModule.api.updateOrder).mockResolvedValue(updated);
 
         await store.dispatch(
-          updateOrder({ id: "cs_test_1", metadata: { shipped: "true" } }),
+          updateOrder({
+            id: "cs_test_1",
+            metadata: {
+              shipped: "true",
+              order_status: "new",
+              description: "Test",
+            },
+          }),
         );
         const state = store.getState().orders;
         expect(state.selectedOrder?.metadata.shipped).toBe("true");
+        expect(state.selectedOrder?.orderStatus).toBe("new");
+        expect(state.selectedOrder?.description).toBe("Test");
         expect(state.items[0].metadata.shipped).toBe("true");
       });
 

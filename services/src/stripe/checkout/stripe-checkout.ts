@@ -61,6 +61,22 @@ export async function handleCheckout(stripe: Stripe, request: Request, env: Env,
 
 		const sessions: string[] = [];
 
+		const orderStatusField: Stripe.Checkout.SessionCreateParams.CustomField = {
+			key: 'order_status',
+			label: { custom: 'Order Status', type: 'custom' },
+			type: 'dropdown',
+			optional: true,
+			dropdown: {
+				options: [
+					{ label: 'New', value: 'new' },
+					{ label: 'Pending', value: 'pending' },
+					{ label: 'Fulfilled', value: 'fulfilled' },
+				],
+			},
+		};
+
+		const customFields = body.custom_fields?.length ? body.custom_fields : [orderStatusField];
+
 		// Create subscription session for recurring items
 		if (recurringItems.length > 0) {
 			const subscriptionSession = await stripe.checkout.sessions.create({
@@ -70,6 +86,7 @@ export async function handleCheckout(stripe: Stripe, request: Request, env: Env,
 					quantity: item.quantity,
 				})),
 				metadata: body.metadata,
+				custom_fields: customFields,
 				success_url: `${body.success_url}?session_id={CHECKOUT_SESSION_ID}&type=subscription`,
 				cancel_url: body.cancel_url,
 				customer_email: body.customer_email,
@@ -91,6 +108,7 @@ export async function handleCheckout(stripe: Stripe, request: Request, env: Env,
 					quantity: item.quantity,
 				})),
 				metadata: body.metadata,
+				custom_fields: customFields,
 				success_url: `${body.success_url}?session_id={CHECKOUT_SESSION_ID}&type=payment`,
 				cancel_url: body.cancel_url,
 				customer_email: body.customer_email,
