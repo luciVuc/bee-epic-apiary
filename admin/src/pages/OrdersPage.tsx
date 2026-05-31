@@ -273,8 +273,9 @@ export function OrdersPage() {
             )}
           </div>
 
+          {/* Filters Panel */}
           <div
-            data-testid="orders-page_filters"
+            data-testid="orders-page_filters-panel"
             className="flex items-center gap-4 flex-wrap"
           >
             <div

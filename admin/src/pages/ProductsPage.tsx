@@ -213,16 +213,19 @@ export function ProductsPage() {
 
   return (
     <div data-testid="products-page">
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div
+        data-testid="products-page_header"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4"
+      >
         <h2
-          className="font-heading text-3xl font-bold text-dark-900"
           data-testid="products-page_title"
+          className="font-heading text-3xl font-bold text-dark-900"
         >
           Products Management
         </h2>
         <button
-          onClick={handleAddProduct}
           data-testid="products-page_add-btn"
+          onClick={handleAddProduct}
           className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
           <Plus className="w-4 h-4" />
@@ -242,10 +245,16 @@ export function ProductsPage() {
       )}
 
       {/* Toolbar */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
+      <div
+        data-testid="products-page_toolbar"
+        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6"
+      >
+        <div
+          data-testid="products-page_toolbar-content"
+          className="flex flex-col md:flex-row gap-4"
+        >
           {/* Search */}
-          <div className="flex-1 relative">
+          <div data-testid="products-page_search" className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
             <label htmlFor="products-search" className="sr-only">
               Search products
@@ -272,41 +281,56 @@ export function ProductsPage() {
             )}
           </div>
 
-          {/* Category Filter */}
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-dark-400" />
-            <select
-              value={selectedCategory}
-              onChange={(e) => handleCategoryChange(e.target.value)}
-              aria-label="Filter by category"
-              data-testid="products-page_category-filter"
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          {/* Filters Panel */}
+          <div
+            data-testid="products-page_filters-panel"
+            className="flex items-center gap-4"
+          >
+            {/* Category Filter */}
+            <div
+              data-testid="products-page_category-filter-container"
+              className="flex items-center gap-2"
             >
-              <option value="ALL">All Categories</option>
-              {categories.length === 0 ? (
-                <option value="ALL" disabled>
-                  No categories available
-                </option>
-              ) : (
-                categories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {cat.label}
+              <Filter
+                data-testid="products-page_category-filter-icon"
+                className="w-4 h-4 text-dark-400"
+              />
+              <select
+                value={selectedCategory}
+                onChange={(e) => handleCategoryChange(e.target.value)}
+                aria-label="Filter by category"
+                data-testid="products-page_category-filter"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                <option value="ALL">All Categories</option>
+                {categories.length === 0 ? (
+                  <option value="ALL" disabled>
+                    No categories available
                   </option>
-                ))
-              )}
-            </select>
+                ) : (
+                  categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.label}
+                    </option>
+                  ))
+                )}
+              </select>
+            </div>
           </div>
         </div>
 
         {/* Results count */}
-        <div className="mt-3 text-sm text-dark-500">
+        <div
+          data-testid="products-page_results-count"
+          className="mt-3 text-sm text-dark-500"
+        >
           Showing {showingCount} of {totalCount} products
         </div>
       </div>
 
       {/* Products Display */}
       {products.length === 0 && !loading ? (
-        <div className="text-center py-12" data-testid="products-page_empty">
+        <div data-testid="products-page_empty" className="text-center py-12">
           <Package className="w-16 h-16 text-dark-300 mx-auto mb-4" />
           <h3 className="font-heading text-xl font-semibold text-dark-700 mb-2">
             No products found
@@ -325,7 +349,7 @@ export function ProductsPage() {
           </button>
         </div>
       ) : (
-        <div className="relative">
+        <div data-testid="products-page_content" className="relative">
           {loading && (
             <div
               role="status"
@@ -338,8 +362,11 @@ export function ProductsPage() {
           )}
 
           {/* Desktop table view */}
-          <div className="hidden md:flex flex-col overflow-x-auto">
-            <table className="w-full">
+          <div
+            data-testid="products-page_table-container"
+            className="hidden md:flex flex-col overflow-x-auto"
+          >
+            <table data-testid="products-page_table" className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
