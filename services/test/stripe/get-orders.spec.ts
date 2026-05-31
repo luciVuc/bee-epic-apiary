@@ -156,6 +156,55 @@ describe('handleGetOrders', () => {
 		expect(body.total_count).toBe(1);
 	});
 
+	it('filters by order status client-side via metadata.order_status', async () => {
+		const sessions = [
+			createMockSession({ id: 'cs_1', metadata: { order_status: 'new' } }),
+			createMockSession({ id: 'cs_2', metadata: { order_status: 'fulfilled' } }),
+			createMockSession({ id: 'cs_3', metadata: { order_status: 'pending' } }),
+		];
+		mockStripe.checkout.sessions.list.mockResolvedValue(createMockPage(sessions));
+
+		const request = new Request('http://example.com/orders?order_status=fulfilled', { method: 'GET' });
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetOrders(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+
+		const body = (await response.json()) as any;
+		expect(body.data).toHaveLength(1);
+		expect(body.data[0].id).toBe('cs_2');
+		expect(body.total_count).toBe(1);
+	});
+
+	it('filters with order_status ALL returns all sessions', async () => {
+		const sessions = [
+			createMockSession({ id: 'cs_1', metadata: { order_status: 'new' } }),
+			createMockSession({ id: 'cs_2', metadata: { order_status: 'fulfilled' } }),
+		];
+		mockStripe.checkout.sessions.list.mockResolvedValue(createMockPage(sessions));
+
+		const request = new Request('http://example.com/orders?order_status=ALL', { method: 'GET' });
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetOrders(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+
+		const body = (await response.json()) as any;
+		expect(body.data).toHaveLength(2);
+	});
+
+	it('returns empty data when order_status filter matches nothing', async () => {
+		const sessions = [createMockSession({ id: 'cs_1', metadata: { order_status: 'new' } })];
+		mockStripe.checkout.sessions.list.mockResolvedValue(createMockPage(sessions));
+
+		const request = new Request('http://example.com/orders?order_status=fulfilled', { method: 'GET' });
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleGetOrders(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(200);
+
+		const body = (await response.json()) as any;
+		expect(body.data).toHaveLength(0);
+		expect(body.total_count).toBe(0);
+	});
+
 	it('returns empty data when no sessions match search', async () => {
 		const sessions = [createMockSession({ id: 'cs_1', customer_details: { email: 'alice@test.com', name: 'Alice' } })];
 		mockStripe.checkout.sessions.list.mockResolvedValue(createMockPage(sessions));

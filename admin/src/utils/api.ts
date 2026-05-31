@@ -208,6 +208,7 @@ export const api = {
     search?: string;
     status?: string;
     payment_status?: string;
+    order_status?: string;
   }) => {
     const response = await apiClient.get("/orders", {
       params: {
@@ -216,6 +217,7 @@ export const api = {
         search: params?.search || undefined,
         status: params?.status || undefined,
         payment_status: params?.payment_status || undefined,
+        order_status: params?.order_status || undefined,
       },
     });
     return {

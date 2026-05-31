@@ -11,6 +11,8 @@ import {
   orderStatusLabel,
   orderPaymentStatusBadge,
   orderPaymentStatusLabel,
+  orderMetadataStatusBadge,
+  orderMetadataStatusLabel,
   formatPrice,
   formatDate,
 } from "../utils/badgeClasses";
@@ -29,6 +31,13 @@ const PAYMENT_STATUS_OPTIONS = [
   { value: "no_payment_required", label: "No Payment Required" },
 ];
 
+const ORDER_STATUS_OPTIONS = [
+  { value: "ALL", label: "All Orders" },
+  { value: "new", label: "New" },
+  { value: "pending", label: "Pending" },
+  { value: "fulfilled", label: "Fulfilled" },
+];
+
 export function OrdersPage() {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
@@ -41,22 +50,29 @@ export function OrdersPage() {
     totalCount,
   } = useSelector((state: RootState) => state.orders);
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(null);
+  const prevParamsKey = useRef(
+    `${searchParams.get("search") || ""}|${searchParams.get("status") || "ALL"}|${searchParams.get("payment_status") || "ALL"}|${searchParams.get("order_status") || "ALL"}`,
+  );
 
   const searchTerm = searchParams.get("search") || "";
   const selectedStatus = searchParams.get("status") || "ALL";
   const selectedPaymentStatus = searchParams.get("payment_status") || "ALL";
-
-  const prevSearch = useRef(searchTerm);
-  const prevStatus = useRef(selectedStatus);
-  const prevPaymentStatus = useRef(selectedPaymentStatus);
+  const selectedOrderStatus = searchParams.get("order_status") || "ALL";
 
   const updateSearchParams = useCallback(
-    (search: string, status: string, paymentStatus: string) => {
+    (
+      search: string,
+      status: string,
+      paymentStatus: string,
+      orderStatus: string,
+    ) => {
       const params: Record<string, string> = {};
       if (search) params.search = search;
       if (status && status !== "ALL") params.status = status;
       if (paymentStatus && paymentStatus !== "ALL")
         params.payment_status = paymentStatus;
+      if (orderStatus && orderStatus !== "ALL")
+        params.order_status = orderStatus;
       setSearchParams(params, { replace: true });
     },
     [setSearchParams],
@@ -67,12 +83,15 @@ export function OrdersPage() {
       search?: string;
       status?: string;
       payment_status?: string;
+      order_status?: string;
       limit?: number;
     } = {};
     if (searchTerm) params.search = searchTerm;
     if (selectedStatus !== "ALL") params.status = selectedStatus;
     if (selectedPaymentStatus !== "ALL")
       params.payment_status = selectedPaymentStatus;
+    if (selectedOrderStatus !== "ALL")
+      params.order_status = selectedOrderStatus;
     if (includeLimit) {
       const limitParam = searchParams.get("limit");
       if (limitParam) {
@@ -82,10 +101,6 @@ export function OrdersPage() {
     }
     return params;
   };
-
-  useLayoutEffect(() => {
-    dispatch(fetchOrders(buildFetchParams(true)));
-  }, []);
 
   useLayoutEffect(() => {
     const saved = sessionStorage.getItem("adminOrdersScrollY");
@@ -100,19 +115,15 @@ export function OrdersPage() {
   }, []);
 
   useEffect(() => {
-    if (
-      prevSearch.current === searchTerm &&
-      prevStatus.current === selectedStatus &&
-      prevPaymentStatus.current === selectedPaymentStatus
-    ) {
-      prevSearch.current = searchTerm;
-      prevStatus.current = selectedStatus;
-      prevPaymentStatus.current = selectedPaymentStatus;
+    const currentKey = `${searchTerm}|${selectedStatus}|${selectedPaymentStatus}|${selectedOrderStatus}`;
+
+    if (prevParamsKey.current === currentKey) {
+      prevParamsKey.current = currentKey;
+      dispatch(fetchOrders(buildFetchParams(true)));
       return;
     }
-    prevSearch.current = searchTerm;
-    prevStatus.current = selectedStatus;
-    prevPaymentStatus.current = selectedPaymentStatus;
+
+    prevParamsKey.current = currentKey;
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(async () => {
@@ -121,7 +132,13 @@ export function OrdersPage() {
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
-  }, [searchTerm, selectedStatus, selectedPaymentStatus, dispatch]);
+  }, [
+    searchTerm,
+    selectedStatus,
+    selectedPaymentStatus,
+    selectedOrderStatus,
+    dispatch,
+  ]);
 
   const saveScroll = useCallback(() => {
     sessionStorage.setItem("adminOrdersScrollY", String(window.scrollY));
@@ -138,6 +155,8 @@ export function OrdersPage() {
       params.status = selectedStatus;
     if (selectedPaymentStatus && selectedPaymentStatus !== "ALL")
       params.payment_status = selectedPaymentStatus;
+    if (selectedOrderStatus && selectedOrderStatus !== "ALL")
+      params.order_status = selectedOrderStatus;
     params.limit = String(newLimit);
     setSearchParams(params, { replace: true });
     saveScroll();
@@ -148,6 +167,7 @@ export function OrdersPage() {
         search: searchTerm,
         status: selectedStatus,
         payment_status: selectedPaymentStatus,
+        order_status: selectedOrderStatus,
       }),
     );
   };
@@ -155,15 +175,34 @@ export function OrdersPage() {
   const currentUrl = `${location.pathname}${location.search}`;
 
   const handleSearchChange = (value: string) => {
-    updateSearchParams(value, selectedStatus, selectedPaymentStatus);
+    updateSearchParams(
+      value,
+      selectedStatus,
+      selectedPaymentStatus,
+      selectedOrderStatus,
+    );
   };
 
   const handleStatusChange = (value: string) => {
-    updateSearchParams(searchTerm, value, selectedPaymentStatus);
+    updateSearchParams(
+      searchTerm,
+      value,
+      selectedPaymentStatus,
+      selectedOrderStatus,
+    );
   };
 
   const handlePaymentStatusChange = (value: string) => {
-    updateSearchParams(searchTerm, selectedStatus, value);
+    updateSearchParams(searchTerm, selectedStatus, value, selectedOrderStatus);
+  };
+
+  const handleOrderStatusChange = (value: string) => {
+    updateSearchParams(
+      searchTerm,
+      selectedStatus,
+      selectedPaymentStatus,
+      value,
+    );
   };
 
   if (loading && orders.length === 0) {
@@ -235,49 +274,77 @@ export function OrdersPage() {
           </div>
 
           <div
-            data-testid="orders-page_status-filter-container"
-            className="flex items-center gap-2"
+            data-testid="orders-page_filters"
+            className="flex items-center gap-4 flex-wrap"
           >
-            <Filter
-              data-testid="orders-page_status-filter-icon"
-              className="w-4 h-4 text-dark-400"
-            />
-            <select
-              value={selectedStatus}
-              onChange={(e) => handleStatusChange(e.target.value)}
-              aria-label="Filter by status"
-              data-testid="orders-page_status-filter"
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            <div
+              data-testid="orders-page_status-filter-container"
+              className="flex items-center gap-2"
             >
-              {STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+              <Filter
+                data-testid="orders-page_status-filter-icon"
+                className="w-4 h-4 text-dark-400"
+              />
+              <select
+                value={selectedStatus}
+                onChange={(e) => handleStatusChange(e.target.value)}
+                aria-label="Filter by status"
+                data-testid="orders-page_status-filter"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                {STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          <div
-            data-testid="orders-page_payment-status-filter-container"
-            className="flex items-center gap-2"
-          >
-            <Filter
-              data-testid="orders-page_payment-status-filter-icon"
-              className="w-4 h-4 text-dark-400"
-            />
-            <select
-              value={selectedPaymentStatus}
-              onChange={(e) => handlePaymentStatusChange(e.target.value)}
-              aria-label="Filter by payment status"
-              data-testid="orders-page_payment-status-filter"
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+            <div
+              data-testid="orders-page_payment-status-filter-container"
+              className="flex items-center gap-2"
             >
-              {PAYMENT_STATUS_OPTIONS.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
+              <Filter
+                data-testid="orders-page_payment-status-filter-icon"
+                className="w-4 h-4 text-dark-400"
+              />
+              <select
+                value={selectedPaymentStatus}
+                onChange={(e) => handlePaymentStatusChange(e.target.value)}
+                aria-label="Filter by payment status"
+                data-testid="orders-page_payment-status-filter"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                {PAYMENT_STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div
+              data-testid="orders-page_order-status-filter-container"
+              className="flex items-center gap-2"
+            >
+              <Filter
+                data-testid="orders-page_order-status-filter-icon"
+                className="w-4 h-4 text-dark-400"
+              />
+              <select
+                value={selectedOrderStatus}
+                onChange={(e) => handleOrderStatusChange(e.target.value)}
+                aria-label="Filter by order status"
+                data-testid="orders-page_order-status-filter"
+                className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              >
+                {ORDER_STATUS_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -307,7 +374,8 @@ export function OrdersPage() {
           >
             {searchTerm ||
             selectedStatus !== "ALL" ||
-            selectedPaymentStatus !== "ALL"
+            selectedPaymentStatus !== "ALL" ||
+            selectedOrderStatus !== "ALL"
               ? "Try adjusting your search or filters"
               : "No orders have been placed yet"}
           </p>
@@ -343,7 +411,10 @@ export function OrdersPage() {
                     Total
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
-                    Status
+                    Payment Status
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                    Order Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
                     Payment
@@ -390,6 +461,13 @@ export function OrdersPage() {
                         className={`px-2 py-1 text-xs font-medium rounded-full ${orderStatusBadge(order.status)}`}
                       >
                         {orderStatusLabel(order.status)}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${orderMetadataStatusBadge(order.orderStatus)}`}
+                      >
+                        {orderMetadataStatusLabel(order.orderStatus)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -462,6 +540,14 @@ export function OrdersPage() {
                       className={`ml-1 px-2 py-0.5 text-xs font-medium rounded-full ${orderPaymentStatusBadge(order.paymentStatus)}`}
                     >
                       {orderPaymentStatusLabel(order.paymentStatus)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-dark-500">Order:</span>
+                    <span
+                      className={`ml-1 px-2 py-0.5 text-xs font-medium rounded-full ${orderMetadataStatusBadge(order.orderStatus)}`}
+                    >
+                      {orderMetadataStatusLabel(order.orderStatus)}
                     </span>
                   </div>
                   <div className="col-span-2">

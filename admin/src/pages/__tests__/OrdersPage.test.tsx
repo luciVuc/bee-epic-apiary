@@ -317,6 +317,33 @@ describe("OrdersPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders order status filter dropdown", async () => {
+    mockGetOrders.mockResolvedValue({
+      orders: mockOrders,
+      hasMore: false,
+      lastId: "cs_test_2",
+      totalCount: 2,
+    });
+    const store = createStore({
+      orders: {
+        items: [],
+        loading: false,
+        error: null,
+        selectedOrder: null,
+        selectedOrderLineItems: [],
+        hasMore: false,
+        lastId: null,
+        totalCount: 0,
+        lastFetchParams: null,
+      },
+    });
+    renderWithProviders(<OrdersPage />, { store });
+
+    expect(
+      await screen.findByLabelText("Filter by order status"),
+    ).toBeInTheDocument();
+  });
+
   it("shows loading overlay when loading with existing orders", () => {
     mockGetOrders.mockResolvedValue({
       orders: mockOrders,

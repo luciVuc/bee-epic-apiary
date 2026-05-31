@@ -22,6 +22,12 @@ function matchesPaymentStatus(session: Stripe.Checkout.Session, paymentStatus: s
 	return session.payment_status === paymentStatus;
 }
 
+function matchesOrderStatus(session: Stripe.Checkout.Session, orderStatus: string): boolean {
+	if (!orderStatus || orderStatus === 'ALL') return true;
+	const metadata = session.metadata as Record<string, string> | undefined;
+	return metadata?.order_status === orderStatus;
+}
+
 async function fetchCappedSessions(stripe: Stripe, max: number = MAX_SESSIONS): Promise<Stripe.Checkout.Session[]> {
 	const allSessions: Stripe.Checkout.Session[] = [];
 	let hasMore = true;
@@ -73,6 +79,7 @@ export async function handleGetOrders(stripe: Stripe, request: Request, env: Env
 		const search = url.searchParams.get('search') || '';
 		const status = url.searchParams.get('status') || '';
 		const paymentStatus = url.searchParams.get('payment_status') || '';
+		const orderStatus = url.searchParams.get('order_status') || '';
 
 		if (orderId) {
 			const retrieveParams: Stripe.Checkout.SessionRetrieveParams = {
@@ -88,10 +95,14 @@ export async function handleGetOrders(stripe: Stripe, request: Request, env: Env
 
 		let resultData: Record<string, unknown>;
 
-		if (search || (status && status !== 'ALL') || (paymentStatus && paymentStatus !== 'ALL')) {
+		if (search || (status && status !== 'ALL') || (paymentStatus && paymentStatus !== 'ALL') || (orderStatus && orderStatus !== 'ALL')) {
 			const allSessions = await fetchCappedSessions(stripe);
 			const filtered = allSessions.filter(
-				(s) => matchesSearch(s, search) && matchesStatus(s, status) && matchesPaymentStatus(s, paymentStatus),
+				(s) =>
+					matchesSearch(s, search) &&
+					matchesStatus(s, status) &&
+					matchesPaymentStatus(s, paymentStatus) &&
+					matchesOrderStatus(s, orderStatus),
 			);
 			const paginated = paginateArray(filtered, limit, startingAfter);
 			resultData = {
@@ -100,21 +111,12 @@ export async function handleGetOrders(stripe: Stripe, request: Request, env: Env
 				total_count: filtered.length,
 			};
 		} else {
-			const listParams: Stripe.Checkout.SessionListParams = { limit };
-			if (startingAfter) listParams.starting_after = startingAfter;
-			const stripeResult = await stripe.checkout.sessions.list(listParams);
-
-			let totalCount = stripeResult.data.length;
-			try {
-				const allSessions = await fetchCappedSessions(stripe);
-				totalCount = allSessions.length;
-			} catch (error) {
-				console.error('Failed to fetch capped sessions for total_count:', error);
-			}
-
+			const allSessions = await fetchCappedSessions(stripe);
+			const paginated = paginateArray(allSessions, limit, startingAfter);
 			resultData = {
-				...stripeResult,
-				total_count: totalCount,
+				data: paginated.data,
+				has_more: paginated.hasMore,
+				total_count: allSessions.length,
 			};
 		}
 

@@ -35,6 +35,7 @@ export const fetchOrders = createAsyncThunk(
     search?: string;
     status?: string;
     payment_status?: string;
+    order_status?: string;
   }) => {
     const result = await api.api.getOrders(params);
     return {
