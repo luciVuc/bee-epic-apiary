@@ -129,7 +129,7 @@ export function OrdersPage() {
 
   const handleLoadMore = () => {
     if (orders.length === 0) return;
-    const lastOrder = orders.at(-1);
+    const lastOrder = orders[orders.length - 1];
     if (!lastOrder?.id) return;
     const newLimit = orders.length + 10;
     const params: Record<string, string> = {};
@@ -174,7 +174,10 @@ export function OrdersPage() {
 
   return (
     <div data-testid="orders-page">
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between">
+      <div
+        data-testid="orders-page_header"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between"
+      >
         <h2
           className="font-heading text-3xl font-bold text-dark-900"
           data-testid="orders-page_title"
@@ -194,10 +197,19 @@ export function OrdersPage() {
         </div>
       )}
 
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
+      <div
+        data-testid="orders-page_filter"
+        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6"
+      >
+        <div
+          data-testid="orders-page_filter-content"
+          className="flex flex-col md:flex-row gap-4"
+        >
+          <div data-testid="orders-page_search" className="flex-1 relative">
+            <Search
+              data-testid="orders-page_search-icon"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400"
+            />
             <label htmlFor="orders-search" className="sr-only">
               Search orders
             </label>
@@ -222,8 +234,14 @@ export function OrdersPage() {
             )}
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-dark-400" />
+          <div
+            data-testid="orders-page_status-filter-container"
+            className="flex items-center gap-2"
+          >
+            <Filter
+              data-testid="orders-page_status-filter-icon"
+              className="w-4 h-4 text-dark-400"
+            />
             <select
               value={selectedStatus}
               onChange={(e) => handleStatusChange(e.target.value)}
@@ -239,8 +257,14 @@ export function OrdersPage() {
             </select>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-dark-400" />
+          <div
+            data-testid="orders-page_payment-status-filter-container"
+            className="flex items-center gap-2"
+          >
+            <Filter
+              data-testid="orders-page_payment-status-filter-icon"
+              className="w-4 h-4 text-dark-400"
+            />
             <select
               value={selectedPaymentStatus}
               onChange={(e) => handlePaymentStatusChange(e.target.value)}
@@ -257,18 +281,30 @@ export function OrdersPage() {
           </div>
         </div>
 
-        <div className="mt-3 text-sm text-dark-500">
+        <div
+          data-testid="orders-page_order-count"
+          className="mt-3 text-sm text-dark-500"
+        >
           Showing {showingCount} of {totalCount} orders
         </div>
       </div>
 
       {orders.length === 0 && !loading ? (
-        <div className="text-center py-12" data-testid="orders-page_empty">
-          <ShoppingCart className="w-16 h-16 text-dark-300 mx-auto mb-4" />
-          <h3 className="font-heading text-xl font-semibold text-dark-700 mb-2">
+        <div data-testid="orders-page_empty" className="text-center py-12">
+          <ShoppingCart
+            data-testid="orders-page_empty-icon"
+            className="w-16 h-16 text-dark-300 mx-auto mb-4"
+          />
+          <h3
+            data-testid="orders-page_empty-title"
+            className="font-heading text-xl font-semibold text-dark-700 mb-2"
+          >
             No orders found
           </h3>
-          <p className="text-dark-500 mb-4">
+          <p
+            data-testid="orders-page_empty-description"
+            className="text-dark-500 mb-4"
+          >
             {searchTerm ||
             selectedStatus !== "ALL" ||
             selectedPaymentStatus !== "ALL"
@@ -277,9 +313,10 @@ export function OrdersPage() {
           </p>
         </div>
       ) : (
-        <div className="relative">
+        <div data-testid="orders-page_content" className="relative">
           {loading && (
             <div
+              data-testid="orders-page_loading-overlay"
               role="status"
               aria-live="polite"
               className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px]"
@@ -289,8 +326,11 @@ export function OrdersPage() {
             </div>
           )}
 
-          <div className="hidden md:flex flex-col overflow-x-auto">
-            <table className="w-full">
+          <div
+            data-testid="orders-page_table-container"
+            className="hidden md:flex flex-col overflow-x-auto"
+          >
+            <table data-testid="orders-page_table" className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
@@ -378,7 +418,10 @@ export function OrdersPage() {
             </table>
           </div>
 
-          <div className="md:hidden space-y-4">
+          <div
+            data-testid="orders-page_mobile-container"
+            className="md:hidden space-y-4"
+          >
             {orders.map((order) => (
               <div
                 key={order.id}

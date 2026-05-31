@@ -3,12 +3,6 @@ import Stripe from 'stripe';
 
 const MAX_SESSIONS = 1000;
 
-interface ICheckoutSessionSearchParams {
-	query: string;
-	limit: number;
-	page?: string;
-}
-
 function matchesSearch(session: Stripe.Checkout.Session, search: string): boolean {
 	if (!search) return true;
 	const q = search.toLowerCase();
@@ -18,43 +12,29 @@ function matchesSearch(session: Stripe.Checkout.Session, search: string): boolea
 	return email.includes(q) || name.includes(q) || id.includes(q);
 }
 
-function buildSearchQuery(search: string, status: string, paymentStatus: string): string {
-	const conditions: string[] = [];
-	if (status && status !== 'ALL') {
-		conditions.push(`status:'${status}'`);
-	}
-	if (paymentStatus && paymentStatus !== 'ALL') {
-		conditions.push(`payment_status:'${paymentStatus}'`);
-	}
-	if (search) {
-		const escaped = search.replace(/'/g, "\\'");
-		conditions.push(`(customer_details.email:'${escaped}' OR customer_details.name:'${escaped}' OR customer_email:'${escaped}')`);
-	}
-	return conditions.join(' AND ');
+function matchesStatus(session: Stripe.Checkout.Session, status: string): boolean {
+	if (!status || status === 'ALL') return true;
+	return session.status === status;
 }
 
-async function searchAllMatchingSessions(stripe: Stripe, query: string, max: number = MAX_SESSIONS): Promise<Stripe.Checkout.Session[]> {
+function matchesPaymentStatus(session: Stripe.Checkout.Session, paymentStatus: string): boolean {
+	if (!paymentStatus || paymentStatus === 'ALL') return true;
+	return session.payment_status === paymentStatus;
+}
+
+async function fetchCappedSessions(stripe: Stripe, max: number = MAX_SESSIONS): Promise<Stripe.Checkout.Session[]> {
 	const allSessions: Stripe.Checkout.Session[] = [];
 	let hasMore = true;
-	let page: string | undefined;
+	let startingAfter: string | undefined;
 
 	while (hasMore && allSessions.length < max) {
-		const params: ICheckoutSessionSearchParams = {
-			query,
-			limit: Math.min(100, max - allSessions.length),
-		};
-		if (page) params.page = page;
-		// eslint-disable-next-line @typescript-eslint/no-explicit-any
-		const sessionResource = stripe.checkout.sessions as any;
-		const result = (await sessionResource.search(params)) as {
-			data: Stripe.Checkout.Session[];
-			has_more: boolean;
-			next_page: string | null;
-			total_details?: { total_count: number };
-		};
-		allSessions.push(...result.data);
-		hasMore = result.has_more;
-		page = result.next_page || undefined;
+		const batchSize = Math.min(100, max - allSessions.length);
+		const params: Stripe.Checkout.SessionListParams = { limit: batchSize };
+		if (startingAfter) params.starting_after = startingAfter;
+		const page = await stripe.checkout.sessions.list(params);
+		allSessions.push(...page.data);
+		hasMore = page.has_more;
+		startingAfter = page.data[page.data.length - 1]?.id;
 	}
 
 	return allSessions;
@@ -109,9 +89,10 @@ export async function handleGetOrders(stripe: Stripe, request: Request, env: Env
 		let resultData: Record<string, unknown>;
 
 		if (search || (status && status !== 'ALL') || (paymentStatus && paymentStatus !== 'ALL')) {
-			const query = buildSearchQuery(search, status, paymentStatus);
-			const allSessions = await searchAllMatchingSessions(stripe, query);
-			const filtered = search ? allSessions.filter((s) => matchesSearch(s, search)) : allSessions;
+			const allSessions = await fetchCappedSessions(stripe);
+			const filtered = allSessions.filter(
+				(s) => matchesSearch(s, search) && matchesStatus(s, status) && matchesPaymentStatus(s, paymentStatus),
+			);
 			const paginated = paginateArray(filtered, limit, startingAfter);
 			resultData = {
 				data: paginated.data,
@@ -123,9 +104,17 @@ export async function handleGetOrders(stripe: Stripe, request: Request, env: Env
 			if (startingAfter) listParams.starting_after = startingAfter;
 			const stripeResult = await stripe.checkout.sessions.list(listParams);
 
+			let totalCount = stripeResult.data.length;
+			try {
+				const allSessions = await fetchCappedSessions(stripe);
+				totalCount = allSessions.length;
+			} catch (error) {
+				console.error('Failed to fetch capped sessions for total_count:', error);
+			}
+
 			resultData = {
 				...stripeResult,
-				total_count: stripeResult.data.length,
+				total_count: totalCount,
 			};
 		}
 
