@@ -51,6 +51,7 @@ export interface IOrderLineItem {
   amountSubtotal: number;
   currency: string;
   quantity: number | null;
+  productId: string | null;
   price: {
     id: string;
     unitAmount: number | null;

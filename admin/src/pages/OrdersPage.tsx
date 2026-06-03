@@ -28,6 +28,7 @@ import {
   orderMetadataStatusLabel,
   formatPrice,
   formatDate,
+  truncateOrderId,
 } from "../utils/badgeClasses";
 
 const STATUS_OPTIONS = [
@@ -449,29 +450,56 @@ export function OrdersPage() {
           >
             <table data-testid="orders-page_table" className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                <tr
+                  data-testid="orders-page_table-header"
+                  className="text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                >
+                  <th
+                    data-testid="orders-page_table-header-order"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Order
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
-                    Customer
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
-                    Total
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
-                    Payment Status
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    data-testid="orders-page_table-header-order-status"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Order Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
-                    Payment
+                  <th
+                    data-testid="orders-page_table-header-customer"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
+                    Customer
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    data-testid="orders-page_table-header-total"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
+                    Total
+                  </th>
+                  <th
+                    data-testid="orders-page_table-header-checkout-status"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
+                    Checkout Status
+                  </th>
+                  <th
+                    data-testid="orders-page_table-header-payment-status"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
+                    Payment Status
+                  </th>
+                  <th
+                    data-testid="orders-page_table-header-date"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Date
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    data-testid="orders-page_table-header-actions"
+                    className="px-6 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Actions
                   </th>
                 </tr>
@@ -481,18 +509,35 @@ export function OrdersPage() {
                   <tr
                     key={order.id}
                     className="hover:bg-gray-50 transition-colors"
+                    data-testid="orders-page_table-row"
                   >
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td
+                      data-testid="orders-page_table-cell-order"
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
                       <Link
                         to={`/orders/${order.id}`}
                         onClick={saveScroll}
                         state={{ from: currentUrl }}
                         className="font-mono text-sm text-primary-600 hover:text-primary-700"
                       >
-                        {order.id.slice(0, 14)}...
+                        {truncateOrderId(order.id)}
                       </Link>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td
+                      data-testid="orders-page_table-cell-order-status"
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
+                      <span
+                        className={`px-2 py-1 text-xs font-medium rounded-full ${orderMetadataStatusBadge(order.orderStatus)}`}
+                      >
+                        {orderMetadataStatusLabel(order.orderStatus)}
+                      </span>
+                    </td>
+                    <td
+                      data-testid="orders-page_table-cell-customer"
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
                       <div className="text-dark-900 font-medium">
                         {order.customerName || "—"}
                       </div>
@@ -500,36 +545,44 @@ export function OrdersPage() {
                         {order.customerEmail || "—"}
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td
+                      data-testid="orders-page_table-cell-total"
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
                       <span className="text-dark-700 font-medium">
                         {formatPrice(order.amountTotal)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td
+                      data-testid="orders-page_table-cell-checkout-status"
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${orderStatusBadge(order.status)}`}
                       >
                         {orderStatusLabel(order.status)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span
-                        className={`px-2 py-1 text-xs font-medium rounded-full ${orderMetadataStatusBadge(order.orderStatus)}`}
-                      >
-                        {orderMetadataStatusLabel(order.orderStatus)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
+                    <td
+                      data-testid="orders-page_table-cell-payment"
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
                       <span
                         className={`px-2 py-1 text-xs font-medium rounded-full ${orderPaymentStatusBadge(order.paymentStatus)}`}
                       >
                         {orderPaymentStatusLabel(order.paymentStatus)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-dark-500">
+                    <td
+                      data-testid="orders-page_table-cell-date"
+                      className="px-6 py-4 whitespace-nowrap"
+                    >
                       {formatDate(order.created)}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right">
+                    <td
+                      data-testid="orders-page_table-cell-actions"
+                      className="px-6 py-4 whitespace-nowrap text-right"
+                    >
                       <Link
                         to={`/orders/${order.id}`}
                         onClick={saveScroll}
@@ -553,60 +606,92 @@ export function OrdersPage() {
               <div
                 key={order.id}
                 className="bg-white p-4 rounded-xl shadow-sm border border-gray-200"
+                data-testid="orders-page_mobile-card"
               >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="font-mono text-sm text-primary-600">
-                    {order.id.slice(0, 14)}...
+                <div
+                  data-testid="orders-page_mobile-card-header"
+                  className="flex items-center justify-between mb-3"
+                >
+                  <div
+                    data-testid="orders-page_mobile-card-order-id"
+                    className="font-mono text-sm text-primary-600"
+                  >
+                    {truncateOrderId(order.id)}
                   </div>
                   <span
-                    className={`px-2 py-1 text-xs font-medium rounded-full ${orderStatusBadge(order.status)}`}
+                    data-testid="orders-page_mobile-card-status"
+                    className={`px-2 py-1 text-xs font-medium rounded-full ${orderMetadataStatusBadge(order.orderStatus)}`}
                   >
-                    {orderStatusLabel(order.status)}
+                    {orderMetadataStatusLabel(order.orderStatus)}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>
+                <div
+                  data-testid="orders-page_mobile-card-details"
+                  className="grid grid-cols-2 gap-2 text-sm"
+                >
+                  <div
+                    data-testid="orders-page_mobile-card-customer"
+                    className="flex items-center justify-between col-span-2"
+                  >
                     <span className="text-dark-500">Customer:</span>
                     <span className="ml-1 text-dark-700">
                       {order.customerName || "—"}
                     </span>
                   </div>
-                  <div>
+                  <div
+                    data-testid="orders-page_mobile-card-email"
+                    className="flex items-center justify-between col-span-2"
+                  >
                     <span className="text-dark-500">Email:</span>
                     <span className="ml-1 text-dark-700">
                       {order.customerEmail || "—"}
                     </span>
                   </div>
-                  <div>
+                  <div
+                    data-testid="orders-page_mobile-card-total"
+                    className="flex items-center justify-between col-span-2"
+                  >
                     <span className="text-dark-500">Total:</span>
                     <span className="ml-1 text-dark-700 font-medium">
                       {formatPrice(order.amountTotal)}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-dark-500">Payment:</span>
+                  <div
+                    data-testid="orders-page_mobile-card-checkout-status"
+                    className="flex items-center justify-between col-span-2"
+                  >
+                    <span className="text-dark-500">Checkout Status:</span>
+                    <span
+                      className={`ml-1 px-2 py-0.5 text-xs font-medium rounded-full ${orderStatusBadge(order.status)}`}
+                    >
+                      {orderStatusLabel(order.status)}
+                    </span>
+                  </div>
+                  <div
+                    data-testid="orders-page_mobile-card-payment-status"
+                    className="flex items-center justify-between col-span-2"
+                  >
+                    <span className="text-dark-500">Payment Status:</span>
                     <span
                       className={`ml-1 px-2 py-0.5 text-xs font-medium rounded-full ${orderPaymentStatusBadge(order.paymentStatus)}`}
                     >
                       {orderPaymentStatusLabel(order.paymentStatus)}
                     </span>
                   </div>
-                  <div>
-                    <span className="text-dark-500">Order:</span>
-                    <span
-                      className={`ml-1 px-2 py-0.5 text-xs font-medium rounded-full ${orderMetadataStatusBadge(order.orderStatus)}`}
-                    >
-                      {orderMetadataStatusLabel(order.orderStatus)}
-                    </span>
-                  </div>
-                  <div className="col-span-2">
+                  <div
+                    data-testid="orders-page_mobile-card-date"
+                    className="flex items-center justify-between col-span-2"
+                  >
                     <span className="text-dark-500">Date:</span>
                     <span className="ml-1 text-dark-700">
                       {formatDate(order.created)}
                     </span>
                   </div>
                 </div>
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+                <div
+                  data-testid="orders-page_mobile-card-actions"
+                  className="flex gap-2 mt-3 pt-3 border-t border-gray-200"
+                >
                   <Link
                     to={`/orders/${order.id}`}
                     onClick={saveScroll}

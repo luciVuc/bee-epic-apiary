@@ -201,6 +201,7 @@ export function transformStripeLineItem(
     amountSubtotal: (item.amount_subtotal as number) || 0,
     currency: (item.currency as string) || "usd",
     quantity: (item.quantity as number) || null,
+    productId: price ? (price.product as string) || null : null,
     price: price
       ? {
           id: (price.id as string) || "",

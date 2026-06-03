@@ -153,6 +153,14 @@ export function orderMetadataStatusLabel(status: string | null): string {
   }
 }
 
+/** Truncates a Stripe session ID to show first 7 chars after the last underscore and last 7 chars with ... in between */
+export function truncateOrderId(id: string): string {
+  const underscoreIndex = id.lastIndexOf("_");
+  const suffix = underscoreIndex >= 0 ? id.slice(underscoreIndex + 1) : id;
+  if (suffix.length <= 10) return suffix;
+  return `${suffix.slice(0, 5)}...${suffix.slice(-5)}`;
+}
+
 /** Formats a Unix timestamp to a readable date string (e.g. "Jan 15, 2026, 02:30 PM") */
 export function formatDate(timestamp: number): string {
   return new Date(timestamp * 1000).toLocaleDateString("en-US", {

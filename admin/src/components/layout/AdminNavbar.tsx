@@ -5,6 +5,7 @@ import { Bell, User, Menu } from "lucide-react";
 import * as api from "../../utils/api";
 import type { ISiteContent } from "../../types/settings";
 import type { IOrder } from "../../types/order";
+import { ORDER_STATUS_CHANGED_EVENT } from "../../utils/constants";
 import { NotificationsPanel } from "../notifications/NotificationsPanel";
 
 export interface IAdminNavbarProps {
@@ -41,6 +42,22 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
 
   useEffect(() => {
     fetchNotifications();
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    const handleOrderStatusChange = () => {
+      fetchNotifications();
+    };
+    window.addEventListener(
+      ORDER_STATUS_CHANGED_EVENT,
+      handleOrderStatusChange,
+    );
+    return () => {
+      window.removeEventListener(
+        ORDER_STATUS_CHANGED_EVENT,
+        handleOrderStatusChange,
+      );
+    };
   }, [fetchNotifications]);
 
   const title = businessName ? `${businessName} Admin` : "Admin";

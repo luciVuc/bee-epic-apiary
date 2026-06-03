@@ -14,6 +14,9 @@ export const DEFAULT_PRODUCT_THUMBNAIL = `data:image/svg+xml;utf8,<svg xmlns="ht
 /** localStorage key for persisting admin settings */
 export const SETTINGS_STORAGE_KEY = "beeEpicAdminSettings";
 
+/** Custom event dispatched when an order's internal status (new/pending/fulfilled) is updated */
+export const ORDER_STATUS_CHANGED_EVENT = "order-status-changed";
+
 /** Default product categories used when no remote categories are loaded */
 export const CATEGORIES = [
   { id: "HONEY", label: "Honey" },

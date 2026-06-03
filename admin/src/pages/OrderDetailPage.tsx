@@ -12,6 +12,7 @@ import {
 } from "../store/ordersSlice";
 import { Spinner } from "../components/shared/Spinner";
 import type { IOrder, IOrderUpdate } from "../types";
+import { ORDER_STATUS_CHANGED_EVENT } from "../utils/constants";
 import {
   orderStatusBadge,
   orderStatusLabel,
@@ -21,6 +22,7 @@ import {
   orderModeLabel,
   formatPrice,
   formatDate,
+  truncateOrderId,
 } from "../utils/badgeClasses";
 
 function getBackUrl(location: ReturnType<typeof useLocation>): string {
@@ -119,7 +121,7 @@ export function OrderDetailPage() {
               data-testid="order-detail-page_id"
               className="font-heading text-3xl font-bold text-dark-900 font-mono"
             >
-              {order.id.slice(0, 20)}...
+              {truncateOrderId(order.id)}
             </h2>
             <p className="text-sm text-dark-500 mt-1">
               {formatDate(order.created)}
@@ -180,22 +182,48 @@ export function OrderDetailPage() {
               Order Items
             </h3>
             {lineItems.length === 0 ? (
-              <p className="text-dark-500">No line items available</p>
+              <p
+                data-testid="order-detail-page_no-line-items"
+                className="text-dark-500"
+              >
+                No line items available
+              </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
+              <div
+                data-testid="order-detail-page_line-items-container"
+                className="overflow-x-auto"
+              >
+                <table
+                  data-testid="order-detail-page_line-items-table"
+                  className="w-full"
+                >
                   <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                    <tr
+                      data-testid="order-detail-page_line-items-table-header"
+                      className="text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                    >
+                      <th
+                        data-testid="order-detail-page_line-items-table-header-item"
+                        className="px-4 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                      >
                         Item
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider">
+                      <th
+                        data-testid="order-detail-page_line-items-table-header-qty"
+                        className="px-4 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider"
+                      >
                         Qty
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider">
+                      <th
+                        data-testid="order-detail-page_line-items-table-header-subtotal"
+                        className="px-4 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider"
+                      >
                         Subtotal
                       </th>
-                      <th className="px-4 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider">
+                      <th
+                        data-testid="order-detail-page_line-items-table-header-total"
+                        className="px-4 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider"
+                      >
                         Total
                       </th>
                     </tr>
@@ -205,49 +233,92 @@ export function OrderDetailPage() {
                       <tr
                         key={item.id}
                         className="hover:bg-gray-50 transition-colors"
+                        data-testid="order-detail-page_line-items-table-row"
                       >
-                        <td className="px-4 py-3">
-                          <div className="text-dark-900">
-                            {item.description}
-                          </div>
+                        <td
+                          data-testid="order-detail-page_line-items-table-cell-item"
+                          className="px-4 py-3"
+                        >
+                          {item.productId ? (
+                            <Link
+                              to={`/products/${item.productId}`}
+                              className="text-primary-600 hover:text-primary-800 hover:underline"
+                              data-testid="order-detail-page_line-items-table-cell-item-description"
+                            >
+                              {item.description}
+                            </Link>
+                          ) : (
+                            <div
+                              className="text-dark-900"
+                              data-testid="order-detail-page_line-items-table-cell-item-description"
+                            >
+                              {item.description}
+                            </div>
+                          )}
                           {item.price && (
-                            <div className="text-xs text-dark-500 font-mono mt-0.5">
+                            <div
+                              className="text-xs text-dark-500 font-mono mt-0.5"
+                              data-testid="order-detail-page_line-items-table-cell-item-price-id"
+                            >
                               {item.price.id}
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-3 text-right text-dark-700">
+                        <td
+                          data-testid="order-detail-page_line-items-table-cell-qty"
+                          className="px-4 py-3 text-right text-dark-700"
+                        >
                           {item.quantity || 1}
                         </td>
-                        <td className="px-4 py-3 text-right text-dark-700">
+                        <td
+                          data-testid="order-detail-page_line-items-table-cell-subtotal"
+                          className="px-4 py-3 text-right text-dark-700"
+                        >
                           {formatPrice(item.amountSubtotal)}
                         </td>
-                        <td className="px-4 py-3 text-right text-dark-900 font-medium">
+                        <td
+                          data-testid="order-detail-page_line-items-table-cell-total"
+                          className="px-4 py-3 text-right text-dark-900 font-medium"
+                        >
                           {formatPrice(item.amountTotal)}
                         </td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot className="bg-gray-50 border-t-2 border-gray-200">
-                    <tr>
+                    <tr
+                      data-testid="order-detail-page_line-items-table-footer-subtotal"
+                      className="text-right"
+                    >
                       <td
                         colSpan={3}
                         className="px-4 py-3 text-right text-sm font-medium text-dark-600"
+                        data-testid="order-detail-page_line-items-table-footer-subtotal-label"
                       >
                         Subtotal
                       </td>
-                      <td className="px-4 py-3 text-right text-dark-900 font-medium">
+                      <td
+                        className="px-4 py-3 text-right text-dark-900 font-medium"
+                        data-testid="order-detail-page_line-items-table-footer-subtotal-value"
+                      >
                         {formatPrice(order.amountSubtotal)}
                       </td>
                     </tr>
-                    <tr>
+                    <tr
+                      data-testid="order-detail-page_line-items-table-footer-total"
+                      className="text-right"
+                    >
                       <td
                         colSpan={3}
                         className="px-4 py-3 text-right text-sm font-medium text-dark-600"
+                        data-testid="order-detail-page_line-items-table-footer-total-label"
                       >
                         Total
                       </td>
-                      <td className="px-4 py-3 text-right text-dark-900 font-bold text-lg">
+                      <td
+                        className="px-4 py-3 text-right text-dark-900 font-bold text-lg"
+                        data-testid="order-detail-page_line-items-table-footer-total-value"
+                      >
                         {formatPrice(order.amountTotal)}
                       </td>
                     </tr>
@@ -428,8 +499,8 @@ export function OrderDetailPage() {
             >
               <div className="flex items-center justify-between">
                 <span className="text-sm text-dark-500">Order ID</span>
-                <p className="text-dark-700 font-mono text-xs break-all">
-                  {order.id}
+                <p className="text-dark-700 font-mono text-xs" title={order.id}>
+                  {truncateOrderId(order.id)}
                 </p>
               </div>
               <div className="flex items-center justify-between">
@@ -545,6 +616,7 @@ function OrderEditDialog({
       }
 
       await dispatch(updateOrder(payload)).unwrap();
+      window.dispatchEvent(new CustomEvent(ORDER_STATUS_CHANGED_EVENT));
       onClose();
     } catch {
       setError("Failed to update order");
@@ -580,7 +652,7 @@ function OrderEditDialog({
         <div className="px-6 py-4 space-y-6">
           <p className="text-sm text-dark-500">
             Update details for order{" "}
-            <span className="font-mono">{order.id.slice(0, 20)}...</span>
+            <span className="font-mono">{truncateOrderId(order.id)}</span>
           </p>
           {error && (
             <div
