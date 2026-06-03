@@ -2,7 +2,15 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { ArrowLeft, Edit, ExternalLink, AlertCircle } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit,
+  ExternalLink,
+  AlertCircle,
+  Eye,
+  X,
+  Copy,
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import type { RootState, AppDispatch } from "../store";
 import {
@@ -41,6 +49,8 @@ export function OrderDetailPage() {
     error,
   } = useSelector((state: RootState) => state.orders);
   const fetchedId = useRef<string | undefined>(undefined);
+  const [showOrderIdPopup, setShowOrderIdPopup] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<"idle" | "copied">("idle");
 
   const isEditMode = location.pathname.endsWith("/edit");
 
@@ -54,6 +64,15 @@ export function OrderDetailPage() {
     };
   }, [dispatch, id]);
 
+  useEffect(() => {
+    if (!showOrderIdPopup) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowOrderIdPopup(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showOrderIdPopup]);
+
   const handleEdit = () => {
     navigate(`/orders/${id}/edit`, {
       replace: true,
@@ -66,6 +85,15 @@ export function OrderDetailPage() {
       replace: true,
       state: { from: getBackUrl(location) },
     });
+  };
+
+  const handleCopyOrderId = async () => {
+    try {
+      await navigator.clipboard.writeText(order?.id || "");
+      setCopyStatus("copied");
+    } catch {
+      // Clipboard API not available
+    }
   };
 
   if (error) {
@@ -117,12 +145,24 @@ export function OrderDetailPage() {
             <ArrowLeft className="w-5 h-5 text-dark-600" />
           </button>
           <div>
-            <h2
+            <div
+              className="flex items-center gap-2"
               data-testid="order-detail-page_id"
-              className="font-heading text-3xl font-bold text-dark-900 font-mono"
             >
-              {truncateOrderId(order.id)}
-            </h2>
+              <h2 className="font-heading text-3xl font-bold text-dark-900 font-mono">
+                {truncateOrderId(order.id)}
+              </h2>
+              <button
+                onClick={() => {
+                  setShowOrderIdPopup(true);
+                  setCopyStatus("idle");
+                }}
+                aria-label="Show full order ID"
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Eye className="w-5 h-5 text-dark-400" />
+              </button>
+            </div>
             <p className="text-sm text-dark-500 mt-1">
               {formatDate(order.created)}
             </p>
@@ -497,33 +537,101 @@ export function OrderDetailPage() {
               data-testid="order-detail-page_details_content"
               className="space-y-3"
             >
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-dark-500">Order ID</span>
-                <p className="text-dark-700 font-mono text-xs" title={order.id}>
-                  {truncateOrderId(order.id)}
-                </p>
+              <div
+                data-testid="order-detail-page_details_order-id"
+                className="flex items-center justify-between"
+              >
+                <span
+                  data-testid="order-detail-page_details_order-id_label"
+                  className="text-sm text-dark-500"
+                >
+                  Order ID
+                </span>
+                <div className="flex items-center gap-1.5">
+                  <p
+                    data-testid="order-detail-page_details_order-id_value"
+                    className="text-dark-700 font-mono text-xs"
+                    title={order.id}
+                  >
+                    {truncateOrderId(order.id)}
+                  </p>
+                  <button
+                    onClick={() => {
+                      setShowOrderIdPopup(true);
+                      setCopyStatus("idle");
+                    }}
+                    aria-label="Show full order ID"
+                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5 text-dark-400" />
+                  </button>
+                </div>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-dark-500">Subtotal</span>
-                <p className="text-dark-700 font-medium">
+              <div
+                data-testid="order-detail-page_details_subtotal"
+                className="flex items-center justify-between"
+              >
+                <span
+                  data-testid="order-detail-page_details_subtotal_label"
+                  className="text-sm text-dark-500"
+                >
+                  Subtotal
+                </span>
+                <p
+                  data-testid="order-detail-page_details_subtotal_value"
+                  className="text-dark-700 font-medium"
+                >
                   {formatPrice(order.amountSubtotal)}
                 </p>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-dark-500">Total</span>
-                <p className="text-dark-900 font-bold text-lg">
+              <div
+                data-testid="order-detail-page_details_total"
+                className="flex items-center justify-between"
+              >
+                <span
+                  data-testid="order-detail-page_details_total_label"
+                  className="text-sm text-dark-500"
+                >
+                  Total
+                </span>
+                <p
+                  data-testid="order-detail-page_details_total_value"
+                  className="text-dark-900 font-bold text-lg"
+                >
                   {formatPrice(order.amountTotal)}
                 </p>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-dark-500">Currency</span>
-                <p className="text-dark-700 font-medium uppercase">
+              <div
+                data-testid="order-detail-page_details_currency"
+                className="flex items-center justify-between"
+              >
+                <span
+                  data-testid="order-detail-page_details_currency_label"
+                  className="text-sm text-dark-500"
+                >
+                  Currency
+                </span>
+                <p
+                  data-testid="order-detail-page_details_currency_value"
+                  className="text-dark-700 font-medium uppercase"
+                >
                   {order.currency}
                 </p>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-dark-500">Created</span>
-                <p className="text-dark-700 text-sm">
+              <div
+                data-testid="order-detail-page_details_created"
+                className="flex items-center justify-between"
+              >
+                <span
+                  data-testid="order-detail-page_details_created_label"
+                  className="text-sm text-dark-500"
+                >
+                  Created
+                </span>
+                <p
+                  data-testid="order-detail-page_details_created_value"
+                  className="text-dark-700 text-sm"
+                >
                   {formatDate(order.created)}
                 </p>
               </div>
@@ -531,6 +639,60 @@ export function OrderDetailPage() {
           </div>
         </div>
       </div>
+
+      {showOrderIdPopup && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="order-id-popup-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          data-testid="order-detail-page_order-id-popup"
+          onClick={() => setShowOrderIdPopup(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3
+                id="order-id-popup-title"
+                className="font-heading text-lg font-semibold text-dark-900"
+              >
+                Full Order ID
+              </h3>
+              <button
+                onClick={() => setShowOrderIdPopup(false)}
+                aria-label="Close"
+                autoFocus
+                className="p-1 hover:bg-gray-100 rounded"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <div className="flex items-stretch gap-2">
+              <p className="flex-1 text-dark-700 font-mono text-sm break-all bg-gray-50 rounded-lg p-3 select-all">
+                {order.id}
+              </p>
+              <button
+                onClick={handleCopyOrderId}
+                aria-label={
+                  copyStatus === "copied" ? "Copied" : "Copy order ID"
+                }
+                data-testid="order-detail-page_order-id-popup_copy-btn"
+                className="px-3 py-2 bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors shrink-0"
+              >
+                {copyStatus === "copied" ? (
+                  <span className="text-green-600 text-sm font-medium whitespace-nowrap">
+                    Copied!
+                  </span>
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
