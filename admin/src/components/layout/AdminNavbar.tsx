@@ -32,7 +32,8 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
 
   const fetchNotifications = useCallback(() => {
     api.api
-      .getOrders({ order_status: "new", limit: 50 })
+      // .getOrders({ order_status: "new", limit: 50 })
+      .getOrders({ order_status: "new", limit: 50, payment_status: "paid" })
       .then((result) => {
         const sorted = [...result.orders].sort((a, b) => b.created - a.created);
         setNotifications(sorted);
@@ -41,7 +42,24 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   }, []);
 
   useEffect(() => {
-    fetchNotifications();
+    const apiBaseUrl = import.meta.env.VITE_API_URL || "/api";
+    const eventSource = new EventSource(`${apiBaseUrl}/notifications/stream`);
+
+    eventSource.addEventListener("connected", () => {
+      fetchNotifications();
+    });
+
+    eventSource.addEventListener("new-order", () => {
+      fetchNotifications();
+    });
+
+    eventSource.addEventListener("error", () => {
+      // EventSource will auto-reconnect
+    });
+
+    return () => {
+      eventSource.close();
+    };
   }, [fetchNotifications]);
 
   useEffect(() => {

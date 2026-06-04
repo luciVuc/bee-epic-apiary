@@ -41,7 +41,24 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
     }
   }, [dispatch]);
 
+  const hasConfirmed = useRef(false);
   const sessionId = searchParams.get("session_id");
+
+  useEffect(() => {
+    if (sessionId && !hasConfirmed.current) {
+      hasConfirmed.current = true;
+      const apiBaseUrl =
+        import.meta.env.VITE_API_URL || "http://localhost:8787";
+      fetch(`${apiBaseUrl}/orders/confirm`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      }).catch(() => {
+        // fire-and-forget — non-critical
+      });
+      window.history.replaceState(null, "", window.location.pathname);
+    }
+  }, [sessionId]);
 
   return (
     <div
