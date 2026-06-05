@@ -34,7 +34,7 @@ export function NotificationsPanel({
         <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h2
             id="notifications-panel_title"
-            className="text-lg font-semibold text-dark-900"
+            className="text-lg font-semibold text-dark-900 py-1"
             data-testid="notifications-panel_title"
           >
             Notifications

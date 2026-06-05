@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { Plus, Minus, Trash2 } from "lucide-react";
+import { Link } from "react-router-dom";
 import { useCart } from "../../hooks/useCart";
 import { formatPrice } from "../../utils/formatters";
 import type { ICartItem } from "../../types";
@@ -21,15 +22,29 @@ export const CartItem = ({ item }: ICartItemProps) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
     >
-      <div className="w-16 h-16 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0">
-        <span className="text-2xl" aria-hidden="true">
-          🍯
-        </span>
+      <div className="w-16 h-16 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+        {product.imageUrls && product.imageUrls[0] ? (
+          <img
+            src={product.imageUrls[0]}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-2xl" aria-hidden="true">
+            🍯
+          </span>
+        )}
       </div>
 
       <div className="flex-1 min-w-0">
         <h4 className="font-heading text-sm font-semibold text-dark-900 truncate">
-          {product.name}
+          <Link
+            to={`/products/${product.slug}`}
+            data-testid={`cart-item_${product.id}_name-link`}
+            className="hover:text-primary-600 transition-colors"
+          >
+            {product.name}
+          </Link>
         </h4>
         <p className="font-body text-xs text-dark-500">{product.weight}</p>
       </div>
