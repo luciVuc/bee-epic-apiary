@@ -17,6 +17,9 @@ export const SETTINGS_STORAGE_KEY = "beeEpicAdminSettings";
 /** Custom event dispatched when an order's internal status (new/pending/fulfilled) is updated */
 export const ORDER_STATUS_CHANGED_EVENT = "order-status-changed";
 
+/** Custom event dispatched when a new order notification is received via SSE */
+export const NEW_ORDER_EVENT = "new-order-received";
+
 /** Default product categories used when no remote categories are loaded */
 export const CATEGORIES = [
   { id: "HONEY", label: "Honey" },

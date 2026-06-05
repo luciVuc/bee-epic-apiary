@@ -5,7 +5,10 @@ import { Bell, User, Menu } from "lucide-react";
 import * as api from "../../utils/api";
 import type { ISiteContent } from "../../types/settings";
 import type { IOrder } from "../../types/order";
-import { ORDER_STATUS_CHANGED_EVENT } from "../../utils/constants";
+import {
+  ORDER_STATUS_CHANGED_EVENT,
+  NEW_ORDER_EVENT,
+} from "../../utils/constants";
 import { NotificationsPanel } from "../notifications/NotificationsPanel";
 
 export interface IAdminNavbarProps {
@@ -51,6 +54,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
 
     eventSource.addEventListener("new-order", () => {
       fetchNotifications();
+      window.dispatchEvent(new CustomEvent(NEW_ORDER_EVENT));
     });
 
     eventSource.addEventListener("error", () => {

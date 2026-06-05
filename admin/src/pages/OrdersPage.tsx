@@ -19,6 +19,7 @@ import {
 import type { RootState, AppDispatch } from "../store";
 import { fetchOrders } from "../store/ordersSlice";
 import { Spinner } from "../components/shared/Spinner";
+import { NEW_ORDER_EVENT } from "../utils/constants";
 import {
   orderStatusBadge,
   orderStatusLabel,
@@ -158,6 +159,20 @@ export function OrdersPage() {
     selectedPaymentStatus,
     selectedOrderStatus,
     dispatch,
+  ]);
+
+  useEffect(() => {
+    const handleNewOrder = () => {
+      dispatch(fetchOrders(buildFetchParams(true)));
+    };
+    window.addEventListener(NEW_ORDER_EVENT, handleNewOrder);
+    return () => window.removeEventListener(NEW_ORDER_EVENT, handleNewOrder);
+  }, [
+    dispatch,
+    searchTerm,
+    selectedStatus,
+    selectedPaymentStatus,
+    selectedOrderStatus,
   ]);
 
   const saveScroll = useCallback(() => {
@@ -455,6 +470,12 @@ export function OrdersPage() {
                   className="text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                 >
                   <th
+                    data-testid="orders-page_table-header-icon"
+                    className="px-2 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider w-10"
+                  >
+                    <span className="sr-only">Status icon</span>
+                  </th>
+                  <th
                     data-testid="orders-page_table-header-order"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
@@ -511,6 +532,38 @@ export function OrdersPage() {
                     className="hover:bg-gray-50 transition-colors"
                     data-testid="orders-page_table-row"
                   >
+                    <td
+                      data-testid="orders-page_table-cell-icon"
+                      className="px-2 py-4 whitespace-nowrap"
+                    >
+                      <span className="relative inline-flex items-center justify-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="18"
+                          height="18"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-dark-400"
+                          aria-hidden="true"
+                        >
+                          <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                          <line x1="3" y1="6" x2="21" y2="6" />
+                          <path d="M16 10a4 4 0 0 1-8 0" />
+                        </svg>
+                        {order.orderStatus === "new" &&
+                          order.paymentStatus === "paid" &&
+                          order.status === "complete" && (
+                            <span
+                              className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-red-500 rounded-full"
+                              aria-hidden="true"
+                            />
+                          )}
+                      </span>
+                    </td>
                     <td
                       data-testid="orders-page_table-cell-order"
                       className="px-6 py-4 whitespace-nowrap"
