@@ -49,6 +49,8 @@ const mockLineItems: IOrderLineItem[] = [
     amountSubtotal: 1000,
     currency: "usd",
     quantity: 1,
+    productId: null,
+    imageUrls: [],
     price: { id: "price_1", unitAmount: 1000, currency: "usd" },
   },
   {
@@ -58,6 +60,8 @@ const mockLineItems: IOrderLineItem[] = [
     amountSubtotal: 1000,
     currency: "usd",
     quantity: 2,
+    productId: null,
+    imageUrls: [],
     price: { id: "price_2", unitAmount: 500, currency: "usd" },
   },
 ];

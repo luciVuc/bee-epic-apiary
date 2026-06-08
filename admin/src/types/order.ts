@@ -52,6 +52,7 @@ export interface IOrderLineItem {
   currency: string;
   quantity: number | null;
   productId: string | null;
+  imageUrls: string[];
   price: {
     id: string;
     unitAmount: number | null;

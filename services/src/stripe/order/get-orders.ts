@@ -86,7 +86,7 @@ export async function handleGetOrders(stripe: Stripe, request: Request, env: Env
 				expand: ['customer', 'payment_intent'],
 			};
 			const session = await stripe.checkout.sessions.retrieve(orderId, retrieveParams);
-			const lineItems = await stripe.checkout.sessions.listLineItems(orderId, { limit: 100 });
+			const lineItems = await stripe.checkout.sessions.listLineItems(orderId, { limit: 100, expand: ['data.price.product'] });
 			return jsonResponse({ session, line_items: lineItems.data }, 200, origin, env);
 		}
 

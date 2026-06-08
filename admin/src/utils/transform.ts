@@ -194,6 +194,16 @@ export function transformStripeLineItem(
   item: Record<string, unknown>,
 ): IOrderLineItem {
   const price = item.price as Record<string, unknown> | null;
+  const product =
+    price && typeof price.product === "object" && price.product !== null
+      ? (price.product as Record<string, unknown>)
+      : null;
+
+  const imageUrls: string[] =
+    product?.images && Array.isArray(product.images)
+      ? (product.images as string[])
+      : [];
+
   return {
     id: (item.id as string) || "",
     description: (item.description as string) || "",
@@ -201,7 +211,12 @@ export function transformStripeLineItem(
     amountSubtotal: (item.amount_subtotal as number) || 0,
     currency: (item.currency as string) || "usd",
     quantity: (item.quantity as number) || null,
-    productId: price ? (price.product as string) || null : null,
+    productId: product
+      ? (product.id as string)
+      : price
+        ? (price.product as string) || null
+        : null,
+    imageUrls,
     price: price
       ? {
           id: (price.id as string) || "",
