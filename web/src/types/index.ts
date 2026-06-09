@@ -67,6 +67,7 @@ export interface INavLink {
 
 export interface ISiteContent {
   businessName: string;
+  logo: string;
   tagline: string;
   heroHeadline: string;
   heroSubheadline: string;

@@ -28,6 +28,7 @@ export interface ISocialLinks {
 /** Full site content definition used by the public web app */
 export interface ISiteContent {
   businessName: string;
+  logo: string;
   tagline: string;
   heroHeadline: string;
   heroSubheadline: string;

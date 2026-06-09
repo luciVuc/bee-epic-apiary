@@ -43,6 +43,12 @@ export function SiteContentTab({
             onChange={(v) => updateSite("businessName", v)}
           />
           <TextField
+            label="Logo URL"
+            value={siteContent.logo}
+            onChange={(v) => updateSite("logo", v)}
+            placeholder="https://example.com/logo.png"
+          />
+          <TextField
             label="Tagline"
             value={siteContent.tagline}
             onChange={(v) => updateSite("tagline", v)}

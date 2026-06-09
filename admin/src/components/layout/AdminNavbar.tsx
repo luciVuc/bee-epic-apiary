@@ -8,6 +8,7 @@ import type { IOrder } from "../../types/order";
 import {
   ORDER_STATUS_CHANGED_EVENT,
   NEW_ORDER_EVENT,
+  DEFAULT_LOGO,
 } from "../../utils/constants";
 import { NotificationsPanel } from "../notifications/NotificationsPanel";
 
@@ -19,6 +20,7 @@ export interface IAdminNavbarProps {
 export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   const navigate = useNavigate();
   const [businessName, setBusinessName] = useState<string>("");
+  const [logo, setLogo] = useState<string>("");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [notifications, setNotifications] = useState<IOrder[]>([]);
 
@@ -28,6 +30,9 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
       .then((site) => {
         if (site?.businessName) {
           setBusinessName(site.businessName);
+        }
+        if (site?.logo) {
+          setLogo(site.logo);
         }
       })
       .catch(() => {});
@@ -100,40 +105,57 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
           data-testid="admin-navbar_content"
           className="flex items-center justify-between"
         >
-          {/* Mobile menu button */}
-          <button
-            onClick={onMenuClick}
-            aria-label="Toggle navigation menu"
-            title="Toggle navigation menu"
-            className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
-            data-testid="admin-navbar_menu-btn"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
           <div
-            data-testid="admin-navbar_title-mobile"
-            className="lg:hidden"
-            aria-hidden="true"
+            data-testid="admin-navbar_branding"
+            className="flex items-center gap-4"
           >
-            <h1
-              className="font-heading text-xl font-bold text-dark-900"
-              data-testid="admin-navbar_title"
+            {/* Mobile menu button */}
+            <button
+              onClick={onMenuClick}
+              aria-label="Toggle navigation menu"
+              title="Toggle navigation menu"
+              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              data-testid="admin-navbar_menu-btn"
             >
-              {title}
-            </h1>
-          </div>
+              <Menu className="w-5 h-5" />
+            </button>
 
-          <div
-            data-testid="admin-navbar_title-desktop"
-            className="hidden lg:block"
-          >
-            <h1
-              className="font-heading text-2xl font-bold text-dark-900"
-              data-testid="admin-navbar_title"
+            <div
+              data-testid="admin-navbar_title-mobile"
+              className="md:hidden flex items-center self-start gap-2"
+              aria-hidden="true"
             >
-              {title}
-            </h1>
+              <img
+                data-testid="admin-navbar_logo"
+                src={logo || DEFAULT_LOGO}
+                alt={`${businessName} logo`}
+                className="h-7 w-auto"
+              />
+              <h1
+                className="font-heading text-xl font-bold text-dark-900 hidden sm:block"
+                data-testid="admin-navbar_title"
+              >
+                {title}
+              </h1>
+            </div>
+
+            <div
+              data-testid="admin-navbar_title-desktop"
+              className="hidden md:flex items-center gap-3"
+            >
+              <img
+                data-testid="admin-navbar_logo"
+                src={logo || DEFAULT_LOGO}
+                alt={`${businessName} logo`}
+                className="h-8 w-auto"
+              />
+              <h1
+                className="font-heading text-2xl font-bold text-dark-900"
+                data-testid="admin-navbar_title"
+              >
+                {title}
+              </h1>
+            </div>
           </div>
 
           <div

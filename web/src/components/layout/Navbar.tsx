@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ShoppingCart, Menu, X } from "lucide-react";
 import { useCart } from "../../hooks/useCart";
 import type { ISiteContent } from "../../types";
+import { DEFAULT_LOGO } from "../../utils/constants";
 
 interface INavbarProps {
   content: ISiteContent;
@@ -55,10 +56,16 @@ export const Navbar = ({ content }: INavbarProps) => {
             aria-label={`${content.businessName} - Home`}
             title={`${content.businessName} - Home`}
           >
-            <span className="text-3xl" aria-hidden="true">
-              🐝
-            </span>
-            <span className="font-heading text-xl font-bold text-dark-900 hidden sm:block">
+            <img
+              data-testid="navbar_logo"
+              src={content.logo || DEFAULT_LOGO}
+              alt={`${content.businessName} logo`}
+              className="h-8 w-auto"
+            />
+            <span
+              data-testid="navbar_business-name"
+              className="font-heading text-xl font-bold text-dark-900 hidden sm:block"
+            >
               {content.businessName}
             </span>
           </Link>
