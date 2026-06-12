@@ -1,5 +1,5 @@
 /** Dashboard overview page with stat cards, category breakdown, quick actions, and recent products */
-import { useEffect, useMemo, type ComponentType } from "react";
+import { useEffect, useMemo, useCallback, type ComponentType } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -7,6 +7,7 @@ import {
   TrendingUp,
   Star,
   AlertCircle,
+  ShoppingCart,
   Plus,
   ArrowRight,
 } from "lucide-react";
@@ -18,6 +19,7 @@ import { EProductCategory } from "../types";
 import {
   DEFAULT_PRODUCT_THUMBNAIL,
   DEFAULT_CATEGORIES,
+  NEW_ORDER_EVENT,
 } from "../utils/constants";
 import { Spinner } from "../components/shared/Spinner";
 import type { ICategory } from "../types/settings";
@@ -29,6 +31,14 @@ export function DashboardPage() {
     (state: RootState) => state.products,
   );
   const [categories, setCategories] = useState<ICategory[]>([]);
+  const [newOrdersCount, setNewOrdersCount] = useState(0);
+
+  const fetchNewOrdersCount = useCallback(() => {
+    api.api
+      .getOrders({ order_status: "new", payment_status: "paid", limit: 1 })
+      .then((result) => setNewOrdersCount(result.totalCount))
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     dispatch(fetchProducts({ limit: 100 }));
@@ -40,6 +50,13 @@ export function DashboardPage() {
       })
       .catch(() => {});
   }, [dispatch]);
+
+  useEffect(() => {
+    fetchNewOrdersCount();
+    const handleNewOrder = () => fetchNewOrdersCount();
+    window.addEventListener(NEW_ORDER_EVENT, handleNewOrder);
+    return () => window.removeEventListener(NEW_ORDER_EVENT, handleNewOrder);
+  }, [fetchNewOrdersCount]);
 
   const stats: IDashboardStats = useMemo(() => {
     const honeyProducts = products.filter(
@@ -92,6 +109,12 @@ export function DashboardPage() {
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <StatCard
+          title="New Orders"
+          value={newOrdersCount}
+          icon={ShoppingCart}
+          color="red"
+        />
         <StatCard
           title="Total Active Products"
           value={stats.totalProducts}
@@ -291,6 +314,7 @@ function StatCard({
     green: "bg-green-50 text-green-600",
     yellow: "bg-yellow-50 text-yellow-600",
     purple: "bg-purple-50 text-purple-600",
+    red: "bg-red-50 text-red-600",
   };
 
   return (

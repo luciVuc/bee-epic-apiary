@@ -10,10 +10,12 @@ import type { IProduct } from "../../types";
 import { EProductCategory } from "../../types";
 
 const mockSettings = vi.fn();
+const mockGetOrders = vi.fn();
 
 vi.mock("../../utils/api", () => ({
   api: {
     getSettings: (...args: any[]) => mockSettings(...args),
+    getOrders: (...args: any[]) => mockGetOrders(...args),
   },
 }));
 
@@ -102,6 +104,12 @@ describe("DashboardPage", () => {
       { id: "HONEY", label: "Honey" },
       { id: "BEESWAX", label: "Beeswax" },
     ]);
+    mockGetOrders.mockResolvedValue({
+      orders: [],
+      hasMore: false,
+      lastId: null,
+      totalCount: 0,
+    });
   });
 
   it("renders loading state initially", () => {
@@ -158,6 +166,7 @@ describe("DashboardPage", () => {
     });
     renderWithProviders(<DashboardPage />, { store });
 
+    expect(await screen.findByText("New Orders")).toBeInTheDocument();
     expect(
       await screen.findByText("Total Active Products"),
     ).toBeInTheDocument();
