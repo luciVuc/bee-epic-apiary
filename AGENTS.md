@@ -88,10 +88,11 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 - Stripe API version: `2026-04-22.dahlia` (in `withStripeHandler.ts`)
 - Rate limiting: KV-based, 100 req/min per IP
 - API key auth for mutating product endpoints if `API_SECRET_KEY` set
-- **Routes**: `POST /checkout`, `POST /prices`, `GET|POST /products`, `GET /products/count`, `GET|PUT|DELETE /products/:id`, `GET|PUT /settings/:type` (site\|process\|testimonials\|categories)
+- **Routes**: `POST /checkout`, `POST /contact`, `POST /prices`, `GET|POST /products`, `GET /products/count`, `GET|PUT|DELETE /products/:id`, `GET|POST /orders/confirm`, `GET|PUT /orders/:id`, `GET /orders`, `GET /notifications/stream`, `GET|PUT /settings/:type` (site\|process\|testimonials\|categories)
 - After changing `wrangler.jsonc` bindings: `npm run services:cf-typegen`
 - KV namespaces: `CONTENT_KV` (settings storage), `RATE_LIMIT_KV`
-- Env vars: `STRIPE_SECRET_KEY`, `ALLOWED_ORIGINS`, `API_SECRET_KEY` (Wrangler secrets); `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW` (wrangler.jsonc vars)
+- Env vars: `STRIPE_SECRET_KEY`, `ALLOWED_ORIGINS`, `API_SECRET_KEY` (Wrangler secrets); `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`, `ADMIN_BASE_URL` (wrangler.jsonc vars)
+- **Cloudflare Email Service**: Uses `send_email` binding (`EMAIL`) for transactional emails — contact form submissions and order notifications. `from` domain must be onboarded via `npx wrangler email sending enable yourdomain.com`.
 
 ### Admin Specifics
 
@@ -106,6 +107,7 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 - Uses **BrowserRouter** (not HashRouter despite outdated README)
 - Data fetched from services API at mount: `GET /settings/site`, `/settings/process`, `/settings/testimonials`, `/products?expand[]=data.default_price`
 - Checkout: `POST /checkout` on services worker (not client-side Stripe redirect)
+- Contact form: `POST /contact` on services worker (via Cloudflare Email Service — no Formspree dependency)
 - Cart persisted to localStorage under key `goldenHiveCart`
 - Legacy JSON in `src/data/` no longer imported
 - Has `vitest` in devDependencies but **no vitest config or test files** — treat as untested

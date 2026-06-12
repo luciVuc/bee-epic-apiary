@@ -104,5 +104,4 @@ export interface ISiteContent {
   phone: string;
   location: string;
   socialLinks: ISocialLinks;
-  formspreeFormId: string;
 }

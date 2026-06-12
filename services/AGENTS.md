@@ -35,13 +35,18 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 
 ### Routing
 
-- **`src/router.ts`**: Manual route matching for `/checkout`, `/products`, and `/products/:id` endpoints. Handles method validation, CORS preflight, and authentication for protected routes.
+- **`src/router.ts`**: Manual route matching for `/checkout`, `/contact`, `/products`, `/orders`, `/settings/:type`, and `/notifications/stream` endpoints. Handles method validation, CORS preflight, and authentication for protected routes.
+
+### Contact
+
+- **`src/contact/contact-handler.ts`**: Handles `POST /contact` — receives contact form submissions and sends them as emails via Cloudflare Email Service (`env.EMAIL.send()`). Includes rate limiting, `_gotcha` honeypot spam protection, and reads the admin email from `CONTENT_KV`.
 
 ### Stripe Integration
 
 - **`src/stripe/`**: Contains all Stripe-related handlers:
   - `checkout/`: Stripe Checkout session creation (handles one-time and subscription items)
   - `product/`: Product CRUD operations (create, read, update, delete)
+  - `order/`: Order listing, detail, update, and confirmation (including admin email notification via Cloudflare Email Service)
 
 ### Utilities
 
@@ -60,6 +65,8 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
   ```bash
   npm run cf-typegen
   ```
+- **Email Service**: Uses `send_email` binding named `EMAIL` for transactional emails (contact form submissions + order notifications).
+  - `from` domain must be onboarded: `npx wrangler email sending enable yourdomain.com`
 
 ## Testing
 
@@ -86,10 +93,11 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 
 ### Optional
 
-| Variable         | Description                                                                                 | Default                                  |
-| ---------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------- |
-| `API_SECRET_KEY` | API key for authenticating product CRUD operations. If not set, authentication is disabled. | None (dev mode)                          |
-| `RATE_LIMIT_KV`  | Cloudflare KV namespace binding for rate limiting                                           | None (rate limiting disabled if not set) |
+| Variable         | Description                                                                                                        | Default                                  |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| `API_SECRET_KEY` | API key for authenticating product CRUD operations. If not set, authentication is disabled.                        | None (dev mode)                          |
+| `RATE_LIMIT_KV`  | Cloudflare KV namespace binding for rate limiting                                                                  | None (rate limiting disabled if not set) |
+| `ADMIN_BASE_URL` | Base URL of the admin dashboard (e.g., `https://admin.beeepicapiary.com`). Used in order notification email links. | `""` (no link included)                  |
 
 ### Local Development
 
@@ -119,6 +127,7 @@ API_SECRET_KEY=dev-api-key-change-me
   Copy the namespace ID and replace the placeholder in `wrangler.jsonc`.
 - **Stripe API Version**: The worker uses Stripe API version `2026-04-22.dahlia` (configured in `withStripeHandler.ts`). Update this when upgrading the Stripe SDK.
 - **Compatibility Date**: Set to `2026-03-10` to match the installed Cloudflare Workers Runtime. Update after upgrading Wrangler.
+- **Email Service Domain**: The `send_email` binding requires the `from` domain to be onboarded. Run `npx wrangler email sending enable yourdomain.com` before sending emails. The contact handler uses `contact@<domain>` and order notification uses `noreply@<domain>` where `<domain>` is extracted from the admin email in site settings.
 - **CORS Headers**: All responses include CORS headers if the request origin is allowed. Preflight requests are handled automatically.
 
 ## Security

@@ -6,6 +6,7 @@ import { Button } from "../ui/Button";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
 import type { ISiteContent } from "../../types";
 import { formatPhoneNumber } from "../../utils/formatters";
+import { submitContactForm } from "../../utils/api";
 
 interface IContactSectionProps {
   content: ISiteContent;
@@ -49,30 +50,18 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const formId = content.formspreeFormId;
-    if (!formId || formId === "REPLACE_ME") {
-      setStatus("error");
-      setErrorMessage(
-        "Formspree is not configured. Please set the Formspree Form ID in the admin settings.",
-      );
-      return;
-    }
-
     setStatus("loading");
     setErrorMessage("");
 
-    try {
-      const response = await fetch(`https://formspree.io/f/${formId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+    const gotchaInput = document.querySelector<HTMLInputElement>(
+      'input[name="_gotcha"]',
+    );
 
-      if (!response.ok) {
-        throw new Error("Failed to send message");
-      }
+    try {
+      await submitContactForm({
+        ...formData,
+        _gotcha: gotchaInput?.value || "",
+      });
 
       setStatus("success");
       setFormData({ name: "", email: "", subject: "general", message: "" });

@@ -5,6 +5,43 @@ interface IConfirmOrderBody {
 	sessionId: string;
 }
 
+async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Checkout.Session, env: Env): Promise<void> {
+	try {
+		const siteContentStr = await env.CONTENT_KV.get('site');
+		if (!siteContentStr) return;
+
+		const siteContent = JSON.parse(siteContentStr) as { email?: string; businessName?: string };
+		const adminEmail = siteContent.email;
+		const businessName = siteContent.businessName || 'Bee Epic Apiary';
+		if (!adminEmail) return;
+
+		const domain = adminEmail.split('@')[1];
+		if (!domain) return;
+
+		const customerEmail = session.customer_details?.email || 'N/A';
+		const customerName = session.customer_details?.name || 'N/A';
+		const amountTotal = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : 'N/A';
+		const adminBaseUrl = env.ADMIN_BASE_URL || '';
+		const orderLink = adminBaseUrl ? `${adminBaseUrl}/orders/${sessionId}` : '';
+
+		await env.EMAIL.send({
+			to: adminEmail,
+			from: { email: `noreply@${domain}`, name: businessName },
+			subject: `New Order: ${sessionId.slice(-8)}`,
+			text: `A new order has been placed.\n\nSession ID: ${sessionId}\nCustomer: ${customerName} (${customerEmail})\nTotal: ${amountTotal}${orderLink ? `\n\nView in admin: ${orderLink}` : ''}`,
+			html: `<p>A new order has been placed.</p>
+<table>
+<tr><td><strong>Session ID:</strong></td><td>${sessionId}</td></tr>
+<tr><td><strong>Customer:</strong></td><td>${customerName} (${customerEmail})</td></tr>
+<tr><td><strong>Total:</strong></td><td>${amountTotal}</td></tr>
+</table>
+${orderLink ? `<p><a href="${orderLink}">View in Admin Dashboard</a></p>` : ''}`,
+		});
+	} catch (error) {
+		console.error('Failed to send order notification email:', error);
+	}
+}
+
 export async function handleConfirmOrder(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
 		const body = (await request.json()) as IConfirmOrderBody;
@@ -28,6 +65,8 @@ export async function handleConfirmOrder(stripe: Stripe, request: Request, env: 
 		};
 
 		await env.CONTENT_KV.put(`notifications:${body.sessionId}`, JSON.stringify(notification), { expirationTtl: 86400 });
+
+		await sendOrderNotificationEmail(body.sessionId, session, env);
 
 		return jsonResponse({ success: true }, 200, origin, env);
 	} catch (error: unknown) {

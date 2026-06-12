@@ -252,7 +252,7 @@ Navigate to `http://localhost:5173/contact`
 **Assertions**:
 
 - Form fields present: name, email, message
-- Note: Formspree ID is `REPLACE_ME` in `.env`, so submit will 404. Verify form markup renders correctly.
+- Note: Contact form submits to `POST /contact` on the services worker. Verify form markup renders correctly.
 
 ---
 

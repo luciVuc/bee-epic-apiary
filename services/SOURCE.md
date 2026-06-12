@@ -24,10 +24,12 @@ This document provides comprehensive documentation for all source code in the `.
      - [get-products-count.ts](#srcstripeproductget-products-countts)
      - [update-product.ts](#srcstripeproductupdate-productts)
      - [delete-product.ts](#srcstripeproductdelete-productts)
-4. [Settings](#settings)
+4. [Contact](#contact)
+   - [src/contact/contact-handler.ts](#srccontactcontact-handlerts)
+5. [Settings](#settings)
    - [src/settings/schemas.ts](#srcsettingsschemasts)
    - [src/settings/settings-handler.ts](#srcsettingssettings-handlerts)
-5. [Utilities](#utilities)
+6. [Utilities](#utilities)
    - [src/utils/index.ts](#srcutilsindexts)
    - [auth.ts](#srcutilsauthts)
    - [handleCORS.ts](#srcutilshandlecorsts)
@@ -395,6 +397,32 @@ Handles `PUT /orders/:id` to update a Stripe Checkout Session's metadata and col
 
 ---
 
+#### src/stripe/order/confirm-order.ts
+
+Handles `POST /orders/confirm` to confirm a paid Stripe Checkout Session and trigger notifications.
+
+**Dependencies**:
+
+- `withStripeHandler` from `../../utils`
+- `jsonResponse` from `../../utils`
+
+**Internal Functions**:
+
+##### `sendOrderNotificationEmail(sessionId: string, session: Stripe.Checkout.Session, env: Env): Promise<void>`
+
+Sends an email notification to the admin (from `site` content KV) via the Cloudflare Email Service binding (`env.EMAIL.send()`). Includes session ID, customer details, total amount, and a link to the admin dashboard (if `ADMIN_BASE_URL` is configured). Errors are logged but do not fail the response.
+
+**Handler Logic**:
+
+1. Validates `sessionId` in request body
+2. Retrieves the Stripe Checkout Session and verifies `payment_status === 'paid'`
+3. Updates Stripe session metadata with `order_status: 'new'`
+4. Writes a notification to `CONTENT_KV` under `notifications:{sessionId}` with 24h TTL (consumed by `notifications-stream.ts` SSE endpoint)
+5. Sends admin notification email via `sendOrderNotificationEmail`
+6. Returns `{ success: true }`
+
+---
+
 #### src/stripe/product/get-products-count.ts
 
 Handles `GET /products/count` to retrieve the total product count with optional search/filter.
@@ -437,6 +465,55 @@ Handles `DELETE /products/:id` to archive a product (Stripe does not support har
 
 ---
 
+#### src/stripe/notifications/notifications-stream.ts
+
+Handles `GET /notifications/stream` to provide a Server-Sent Events (SSE) stream for real-time order notifications to the admin UI.
+
+**Dependencies**:
+
+- `withStripeHandler` from `../../utils`
+
+**Handler Logic**:
+
+1. Sets up an SSE `ReadableStream` with CORS headers
+2. Sends an initial `event: connected` message
+3. Polls `CONTENT_KV` every 5 seconds for keys with prefix `notifications:`
+4. Emits `event: new-order` for notifications newer than `lastCheck`
+5. Sends `event: heartbeat` every 30 seconds to keep the connection alive
+6. Cleans up when the client disconnects
+
+---
+
+## Contact
+
+### src/contact/contact-handler.ts
+
+Handles `POST /contact` to receive contact form submissions and send them as emails via Cloudflare Email Service.
+
+**Dependencies**:
+
+- `handleCORS` from `../utils`
+- `jsonResponse` from `../utils`
+- `RateLimiter` from `../utils`
+
+**Handler Logic**:
+
+1. Handles CORS preflight (`OPTIONS`) and validates method (`POST` only)
+2. Applies KV-based rate limiting to prevent spam
+3. Parses JSON body with fields: `name`, `email`, `subject`, `message`, `_gotcha`
+4. Checks the `_gotcha` honeypot — silently succeeds if filled (bot detected)
+5. Validates all required fields are present
+6. Reads the admin email from `CONTENT_KV` (`site` key)
+7. Sends an email via `env.EMAIL.send()` with the form data:
+   - **To**: Admin email from site settings
+   - **From**: `contact@<admin-domain>` with business name
+   - **Reply-To**: The submitter's email
+   - **Subject**: `Contact Form: <subject>`
+   - **Body**: Name, email, subject, and message (HTML + plain text)
+8. Returns `{ success: true }` on success, or appropriate error
+
+---
+
 ## Settings
 
 ### src/settings/schemas.ts
@@ -452,7 +529,7 @@ Zod validation schemas for settings data.
 Handles `GET` and `PUT` requests for content settings stored in Cloudflare KV (`CONTENT_KV`).
 
 **Supported Types**: `site`, `process`, `testimonials`, `categories`
-(Note: `site` content includes `formspreeFormId` for the contact form configuration)
+(Note: `site` content includes contact info fields; contact form emails are sent via Cloudflare Email Service)
 
 **Handler Logic**:
 

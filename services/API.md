@@ -290,6 +290,52 @@ Updates a Stripe Checkout Session's metadata and/or collected information (shipp
 
 ---
 
+### Contact
+
+#### Submit Contact Form
+
+`POST /contact`
+
+Sends a contact form submission as an email to the site admin via Cloudflare Email Service.
+
+**Authentication**: Not required (public endpoint).
+
+**Rate Limited**: Yes (same limits as other endpoints).
+
+**Request Body**:
+
+```json
+{
+	"name": "Jane Doe",
+	"email": "jane@example.com",
+	"subject": "general",
+	"message": "I'd like to learn more about your honey.",
+	"_gotcha": ""
+}
+```
+
+**\_gotcha Field**: Honeypot for spam prevention. Real users send an empty string; bots often fill hidden fields. If populated, the server silently accepts the request without sending email.
+
+**Response**:
+
+```json
+{
+	"success": true
+}
+```
+
+**Error Responses**:
+
+| Status Code | Message                        |
+| ----------- | ------------------------------ |
+| 400         | `Missing required fields: ...` |
+| 429         | `Rate limit exceeded`          |
+| 500         | `Site content not configured`  |
+| 500         | `Contact email not configured` |
+| 500         | `Failed to send message`       |
+
+---
+
 ## CORS
 
 - Configured via `ALLOWED_ORIGINS` environment variable

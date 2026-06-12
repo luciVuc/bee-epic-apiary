@@ -94,6 +94,27 @@ export async function fetchProductsPaginated(params: {
   };
 }
 
+export interface IContactFormData {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  _gotcha?: string;
+}
+
+/** Submit contact form data to POST /contact on the services worker */
+export async function submitContactForm(data: IContactFormData): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/contact`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  if (!response.ok) {
+    const err = await response.json().catch(() => null);
+    throw new Error(err?.error || "Failed to send message");
+  }
+}
+
 /** Fetch all site data in parallel: site content, testimonials, process steps, and categories */
 export async function fetchAllSiteData(): Promise<{
   siteContent: ISiteContent;

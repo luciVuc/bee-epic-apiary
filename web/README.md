@@ -10,7 +10,7 @@ React + TypeScript e-commerce storefront. Fetches all data (products, site conte
 - **Styling:** Tailwind CSS v3
 - **Routing:** React Router v6 (Hash Router)
 - **Payments:** Stripe (redirect checkout via backend API)
-- **Contact Form:** Formspree
+- **Contact Form:** Cloudflare Email Service
 - **Icons:** Lucide React
 - **Animations:** Framer Motion
 
@@ -21,7 +21,7 @@ React + TypeScript e-commerce storefront. Fetches all data (products, site conte
 - Single product detail page
 - Shopping cart with localStorage persistence
 - Stripe checkout via `POST /checkout` on the services worker
-- Contact form with Formspree (form ID configured via admin settings API)
+- Contact form sent via Cloudflare Email Service (POST /contact on services worker)
 - Responsive mobile-first design
 
 ## Getting Started

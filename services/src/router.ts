@@ -10,6 +10,7 @@ import updateOrderHandler from './stripe/order/update-order';
 import settingsHandler from './settings/settings-handler';
 import confirmOrderHandler from './stripe/order/confirm-order';
 import notificationsStreamHandler from './stripe/notifications/notifications-stream';
+import contactHandler from './contact/contact-handler';
 import { jsonResponse, handleCORS } from './utils';
 
 export const router = async (request: Request, env: Env): Promise<Response> => {
@@ -20,6 +21,11 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 	// Route: /checkout
 	if (pathname === '/checkout' || pathname === '/checkout/') {
 		return checkoutHandler.fetch(request, env);
+	}
+
+	// Route: /contact (public)
+	if (pathname === '/contact' || pathname === '/contact/') {
+		return contactHandler.fetch(request, env);
 	}
 
 	// Route: /prices
