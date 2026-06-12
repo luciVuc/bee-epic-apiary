@@ -127,7 +127,7 @@ API_SECRET_KEY=dev-api-key-change-me
   Copy the namespace ID and replace the placeholder in `wrangler.jsonc`.
 - **Stripe API Version**: The worker uses Stripe API version `2026-04-22.dahlia` (configured in `withStripeHandler.ts`). Update this when upgrading the Stripe SDK.
 - **Compatibility Date**: Set to `2026-03-10` to match the installed Cloudflare Workers Runtime. Update after upgrading Wrangler.
-- **Email Service Domain**: The `send_email` binding requires the `from` domain to be onboarded. Run `npx wrangler email sending enable yourdomain.com` before sending emails. The contact handler uses `contact@<domain>` and order notification uses `noreply@<domain>` where `<domain>` is extracted from the admin email in site settings.
+- **Email Service Domain**: The `send_email` binding requires the `from` domain to be onboarded. Run `npx wrangler email sending enable yourdomain.com` before sending emails in production. Local dev uses `--env development` with `"remote": false` (local simulator, no real emails sent). The contact handler uses `contact@<domain>` and order notification uses `noreply@<domain>` where `<domain>` is extracted from the admin email in site settings.
 - **CORS Headers**: All responses include CORS headers if the request origin is allowed. Preflight requests are handled automatically.
 
 ## Security

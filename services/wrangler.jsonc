@@ -60,4 +60,14 @@
 		},
 	],
 	"send_email": [{ "name": "EMAIL", "remote": true }],
+	"env": {
+		"development": {
+			"kv_namespaces": [
+				{ "binding": "CONTENT_KV", "id": "CONTENT_KV_ID", "preview_id": "CONTENT_KV_PREVIEW_ID" },
+				{ "binding": "RATE_LIMIT_KV", "id": "RATE_LIMIT_KV_ID", "preview_id": "RATE_LIMIT_KV_PREVIEW_ID" },
+			],
+			"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "" },
+			"send_email": [{ "name": "EMAIL", "remote": false }],
+		},
+	},
 }
