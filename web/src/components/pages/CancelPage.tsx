@@ -8,6 +8,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import { Button } from "../ui/Button";
+import { SeoHead } from "../seo/SeoHead";
 import type { ISiteContent } from "../../types";
 
 interface ICancelPageProps {
@@ -20,6 +21,11 @@ export const CancelPage = ({ content }: ICancelPageProps) => {
       data-testid="cancel-page"
       className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white flex items-center justify-center p-4"
     >
+      <SeoHead
+        title="Checkout Cancelled"
+        description="Your checkout was cancelled. No charges were made."
+        canonicalPath="/cancel"
+      />
       <motion.div
         data-testid="cancel-page_container"
         className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"

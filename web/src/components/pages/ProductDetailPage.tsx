@@ -12,9 +12,11 @@ import {
 import { Button } from "../ui/Button";
 import { Badge } from "../ui/Badge";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
+import { SeoHead } from "../seo/SeoHead";
 import { useCart } from "../../hooks/useCart";
 import { formatPrice } from "../../utils/formatters";
 import { fetchProducts } from "../../utils/api";
+import { productSchema, breadcrumbSchema } from "../../utils/structuredData";
 import type { IProduct } from "../../types";
 
 export function ProductDetailPage() {
@@ -134,6 +136,20 @@ export function ProductDetailPage() {
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
     >
+      <SeoHead
+        title={product.name}
+        description={product.description}
+        canonicalPath={`/products/${product.slug}`}
+        ogImage={product.imageUrls[0] || undefined}
+        keywords={`${product.name}, ${product.category}, buy ${product.name}, honey, apiary`}
+        jsonLd={[
+          productSchema(product),
+          breadcrumbSchema([
+            { name: "Products", url: "/products" },
+            { name: product.name, url: `/products/${product.slug}` },
+          ]),
+        ]}
+      />
       <div className="max-w-6xl mx-auto py-12">
         <button
           data-testid="product-detail-page_back-btn"

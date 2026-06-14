@@ -21,7 +21,8 @@ export function LocationMap({ lat, lng, location }: ILocationMapProps) {
     if (!mapRef.current || mapInstanceRef.current) return;
     if (lat === undefined || lng === undefined) return;
 
-    delete (L.Icon.Default.prototype as Record<string, unknown>)._getIconUrl;
+    delete (L.Icon.Default.prototype as unknown as Record<string, unknown>)
+      ._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl: markerIcon2x,
       iconUrl: markerIcon,

@@ -2,6 +2,7 @@ import { StrictMode, useState, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 import { Provider } from "react-redux";
+import { HelmetProvider } from "react-helmet-async";
 import { CheckCircle } from "lucide-react";
 import App from "./App.tsx";
 import { store } from "./store";
@@ -52,7 +53,7 @@ function InstallPrompt() {
     <button
       data-testid="install-prompt"
       onClick={handleInstall}
-      className="fixed bottom-4 right-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 transition-all animate-bounce"
+      className="fixed bottom-4 right-4 bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 z-50 transition-all"
     >
       <CheckCircle size={20} />
       Install App
@@ -63,10 +64,12 @@ function InstallPrompt() {
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
-        <App />
-        <InstallPrompt />
-      </BrowserRouter>
+      <HelmetProvider>
+        <BrowserRouter>
+          <App />
+          <InstallPrompt />
+        </BrowserRouter>
+      </HelmetProvider>
     </Provider>
   </StrictMode>,
 );

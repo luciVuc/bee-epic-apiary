@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Mail, Phone, MapPin } from "lucide-react";
 import {
   SiFacebook,
@@ -20,7 +21,7 @@ export const Footer = ({ content }: IFooterProps) => {
     .slice(1)
     .map((link) => ({
       label: link.label,
-      href: `${link.id}`,
+      path: `/${link.id === "home" ? "" : link.id}`,
     }));
 
   return (
@@ -110,13 +111,13 @@ export const Footer = ({ content }: IFooterProps) => {
             <ul className="space-y-2">
               {navLinks.map((link) => (
                 <li key={link.label}>
-                  <a
-                    href={link.href}
+                  <Link
+                    to={link.path}
                     data-testid={`footer_link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
                     className="font-body text-dark-300 hover:text-primary-400 transition-colors duration-200"
                   >
                     {link.label}
-                  </a>
+                  </Link>
                 </li>
               ))}
             </ul>

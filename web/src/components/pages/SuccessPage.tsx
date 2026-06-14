@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { clearCart } from "../../store/cartSlice";
 import { Button } from "../ui/Button";
+import { SeoHead } from "../seo/SeoHead";
 import type { ISiteContent } from "../../types";
 
 interface ISuccessPageProps {
@@ -65,6 +66,11 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
       data-testid="success-page"
       className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white flex items-center justify-center p-4"
     >
+      <SeoHead
+        title="Order Confirmed"
+        description="Your order has been placed successfully. Thank you for your purchase!"
+        canonicalPath="/success"
+      />
       <motion.div
         data-testid="success-page_container"
         className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"

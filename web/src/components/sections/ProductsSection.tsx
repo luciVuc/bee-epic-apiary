@@ -46,10 +46,12 @@ export const ProductsSection = ({
   const [lastId, setLastId] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
 
-  const searchTimer = useRef<ReturnType<typeof setTimeout>>();
+  const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
   const isInitialMount = useRef(true);
   const sectionRef = useRef<HTMLElement>(null);
-  const lastProdCardIdRef = useRef<string | null>();
+  const lastProdCardIdRef = useRef<string | null>(null);
 
   const updateSearchParams = useCallback(
     (overrides: Record<string, string | undefined>) => {
@@ -313,7 +315,11 @@ export const ProductsSection = ({
 
         {/* Results count */}
         {!initialLoading && (
-          <div className="text-center text-sm text-dark-500 mb-6">
+          <div
+            className="text-center text-sm text-dark-500 mb-6"
+            role="status"
+            aria-live="polite"
+          >
             Showing {products.length} of {totalCount} products
           </div>
         )}

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://golden-hive-apiary.pages.dev/sitemap.xml

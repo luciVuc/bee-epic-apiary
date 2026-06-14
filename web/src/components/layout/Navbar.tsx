@@ -85,6 +85,7 @@ export const Navbar = ({ content }: INavbarProps) => {
                       ? "text-primary-600"
                       : "text-dark-600 hover:text-primary-600"
                   }`}
+                  aria-current={isActive(link.id) ? "page" : undefined}
                 >
                   {link.label}
                 </Link>
@@ -124,6 +125,8 @@ export const Navbar = ({ content }: INavbarProps) => {
               className="md:hidden p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               title={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="navbar_mobile-menu"
             >
               {isMobileMenuOpen ? (
                 <X className="w-6 h-6 text-dark-700" aria-hidden="true" />
@@ -138,6 +141,7 @@ export const Navbar = ({ content }: INavbarProps) => {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <motion.div
+            id="navbar_mobile-menu"
             data-testid="navbar_mobile-menu"
             className="md:hidden bg-white border-t border-dark-100"
             initial={{ opacity: 0, height: 0 }}
@@ -161,6 +165,7 @@ export const Navbar = ({ content }: INavbarProps) => {
                         ? "bg-primary-50 text-primary-600"
                         : "text-dark-600 hover:bg-dark-50"
                     }`}
+                    aria-current={isActive(link.id) ? "page" : undefined}
                   >
                     {link.label}
                   </Link>

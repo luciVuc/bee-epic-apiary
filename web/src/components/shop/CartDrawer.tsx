@@ -61,6 +61,7 @@ export const CartDrawer = () => {
                 className="p-2 hover:bg-dark-100 rounded-lg transition-colors"
                 aria-label="Close cart"
                 title="Close cart"
+                autoFocus
               >
                 <X className="w-5 h-5 text-dark-600" aria-hidden="true" />
               </button>
