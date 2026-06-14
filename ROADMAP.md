@@ -12,7 +12,7 @@ The project fully supports images as URL strings and inline Data URIs.
 | About images       | KV via `ISiteContent.aboutImages[]`     | `aboutImages: string[]`   | None                                                            |
 | Process step icons | KV via `IProcessStep.icon`              | `icon: string`            | None                                                            |
 
-**Admin UI**: All image fields are `<input type="url">` text inputs (`UrlInputList` component). No file upload mechanism.
+**Admin UI**: All image fields are `<input type="url">` text inputs (plain URL fields). No file upload mechanism.
 
 **API**: No image-specific endpoints. Images are passed through to Stripe as URL strings or stored as-is in KV JSON.
 

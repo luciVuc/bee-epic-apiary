@@ -5,7 +5,8 @@ Cloudflare Worker providing Stripe checkout and product management APIs.
 ## Base URL
 
 ```text
-https://your-worker.your-subdomain.workers.dev
+https://your-worker.your-subdomain.workers.dev   (production)
+http://localhost:8787                             (local dev)
 ```
 
 ## Authentication
@@ -195,6 +196,38 @@ Deletes a product.
 
 ---
 
+### Prices
+
+#### Create Price
+
+`POST /prices`
+
+**Authentication**: Required (if `API_SECRET_KEY` is set).
+
+Creates a new Stripe Price for an existing product.
+
+**Request Body**:
+
+```json
+{
+	"product": "prod_1234567890",
+	"unit_amount": 2000,
+	"currency": "usd",
+	"lookup_key": "premium_monthly",
+	"nickname": "Premium Monthly"
+}
+```
+
+**Validation Rules**:
+
+- `product` is required and must be a non-empty string
+- `unit_amount` is required and must be > 0
+- `currency` is required
+
+**Response**: Stripe Price object (201 status)
+
+---
+
 ### Orders (Checkout Sessions)
 
 #### List Orders
@@ -290,6 +323,52 @@ Updates a Stripe Checkout Session's metadata and/or collected information (shipp
 
 ---
 
+#### Confirm Order
+
+`POST /orders/confirm`
+
+Confirms a paid Stripe Checkout Session, triggers a real-time notification via SSE, and sends an order notification email to the admin.
+
+**Authentication**: Not required (public, called by Stripe redirect on success).
+
+**Request Body**:
+
+```json
+{
+	"sessionId": "cs_test_..."
+}
+```
+
+**Validation Rules**:
+
+- `sessionId` is required and must be a non-empty string
+
+**Handler Logic**:
+
+1. Retrieves the Stripe Checkout Session and verifies `payment_status === 'paid'`
+2. Updates Stripe session metadata with `order_status: 'new'`
+3. Writes a notification to `CONTENT_KV` with 24h TTL (consumed by SSE stream)
+4. Sends admin notification email via Cloudflare Email Service
+
+**Response**:
+
+```json
+{
+	"success": true
+}
+```
+
+**Error Responses**:
+
+| Status Code | Message                         |
+| ----------- | ------------------------------- |
+| 400         | `Missing sessionId`             |
+| 400         | `Session not found`             |
+| 400         | `Session payment not completed` |
+| 500         | `Failed to confirm order`       |
+
+---
+
 ### Contact
 
 #### Submit Contact Form
@@ -336,6 +415,79 @@ Sends a contact form submission as an email to the site admin via Cloudflare Ema
 
 ---
 
+### Notifications
+
+#### Order Notifications Stream (SSE)
+
+`GET /notifications/stream`
+
+Provides a Server-Sent Events (SSE) stream for real-time order notifications consumed by the admin panel.
+
+**Authentication**: Not required.
+
+**Response**: SSE text/event-stream with the following events:
+
+| Event       | Data                 | Description                     |
+| ----------- | -------------------- | ------------------------------- |
+| `connected` | `{}`                 | Initial connection confirmation |
+| `new-order` | `{ sessionId, ... }` | New order notification from KV  |
+| `heartbeat` | `{}`                 | Keep-alive every 30 seconds     |
+
+The stream polls `CONTENT_KV` every 5 seconds for keys with prefix `notifications:`.
+
+---
+
+## Settings
+
+### Get Settings
+
+`GET /settings/:type`
+
+Returns content settings for the specified type.
+
+**Types**: `site`, `process`, `testimonials`, `categories`
+
+**Authentication**: Not required.
+
+**Response**: JSON object with settings data.
+
+**Error Responses**:
+
+| Status Code | Message                   |
+| ----------- | ------------------------- |
+| 404         | `Content type not found`  |
+| 500         | `Failed to read settings` |
+
+---
+
+### Update Settings
+
+`PUT /settings/:type`
+
+**Authentication**: Required (if `API_SECRET_KEY` is set).
+
+Updates content settings for the specified type.
+
+**Types**: `site`, `process`, `testimonials`, `categories`
+
+**Request Body**: JSON object matching the settings type schema. For `categories`, the body is validated against a Zod schema (`{ id: string, label: string }[]`).
+
+**Validation Rules**:
+
+- `categories` type is validated with Zod — each entry must have `id` and `label` strings
+
+**Response**: Updated settings JSON object
+
+**Error Responses**:
+
+| Status Code | Message                   |
+| ----------- | ------------------------- |
+| 400         | `Validation failed: ...`  |
+| 404         | `Content type not found`  |
+| 500         | `Failed to save settings` |
+
+---
+
 ## CORS
 
 - Configured via `ALLOWED_ORIGINS` environment variable
@@ -349,9 +501,9 @@ Sends a contact form submission as an email to the site admin via Cloudflare Ema
 ## Rate Limiting
 
 - Configured via `RATE_LIMIT_KV` KV namespace binding
-- Default: 100 requests per minute per IP
+- Default: 100 requests per minute per IP (configurable via `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW` vars in `wrangler.jsonc`)
 - Uses Cloudflare's trusted `cf.connectingIp` field to prevent IP spoofing
-- Rate limiting is disabled if `RATE_LIMIT_KV` is not set
+- Rate limiting is disabled if `RATE_LIMIT_KV` binding is not configured
 
 **Rate Limit Exceeded Response**:
 
@@ -397,9 +549,13 @@ See [AGENTS.md](./AGENTS.md#environment-variables) for full details.
 ## Setup
 
 1. Install dependencies: `npm install`
-2. Create KV namespace: `npx wrangler kv namespace create "RATE_LIMIT_KV"`
-3. Update `wrangler.jsonc` with the KV namespace ID
-4. Set secrets: `npx wrangler secret put STRIPE_SECRET_KEY`
+2. Create KV namespaces:
+   ```bash
+   npx wrangler kv namespace create "RATE_LIMIT_KV"
+   npx wrangler kv namespace create "CONTENT_KV"
+   ```
+3. Update `wrangler.jsonc` with the KV namespace IDs
+4. Set secrets: `npx wrangler secret put STRIPE_SECRET_KEY` and `npx wrangler secret put ALLOWED_ORIGINS`
 5. (Optional) Set API key: `npx wrangler secret put API_SECRET_KEY`
 6. Deploy: `npm run deploy`
 

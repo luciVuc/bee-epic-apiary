@@ -1,6 +1,6 @@
 # Admin E2E Testing Plan — Admin Panel
 
-Tests for the `admin/` sub-project: a React 18 + Vite admin panel for Stripe product CRUD.
+Tests for the `admin/` sub-project: a React 19 + Vite admin panel for Stripe product CRUD.
 
 **Executor**: AI agent with Playwright browser automation.
 **Base URL**: `http://localhost:5174`

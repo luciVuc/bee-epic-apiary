@@ -24,6 +24,13 @@ This document provides comprehensive documentation for all source code in the `.
      - [get-products-count.ts](#srcstripeproductget-products-countts)
      - [update-product.ts](#srcstripeproductupdate-productts)
      - [delete-product.ts](#srcstripeproductdelete-productts)
+   - [Order](#order)
+     - [src/stripe/order/index.ts](#srcstripeorderindexts)
+     - [get-orders.ts](#srcstripeorderget-ordersts)
+     - [update-order.ts](#srcstripeorderupdate-orderts)
+     - [confirm-order.ts](#srcstripeorderconfirm-orderts)
+   - [Notifications](#notifications)
+     - [src/stripe/notifications/notifications-stream.ts](#srcstripenotificationsnotifications-streamts)
 4. [Contact](#contact)
    - [src/contact/contact-handler.ts](#srccontactcontact-handlerts)
 5. [Settings](#settings)
@@ -338,6 +345,22 @@ Handles `PUT /products/:id` to update an existing product.
 
 ---
 
+### Order
+
+#### src/stripe/order/index.ts
+
+Re-exports all order-related handlers.
+
+**Code**:
+
+```typescript
+export * from './get-orders';
+export * from './update-order';
+export * from './confirm-order';
+```
+
+---
+
 #### src/stripe/order/get-orders.ts
 
 Handles `GET /orders` and `GET /orders/:id` to retrieve Stripe Checkout Sessions with search, filter, and pagination.
@@ -463,7 +486,7 @@ Handles `DELETE /products/:id` to archive a product (Stripe does not support har
 
 ---
 
----
+### Notifications
 
 #### src/stripe/notifications/notifications-stream.ts
 

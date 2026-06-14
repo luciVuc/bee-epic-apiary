@@ -277,14 +277,18 @@ Key features:
 • Type safety with TypeScript interfaces
 • Metadata support for custom product attributes
 
-Environment setup: Add your Stripe secret key to your wrangler.toml:
+Environment setup: Add your Stripe secret key as a Wrangler secret:
+
+```bash
+npx wrangler secret put STRIPE_SECRET_KEY
+```
+
+Or for local development, add to `.dev.vars`:
 
 ```
-[env.production.vars]
-STRIPE_SECRET_KEY = "sk_live_..."
-
-[env.development.vars]
-STRIPE_SECRET_KEY = "sk_test_..."
+STRIPE_SECRET_KEY=sk_test_...
 ```
 
 This worker provides a complete REST API for managing your Stripe product catalog through Cloudflare Workers.
+
+> **Note**: This is a reference example. The actual project implementation (`services/`) uses `wrangler.jsonc` configuration and includes additional features like CORS handling, rate limiting, order management, and Cloudflare Email Service integration.

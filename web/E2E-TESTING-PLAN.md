@@ -1,12 +1,12 @@
 # Web E2E Testing Plan — Customer Storefront
 
-Tests for the `web/` sub-project: a React 18 + Vite customer-facing storefront.
+Tests for the `web/` sub-project: a React 19 + Vite customer-facing PWA storefront.
 
 **Executor**: AI agent with Playwright browser automation.
 **Base URL**: `http://localhost:5173`
 **Router**: BrowserRouter — all paths are `/...`
-**Data source**: Static JSON files (`src/data/`), no API calls for product listing (only for checkout).
-**Requires**: `services/` dev server running on port 8787 (for checkout flow).
+**Data source**: Backend API (`services/` Cloudflare Worker) — product listing, site content, testimonials, and process steps are fetched via the API. Legacy JSON files (`src/data/`) are no longer imported.
+**Requires**: `services/` dev server running on port 8787 (for all data and checkout flow).
 
 ---
 

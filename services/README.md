@@ -8,7 +8,7 @@ A lightweight Cloudflare Worker for integrating Stripe into your application, pr
 - Stripe Product CRUD (Create, Read, Update, Delete) operations
 - CORS handling, rate limiting, and optional API key authentication
 
-[![codecov](https://codecov.io/gh/user/repo/branch/main/graph/badge.svg)](https://codecov.io/gh/user/repo)
+<!-- Placeholder: update with actual codecov URL when CI is configured -->
 
 ## Prerequisites
 
@@ -37,7 +37,7 @@ A lightweight Cloudflare Worker for integrating Stripe into your application, pr
 
    ```env
    STRIPE_SECRET_KEY=sk_test_your_stripe_test_key
-   ALLOWED_ORIGINS=http://localhost:8787,http://localhost:3000
+   ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
    # Optional: API_SECRET_KEY=your-secret-key
    ```
 
@@ -87,10 +87,9 @@ Detailed documentation for all source code is available in [SOURCE.md](./SOURCE.
 
 ## Testing
 
-- All 65 tests are currently passing.
-- Run tests with `npm run test`.
 - Tests use Vitest with Cloudflare Workers pool for accurate runtime simulation.
 - Stripe API functions are properly mocked to prevent actual API calls during testing.
+- Run tests with `npm run test`.
 
 ## Deployment
 

@@ -123,15 +123,17 @@ export async function handleCheckout(stripe: Stripe, request: Request, env: Env,
 }
 
 /**
- * Export default fetch handler for /checkout endpoint
- * Creates Stripe Checkout sessions for one-time payments and/or subscriptions
+ * Default export for the /checkout endpoint.
+ * Delegates to handleCheckout via withStripeHandler middleware.
  *
- * @type {ExportedHandler<Env>}
- * @param {Stripe} stripe - Initialized Stripe client
- * @param {Request} request - Incoming HTTP request with line_items, success_url, cancel_url
- * @param {Env} env - Cloudflare Worker environment variables
- * @param {string | null} origin - Request origin for CORS headers
- * @returns {Promise<Response>} JSON response with session URLs
+ * Request body (JSON):
+ *   line_items: [{ price: string, quantity: number }]
+ *   success_url: string (valid HTTP/HTTPS URL)
+ *   cancel_url: string (valid HTTP/HTTPS URL)
+ *   customer_email?: string
+ *   metadata?: Record<string, string>
+ *
+ * Response: { sessions: string[], message: string }
  *
  * @example
  * // Request body:

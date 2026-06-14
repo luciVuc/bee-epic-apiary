@@ -4,15 +4,16 @@ React + TypeScript e-commerce storefront. Fetches all data (products, site conte
 
 ## Tech Stack
 
-- **Runtime:** React 18 with TypeScript (strict mode)
-- **Build Tool:** Vite
+- **Runtime:** React 19 with TypeScript (strict mode)
+- **Build Tool:** Vite 8
 - **State Management:** Redux Toolkit
-- **Styling:** Tailwind CSS v3
-- **Routing:** React Router v6 (Hash Router)
+- **Styling:** Tailwind CSS 4
+- **Routing:** React Router v7 (BrowserRouter)
 - **Payments:** Stripe (redirect checkout via backend API)
 - **Contact Form:** Cloudflare Email Service
 - **Icons:** Lucide React
 - **Animations:** Framer Motion
+- **PWA:** vite-plugin-pwa (auto-update service worker)
 
 ## Features
 
@@ -46,6 +47,7 @@ Copy `.env.example` to `.env` and configure:
 | ----------------------------- | ------------------------------------------- | ----------------------- |
 | `VITE_API_URL`                | Base URL for the services Cloudflare Worker | `http://localhost:8787` |
 | `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for the client       | —                       |
+| `VITE_SITE_URL`               | Site URL for metadata and SEO               | —                       |
 
 ### Running
 
@@ -63,18 +65,20 @@ The site will be available at `http://localhost:5173`.
 
 ```text
 web/
-├── public/images/products/   # Product images
 ├── src/
 │   ├── components/
+│   │   ├── icons/        # BrandIcons (social media SVGs)
 │   │   ├── layout/       # Navbar, Footer, Layout
-│   │   ├── pages/        # Route-level page components
-│   │   ├── sections/     # Page sections (Hero, About, etc.)
-│   │   ├── shop/         # Product cards, Cart, Checkout
-│   │   └── ui/           # Reusable UI (Button, Badge, etc.)
+│   │   ├── pages/        # HomePage, ProductsPage, ProductDetailPage,
+│   │   │                 # AboutProcessPage, ContactPage, SuccessPage, CancelPage
+│   │   ├── sections/     # HeroSection, AboutSection, ProcessSection,
+│   │   │                 # ProductsSection, TestimonialsSection, ContactSection
+│   │   ├── shop/         # ProductCard, ProductGrid, CartDrawer, CartItem, CheckoutButton
+│   │   └── ui/           # Badge, Button, LoadingSpinner, LocationMap, SectionHeader
 │   ├── data/             # Legacy JSON data (no longer imported)
-│   ├── hooks/            # Custom React hooks
-│   ├── store/            # Redux store (cart, UI state)
-│   ├── types/            # TypeScript interfaces
+│   ├── hooks/            # useCart, useScrollSpy, useStripeCheckout
+│   ├── store/            # Redux store (cartSlice, uiSlice)
+│   ├── types/            # TypeScript interfaces (IProduct, ISiteContent, etc.)
 │   ├── utils/
 │   │   ├── api.ts        # API client (fetchSiteContent, fetchProducts, etc.)
 │   │   ├── transform.ts  # Stripe product → IProduct transform
@@ -83,7 +87,8 @@ web/
 │   └── App.tsx           # Root component (fetches all data on mount)
 ├── .env                  # Environment variables
 ├── vite.config.ts        # Vite configuration
-└── tailwind.config.ts    # Tailwind CSS configuration
+├── tailwind.config.ts    # Tailwind CSS configuration
+└── .github/              # GitHub Actions deploy workflow
 ```
 
 ## Data Flow
@@ -110,6 +115,14 @@ Content is managed through the admin panel (`admin/`) or directly via the servic
 
 The JSON files in `src/data/` are legacy and no longer imported.
 
+## PWA
+
+The web app is a Progressive Web App using `vite-plugin-pwa` with:
+
+- Auto-update service worker (registers, installs, activates in background)
+- Manifest for "Golden Hive Apiary" with app icons
+- Offline capability via service worker caching
+
 ## Deployment
 
 ### Build
@@ -122,4 +135,8 @@ Output goes to `dist/`. The `vite.config.ts` base path is set to `"/"`.
 
 ### GitHub Pages
 
-For GitHub Pages deployment with a repo name different from the apex domain, update `base` in `vite.config.ts` to `/<repo-name>/`.
+```bash
+npm run web:deploy
+```
+
+For GitHub Pages deployment with a repo name different from the apex domain, update `base` in `vite.config.ts` to `/<repo-name>/`. CI deploy runs on `main` via `.github/workflows/deploy.yml`.

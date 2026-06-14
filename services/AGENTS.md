@@ -25,7 +25,7 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 
 ## Coverage
 
-[![codecov](https://codecov.io/gh/user/repo/branch/main/graph/badge.svg)](https://codecov.io/gh/user/repo)
+<!-- Placeholder: update with actual codecov URL when CI is configured -->
 
 ## Architecture
 
@@ -75,7 +75,7 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
   - `index.spec.ts`: Integration tests for routing, checkout, and products endpoints
   - `stripe/`: Unit tests for Stripe handlers
   - `utils/`: Unit tests for utility functions
-- All 65 tests currently passing (includes new auth.ts tests).
+- Tests cover routing, Stripe handlers, settings, and utility functions.
 - Stripe API functions are properly mocked to prevent actual API calls during testing.
 - Run tests:
   ```bash
@@ -93,18 +93,17 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 
 ### Optional
 
-| Variable         | Description                                                                                                        | Default                                  |
-| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
-| `API_SECRET_KEY` | API key for authenticating product CRUD operations. If not set, authentication is disabled.                        | None (dev mode)                          |
-| `RATE_LIMIT_KV`  | Cloudflare KV namespace binding for rate limiting                                                                  | None (rate limiting disabled if not set) |
-| `ADMIN_BASE_URL` | Base URL of the admin dashboard (e.g., `https://admin.beeepicapiary.com`). Used in order notification email links. | `""` (no link included)                  |
+| Variable         | Description                                                                                                        | Default                 |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ----------------------- |
+| `API_SECRET_KEY` | API key for authenticating product CRUD operations. If not set, authentication is disabled.                        | None (dev mode)         |
+| `ADMIN_BASE_URL` | Base URL of the admin dashboard (e.g., `https://admin.beeepicapiary.com`). Used in order notification email links. | `""` (no link included) |
 
 ### Local Development
 
 Create a `.env` file in the `services/` directory with:
 
 ```env
-ALLOWED_ORIGINS=http://localhost:8787,http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 # Optional:
 # API_SECRET_KEY=your-secret-key
 ```
@@ -113,7 +112,7 @@ Secrets (not checked into git) go in `.dev.vars`:
 
 ```env
 STRIPE_SECRET_KEY=sk_test_...
-ALLOWED_ORIGINS=http://localhost:8787,http://localhost:3000
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 API_SECRET_KEY=dev-api-key-change-me
 ```
 
@@ -125,7 +124,7 @@ API_SECRET_KEY=dev-api-key-change-me
   npx wrangler kv namespace create "RATE_LIMIT_KV"
   ```
   Copy the namespace ID and replace the placeholder in `wrangler.jsonc`.
-- **Stripe API Version**: The worker uses Stripe API version `2026-04-22.dahlia` (configured in `withStripeHandler.ts`). Update this when upgrading the Stripe SDK.
+- **Stripe API Version**: The worker uses Stripe API version `2026-05-27.dahlia` (configured in `withStripeHandler.ts`). Update this when upgrading the Stripe SDK.
 - **Compatibility Date**: Set to `2026-03-10` to match the installed Cloudflare Workers Runtime. Update after upgrading Wrangler.
 - **Email Service Domain**: The `send_email` binding requires the `from` domain to be onboarded. Run `npx wrangler email sending enable yourdomain.com` before sending emails in production. Local dev uses `--env development` with `"remote": false` (local simulator, no real emails sent). The contact handler uses `contact@<domain>` and order notification uses `noreply@<domain>` where `<domain>` is extracted from the admin email in site settings.
 - **CORS Headers**: All responses include CORS headers if the request origin is allowed. Preflight requests are handled automatically.

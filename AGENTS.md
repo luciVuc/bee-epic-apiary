@@ -51,7 +51,7 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
   ```
 - After changing `wrangler.jsonc` bindings: `npm run cf-typegen`
 - Env vars: Wrangler secrets only (no `dotenv` runtime loading)
-- Stripe API version: `2026-04-22.dahlia` (update when upgrading SDK)
+- Stripe API version: `2026-05-27.dahlia` (in `withStripeHandler.ts`; update when upgrading SDK)
 
 ### Admin App Specifics
 
@@ -72,7 +72,7 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 | `npm run test`          | services tests → admin tests (Vitest)                         |
 | `npm run services:test` | Worker tests (Vitest + `@cloudflare/vitest-pool-workers`)     |
 | `npm run admin:test`    | Admin tests (Vitest + jsdom + React Testing Library)          |
-| `npm run lint`          | ESLint on web + admin                                         |
+| `npm run lint`          | ESLint on web, admin, and services                            |
 | `npm run format`        | Prettier on entire repo                                       |
 | `npm run build`         | `services:deploy && web:build && admin:build`                 |
 
@@ -85,7 +85,7 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 
 - **`src/router.ts`**: Manual route matching (no framework)
 - All handlers follow `{ fetch(request, env): Promise<Response> }` interface via `withStripeHandler` wrapper
-- Stripe API version: `2026-04-22.dahlia` (in `withStripeHandler.ts`)
+- Stripe API version: `2026-05-27.dahlia` (in `withStripeHandler.ts`)
 - Rate limiting: KV-based, 100 req/min per IP
 - API key auth for mutating product endpoints if `API_SECRET_KEY` set
 - **Routes**: `POST /checkout`, `POST /contact`, `POST /prices`, `GET|POST /products`, `GET /products/count`, `GET|PUT|DELETE /products/:id`, `GET|POST /orders/confirm`, `GET|PUT /orders/:id`, `GET /orders`, `GET /notifications/stream`, `GET|PUT /settings/:type` (site\|process\|testimonials\|categories)

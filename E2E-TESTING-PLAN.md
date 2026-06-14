@@ -11,26 +11,6 @@ Orchestration plan for testing all three sub-projects together: `services/` (Clo
 
 ---
 
-## Port Map
-
-| Service           | Port | Notes                              |
-| ----------------- | ---- | ---------------------------------- |
-| Cloudflare Worker | 8787 | Services API (Stripe CRUD)         |
-| Web App (Vite)    | 5173 | Customer storefront                |
-| Admin App (Vite)  | 5174 | Admin panel, proxies `/api` → 8787 |
-
----
-
-## Port Map
-
-| Service           | Port | Notes                              |
-| ----------------- | ---- | ---------------------------------- |
-| Cloudflare Worker | 8787 | Services API (Stripe CRUD)         |
-| Web App (Vite)    | 5173 | Customer storefront                |
-| Admin App (Vite)  | 5174 | Admin panel, proxies `/api` → 8787 |
-
----
-
 ## Pre-flight: Ensure Services API is Running
 
 Before any test, ensure the services API server is running on port 8787. Kill any existing process on that port and restart cleanly.
@@ -61,7 +41,7 @@ Start all servers in parallel with a single command, **or** start them individua
 **Option A — Single terminal (concurrently):**
 
 ```bash
-npm run dev:all
+npm run dev
 ```
 
 **Option B — Three separate processes (recommended for E2E):**

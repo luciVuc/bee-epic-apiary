@@ -1,14 +1,14 @@
 # Bee Epic Apiary
 
-Monorepo for the Bee Epic Apiary e-commerce platform. Includes a React admin panel, a public-facing web storefront, and a Cloudflare Worker for Stripe integration.
+Monorepo for the Bee Epic Apiary e-commerce platform. Includes a React admin panel, a public-facing web storefront (PWA), and a Cloudflare Worker for Stripe integration.
 
 ## Project Structure
 
-| Directory   | Description                                          |
-| ----------- | ---------------------------------------------------- |
-| `admin/`    | React 18 + TypeScript admin panel (Vite)             |
-| `services/` | Cloudflare Worker for Stripe checkout & product CRUD |
-| `web/`      | Public-facing React storefront (in development)      |
+| Directory   | Description                                                 |
+| ----------- | ----------------------------------------------------------- |
+| `admin/`    | React 19 + TypeScript admin panel (Vite)                    |
+| `services/` | Cloudflare Worker for Stripe checkout, product CRUD & email |
+| `web/`      | Public-facing React 19 PWA storefront (BrowserRouter)       |
 
 ## Quick Start
 
@@ -16,6 +16,7 @@ Monorepo for the Bee Epic Apiary e-commerce platform. Includes a React admin pan
 git clone <repo-url>
 npm install
 npx wrangler kv namespace create "RATE_LIMIT_KV"  # First-time setup
+npx wrangler kv namespace create "CONTENT_KV"     # First-time setup
 npm run dev
 ```
 
@@ -25,20 +26,22 @@ npm run dev
 
 ## Available Commands
 
-| Command          | Purpose                                                 |
-| ---------------- | ------------------------------------------------------- |
-| `npm run dev`    | Start services + admin + web dev servers (concurrently) |
-| `npm run build`  | Build all sub-projects                                  |
-| `npm run deploy` | Deploy services + web + admin build                     |
-| `npm run test`   | Run all tests (services then admin)                     |
-| `npm run lint`   | Lint admin and web                                      |
-| `npm run format` | Format all code with Prettier                           |
+| Command                 | Purpose                                                       |
+| ----------------------- | ------------------------------------------------------------- |
+| `npm run dev`           | Start services + admin + web dev servers (concurrently)       |
+| `npm run build`         | Deploy services + build web + admin                           |
+| `npm run deploy`        | Deploy services + deploy web + build admin                    |
+| `npm run test`          | Run all tests (services then admin)                           |
+| `npm run services:test` | Run services tests only (Vitest + Cloudflare Workers pool)    |
+| `npm run admin:test`    | Run admin tests only (Vitest + jsdom + React Testing Library) |
+| `npm run lint`          | Lint web, admin, and services                                 |
+| `npm run format`        | Format all code with Prettier                                 |
 
 ## Sub-projects
 
-- **Admin**: React 18 + TypeScript + Vite + Redux Toolkit + Tailwind CSS. Manage products and site settings. See `admin/README.md`.
-- **Services**: Cloudflare Worker (Wrangler) for Stripe checkout, product CRUD, content settings, and rate-limited API. See `services/README.md`.
-- **Web**: (In development) Public-facing storefront with Hash Router for GitHub Pages.
+- **Admin**: React 19 + TypeScript + Vite + Redux Toolkit + Tailwind CSS 4. Manage products, orders, and site settings. See `admin/README.md`.
+- **Services**: Cloudflare Worker (Wrangler) for Stripe checkout, product CRUD, order management, content settings, contact form email, and rate-limited API. See `services/README.md`.
+- **Web**: Public-facing PWA storefront with BrowserRouter, Framer Motion animations, shopping cart, and Stripe checkout. See `web/README.md`.
 
 ## Documentation
 

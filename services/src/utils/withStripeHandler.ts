@@ -5,6 +5,10 @@ import { IAPIResponseError } from '../types';
 
 let stripeInstance: Stripe | null = null;
 
+/**
+ * Gets or initializes a lazy singleton Stripe client instance.
+ * Uses `STRIPE_SECRET_KEY` from env and a fixed API version.
+ */
 function getStripeInstance(env: Env): Stripe {
 	if (!stripeInstance) {
 		stripeInstance = new Stripe(env.STRIPE_SECRET_KEY, {
@@ -15,12 +19,24 @@ function getStripeInstance(env: Env): Stripe {
 	return stripeInstance;
 }
 
+/** Handler function type for Stripe endpoints. Receives an initialized Stripe client, request, env bindings, and the CORS origin. */
 export type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
 
+/** Options for configuring the withStripeHandler wrapper. */
 export interface IWithStripeHandlerOptions {
+	/** If true, requires a valid API key via Authorization: Bearer <token>. */
 	requireAuth?: boolean;
 }
 
+/**
+ * Wraps a Stripe handler function with common middleware:
+ * CORS preflight, method validation, origin validation, optional API key auth, KV rate limiting, and Stripe client initialization.
+ *
+ * @param method - Allowed HTTP method for the route
+ * @param handler - The Stripe handler function to wrap
+ * @param options - Optional configuration (e.g., requireAuth)
+ * @returns A fetch-compatible function (request, env) => Promise<Response>
+ */
 export function withStripeHandler(method: HttpMethod, handler: StripeHandler, options?: IWithStripeHandlerOptions) {
 	return async (request: Request, env: Env): Promise<Response> => {
 		if (request.method === 'OPTIONS') {

@@ -22,11 +22,11 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 
 ## Tech Stack
 
-- React 18 + TypeScript
+- React 19 + TypeScript
 - Vite (build tool)
 - Redux Toolkit (state management)
-- Tailwind CSS (styling) with custom `primary` (yellow/amber) and `dark` (slate) palettes
-- React Router v6 (routing)
+- Tailwind CSS 4 (styling) with custom `primary` (yellow/amber) and `dark` (slate) palettes
+- React Router v7 (routing, BrowserRouter)
 - Axios (API calls)
 - Lucide React (icons)
 - Vitest + React Testing Library (tests)
@@ -85,7 +85,7 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 
 ## API Integration
 
-The admin module communicates with the Cloudflare Worker (services) for product management and content settings:
+The admin module communicates with the Cloudflare Worker (services) for product management, orders, and content settings:
 
 - `GET /products` — List all products with search/category/limit/pagination
 - `GET /products/count` — Total product count
@@ -93,8 +93,13 @@ The admin module communicates with the Cloudflare Worker (services) for product 
 - `POST /products` — Create new product (requires API key)
 - `PUT /products/:id` — Update product (requires API key)
 - `DELETE /products/:id` — Delete/archive product (requires API key)
+- `GET /orders` — List orders with search/status/payment filters
+- `GET /orders/:id` — Get single order with line items
+- `PUT /orders/:id` — Update order metadata/delivery info (requires API key)
+- `POST /checkout` — Create Stripe checkout sessions (public)
 - `GET /settings/:type` — Get content settings (site/process/testimonials/categories)
 - `PUT /settings/:type` — Save content settings (requires API key)
+- `GET /notifications/stream` — SSE stream for real-time order notifications
 
 ## Testing
 
@@ -111,6 +116,7 @@ admin/
 │   ├── components/
 │   │   ├── forms/          # Section, TextField, TextAreaField
 │   │   ├── layout/         # AdminLayout, Sidebar, AdminNavbar
+│   │   ├── notifications/  # NotificationsPanel (SSE stream)
 │   │   ├── products/       # ProductFormDialog
 │   │   └── shared/         # DeleteConfirmDialog, Spinner
 │   ├── pages/
@@ -119,9 +125,11 @@ admin/
 │   │   ├── DashboardPage.tsx
 │   │   ├── ProductsPage.tsx
 │   │   ├── ProductDetailPage.tsx
+│   │   ├── OrdersPage.tsx
+│   │   ├── OrderDetailPage.tsx
 │   │   └── SettingsPage.tsx
-│   ├── store/              # Redux store + productsSlice
-│   ├── types/              # IProduct, ISiteContent, IStripe*, etc.
+│   ├── store/              # Redux store + productsSlice + ordersSlice
+│   ├── types/              # IProduct, IOrder, ISiteContent, IStripe*, etc.
 │   ├── utils/              # API client, transform, badgeClasses, constants
 │   └── test/               # Test setup
 ├── public/                 # Static assets

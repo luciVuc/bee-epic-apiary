@@ -13,6 +13,21 @@ import notificationsStreamHandler from './stripe/notifications/notifications-str
 import contactHandler from './contact/contact-handler';
 import { jsonResponse, handleCORS } from './utils';
 
+/**
+ * Main request router for the Cloudflare Worker.
+ * Matches URL pathnames against known routes and delegates to the appropriate handler.
+ * Handles CORS preflight, method validation, and authentication for protected routes.
+ *
+ * Routes:
+ *   POST /checkout, POST /contact, POST /prices,
+ *   GET|POST /products, GET /products/count, GET|PUT|DELETE /products/:id,
+ *   GET|POST /orders/confirm, GET|PUT /orders/:id, GET /orders,
+ *   GET /notifications/stream, GET|PUT /settings/:type
+ *
+ * @param request - Incoming HTTP request
+ * @param env - Cloudflare Worker environment variables and bindings
+ * @returns HTTP response
+ */
 export const router = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
 	const pathname = url.pathname;
