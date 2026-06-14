@@ -125,6 +125,7 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 - `npm run build` includes `services:deploy` (= actual Cloudflare Worker deploy, not just build)
 - `npm run deploy` deploys all 3: Worker via Wrangler, web + admin via Cloudflare Pages
 - GitHub Actions: `.github/workflows/deploy.yml` runs tests then deploys all 3 on push to `main`/`release`
+- **`SETUP.md`** at root is the business-owner guide (accounts, deployment setup, domain, email). Keep it in sync with actual config values.
 - web and admin both use `tsc && vite build` (type-check before bundling)
 - `services/AGENTS.md`, `services/API.md`, `services/SOURCE.md` are maintained separately
 

@@ -73,8 +73,7 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs tests on pushes 
 
 ## Documentation
 
-Each sub-project contains its own documentation:
-
+- **`SETUP.md`** — Step-by-step guide for business owners to get the store online (accounts, deployment, domain, email)
 - `admin/README.md` — Admin panel setup, features, and API integration
 - `services/README.md` — Worker setup, commands, and deployment
 - `services/API.md` — Full API endpoint reference
