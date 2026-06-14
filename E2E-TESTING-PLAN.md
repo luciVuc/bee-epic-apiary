@@ -134,6 +134,25 @@ Best practice: always run cleanup after test completion to avoid accumulating te
 
 ---
 
+## Post-Deployment: Cloudflare Pages
+
+After E2E testing, deploy all 3 projects to Cloudflare:
+
+```bash
+# Deploy worker + web Pages + admin Pages
+npm run deploy
+```
+
+Or deploy individually:
+
+```bash
+npm run services:deploy   # Worker
+npm run web:deploy        # Web storefront (Pages)
+npm run admin:deploy      # Admin panel (Pages)
+```
+
+---
+
 ## Test Data Reset
 
 ```js

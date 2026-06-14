@@ -125,18 +125,28 @@ The web app is a Progressive Web App using `vite-plugin-pwa` with:
 
 ## Deployment
 
-### Build
+The web storefront deploys to **Cloudflare Pages**.
 
-```bash
-npm run build
-```
+### Option A: Git Integration (recommended)
 
-Output goes to `dist/`. The `vite.config.ts` base path is set to `"/"`.
+Connect your GitHub repo to Cloudflare Pages in the dashboard:
 
-### GitHub Pages
+| Setting                | Value           |
+| ---------------------- | --------------- |
+| Build command          | `npm run build` |
+| Build output directory | `dist`          |
+| Root directory         | `web`           |
+
+Environment variables to set: `VITE_API_URL`, `VITE_STRIPE_PUBLISHABLE_KEY`, `VITE_SITE_URL`. Cloudflare Pages auto-deploys on every push to the connected branch.
+
+### Option B: CLI Deploy
 
 ```bash
 npm run web:deploy
 ```
 
-For GitHub Pages deployment with a repo name different from the apex domain, update `base` in `vite.config.ts` to `/<repo-name>/`. CI deploy runs on `main` via `.github/workflows/deploy.yml`.
+Requires `wrangler` to be authenticated (`npx wrangler login`). The `vite.config.ts` base path is set to `"/"` (correct for Cloudflare Pages).
+
+### GitHub Actions
+
+Pushes to `main` or `release` run the `.github/workflows/deploy.yml` workflow, which tests and deploys all projects. Web is deployed to `golden-hive-apiary` Pages project. See the root `README.md` for required secrets.

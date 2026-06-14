@@ -93,13 +93,14 @@ Detailed documentation for all source code is available in [SOURCE.md](./SOURCE.
 
 ## Deployment
 
-1. **Create KV namespace for rate limiting**:
+1. **Create KV namespaces**:
 
    ```bash
    npx wrangler kv namespace create "RATE_LIMIT_KV"
+   npx wrangler kv namespace create "CONTENT_KV"
    ```
 
-   Copy the namespace ID and update `wrangler.jsonc`.
+   Copy the namespace IDs and update `wrangler.jsonc`.
 
 2. **Set secrets**:
 
@@ -108,10 +109,18 @@ Detailed documentation for all source code is available in [SOURCE.md](./SOURCE.
    npx wrangler secret put ALLOWED_ORIGINS
    ```
 
+   Optional: `npx wrangler secret put API_SECRET_KEY`
+
 3. **Deploy**:
    ```bash
    npm run deploy
    ```
+
+This deploys the Worker. For the full platform (worker + web storefront + admin panel), run from the monorepo root:
+
+```bash
+npm run deploy
+```
 
 ## Contributing
 

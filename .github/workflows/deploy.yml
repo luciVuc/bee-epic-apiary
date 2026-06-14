@@ -1,0 +1,94 @@
+name: Deploy
+on:
+  push:
+    branches: [main, release]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run services:install
+      - run: npm run admin:install
+      - run: npm run services:test
+      - run: npm run admin:test
+      - run: npm run lint
+
+  deploy-services:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --prefix services
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          workingDirectory: services
+          secrets: |
+            STRIPE_SECRET_KEY
+            ALLOWED_ORIGINS
+            API_SECRET_KEY
+          command: deploy
+
+  deploy-web:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci --prefix web
+      - run: npm run build --prefix web
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://epic-bee-apiary.workers.dev' }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://golden-hive-apiary.pages.dev' }}
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          workingDirectory: web
+          command: pages deploy dist --project-name=golden-hive-apiary
+
+  deploy-admin:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci --prefix admin
+      - run: npm run build --prefix admin
+        env:
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://epic-bee-apiary.workers.dev' }}
+          VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
+          VITE_API_SECRET_KEY: ${{ secrets.VITE_API_SECRET_KEY }}
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CF_API_TOKEN }}
+          workingDirectory: admin
+          command: pages deploy dist --project-name=bee-epic-apiary-admin

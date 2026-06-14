@@ -29,13 +29,41 @@ npm run dev
 | Command                 | Purpose                                                       |
 | ----------------------- | ------------------------------------------------------------- |
 | `npm run dev`           | Start services + admin + web dev servers (concurrently)       |
-| `npm run build`         | Deploy services + build web + admin                           |
-| `npm run deploy`        | Deploy services + deploy web + build admin                    |
+| `npm run build`         | Deploy services, build web + admin                            |
+| `npm run deploy`        | Deploy all 3 projects to Cloudflare (worker + 2 Pages sites)  |
 | `npm run test`          | Run all tests (services then admin)                           |
 | `npm run services:test` | Run services tests only (Vitest + Cloudflare Workers pool)    |
 | `npm run admin:test`    | Run admin tests only (Vitest + jsdom + React Testing Library) |
 | `npm run lint`          | Lint web, admin, and services                                 |
 | `npm run format`        | Format all code with Prettier                                 |
+| `npm run web:deploy`    | Deploy web storefront to Cloudflare Pages                     |
+| `npm run admin:deploy`  | Deploy admin panel to Cloudflare Pages                        |
+
+## CI/CD
+
+A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs tests on pushes to `main` or `release` branches, then deploys all 3 projects to Cloudflare:
+
+1. **services** — Worker deployed via `wrangler deploy`
+2. **web** — Storefront built and deployed to Cloudflare Pages (`golden-hive-apiary`)
+3. **admin** — Admin panel built and deployed to Cloudflare Pages (`bee-epic-apiary-admin`)
+
+### Required GitHub Secrets
+
+| Secret                        | Used by     | Description                                    |
+| ----------------------------- | ----------- | ---------------------------------------------- |
+| `CF_API_TOKEN`                | All         | Cloudflare API token with Workers + Pages perm |
+| `STRIPE_SECRET_KEY`           | services    | Stripe secret key (live or test)               |
+| `ALLOWED_ORIGINS`             | services    | Comma-separated CORS origins                   |
+| `API_SECRET_KEY`              | services    | Bearer token for admin API mutations           |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | web + admin | Stripe publishable key                         |
+| `VITE_API_SECRET_KEY`         | admin       | Bearer token for admin API calls               |
+
+### Required GitHub Variables
+
+| Variable        | Used by | Default                                |
+| --------------- | ------- | -------------------------------------- |
+| `VITE_API_URL`  | web     | `https://epic-bee-apiary.workers.dev`  |
+| `VITE_SITE_URL` | web     | `https://golden-hive-apiary.pages.dev` |
 
 ## Sub-projects
 

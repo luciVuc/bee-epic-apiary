@@ -57,12 +57,11 @@ cd ../admin && npm run dev
 
 The testing agent must ensure these are set in `admin/.env`:
 
-| Variable                      | Purpose                                             |
-| ----------------------------- | --------------------------------------------------- |
-| `VITE_API_URL`                | API base URL (`http://localhost:8787`)              |
-| `VITE_API_SECRET_KEY`         | Bearer token for API auth                           |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for payment links            |
-| `VITE_ALLOWED_ORIGINS`        | CORS origins (must include `http://localhost:5174`) |
+| Variable                      | Purpose                                  |
+| ----------------------------- | ---------------------------------------- |
+| `VITE_API_URL`                | API base URL (`http://localhost:8787`)   |
+| `VITE_API_SECRET_KEY`         | Bearer token for API auth                |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for payment links |
 
 ---
 

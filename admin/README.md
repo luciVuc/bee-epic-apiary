@@ -140,6 +140,36 @@ admin/
 └── package.json
 ```
 
+## Deployment
+
+The admin panel deploys to **Cloudflare Pages**.
+
+### Git Integration (recommended)
+
+Connect your GitHub repo to Cloudflare Pages in the dashboard:
+
+| Setting                | Value           |
+| ---------------------- | --------------- |
+| Build command          | `npm run build` |
+| Build output directory | `dist`          |
+| Root directory         | `admin`         |
+
+Environment variables: `VITE_API_URL`, `VITE_STRIPE_PUBLISHABLE_KEY`, `VITE_API_SECRET_KEY`.
+
+**Important**: The admin panel has no login page — it relies on the bearer token from `VITE_API_SECRET_KEY`. Consider putting **Cloudflare Access** in front of the Pages site for an authentication layer.
+
+### CLI Deploy
+
+```bash
+npm run admin:deploy
+```
+
+(Requires `npx wrangler login`.)
+
+### GitHub Actions
+
+Pushes to `main` or `release` run the `.github/workflows/deploy.yml` workflow, which tests and deploys all projects. Admin is deployed to `bee-epic-apiary-admin` Pages project. See the root `README.md` for required secrets.
+
 ## Notes
 
 - Runs on port 5174 by default

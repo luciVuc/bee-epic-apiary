@@ -66,15 +66,16 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 
 ### Commands
 
-| Command                 | Purpose                                                       |
-| ----------------------- | ------------------------------------------------------------- |
-| `npm run dev`           | Start all 3 dev servers (admin:5174, services:8787, web:5173) |
-| `npm run test`          | services tests → admin tests (Vitest)                         |
-| `npm run services:test` | Worker tests (Vitest + `@cloudflare/vitest-pool-workers`)     |
-| `npm run admin:test`    | Admin tests (Vitest + jsdom + React Testing Library)          |
-| `npm run lint`          | ESLint on web, admin, and services                            |
-| `npm run format`        | Prettier on entire repo                                       |
-| `npm run build`         | `services:deploy && web:build && admin:build`                 |
+| Command                 | Purpose                                                                 |
+| ----------------------- | ----------------------------------------------------------------------- |
+| `npm run dev`           | Start all 3 dev servers (admin:5174, services:8787, web:5173)           |
+| `npm run test`          | services tests → admin tests (Vitest)                                   |
+| `npm run services:test` | Worker tests (Vitest + `@cloudflare/vitest-pool-workers`)               |
+| `npm run admin:test`    | Admin tests (Vitest + jsdom + React Testing Library)                    |
+| `npm run lint`          | ESLint on web, admin, and services                                      |
+| `npm run format`        | Prettier on entire repo                                                 |
+| `npm run build`         | Deploy services worker + build web + build admin                        |
+| `npm run deploy`        | Deploy all 3 to Cloudflare (worker via Wrangler, web + admin via Pages) |
 
 ### Testing Thresholds
 
@@ -112,7 +113,7 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 - Legacy JSON in `src/data/` no longer imported
 - Has `vitest` in devDependencies but **no vitest config or test files** — treat as untested
 - PWA via `vite-plugin-pwa` (auto-update service worker, manifest for "Golden Hive Apiary")
-- GitHub Pages deploy via `npm run web:deploy` (gh-pages) + `.github/workflows/deploy.yml` CI on `main`
+- Cloudflare Pages deploy via `npm run web:deploy` (`wrangler pages deploy`) or Git integration
 
 ## Gotchas
 
@@ -121,7 +122,9 @@ Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/
 - `admin/src/utils/api.ts` uses axios; `web/src/utils/api.ts` uses native fetch
 - Local dev requires KV namespaces created (`npx wrangler kv namespace create "RATE_LIMIT_KV"` etc.)
 - services has observability + source maps enabled in wrangler config
-- `npm run build` includes `services:deploy` (= actual Cloudflare deploy, not just build)
+- `npm run build` includes `services:deploy` (= actual Cloudflare Worker deploy, not just build)
+- `npm run deploy` deploys all 3: Worker via Wrangler, web + admin via Cloudflare Pages
+- GitHub Actions: `.github/workflows/deploy.yml` runs tests then deploys all 3 on push to `main`/`release`
 - web and admin both use `tsc && vite build` (type-check before bundling)
 - `services/AGENTS.md`, `services/API.md`, `services/SOURCE.md` are maintained separately
 
