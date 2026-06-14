@@ -68,6 +68,20 @@ export function SiteContentTab({
             value={siteContent.location}
             onChange={(v) => updateSite("location", v)}
           />
+          <TextField
+            label="Latitude"
+            type="number"
+            value={String(siteContent.lat ?? "")}
+            onChange={(v) => updateSite("lat", v ? Number(v) : undefined)}
+            placeholder="e.g. 38.4405"
+          />
+          <TextField
+            label="Longitude"
+            type="number"
+            value={String(siteContent.lng ?? "")}
+            onChange={(v) => updateSite("lng", v ? Number(v) : undefined)}
+            placeholder="e.g. -122.7144"
+          />
         </div>
       </Section>
 

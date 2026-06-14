@@ -103,5 +103,7 @@ export interface ISiteContent {
   email: string;
   phone: string;
   location: string;
+  lat?: number;
+  lng?: number;
   socialLinks: ISocialLinks;
 }

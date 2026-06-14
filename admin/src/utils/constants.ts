@@ -80,6 +80,8 @@ export const DEFAULT_SITE: ISiteContent = {
   email: "hello@beeepicapiary.com",
   phone: "(510) 555-APIARY",
   location: "Union City, California",
+  lat: 37.5964,
+  lng: -122.0181,
   categories: [
     { id: "ALL", label: "All Products" },
     { id: "HONEY", label: "Honey" },

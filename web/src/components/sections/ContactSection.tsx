@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Send, AlertCircle } from "lucide-react";
+import { LocationMap } from "../ui/LocationMap";
 import { SectionHeader } from "../ui/SectionHeader";
 import { Button } from "../ui/Button";
 import { LoadingSpinner } from "../ui/LoadingSpinner";
@@ -308,12 +309,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
               </div>
             </div>
 
-            <div className="aspect-[4/3] bg-primary-50 rounded-2xl flex items-center justify-center">
-              <div className="text-center" aria-hidden="true">
-                <MapPin className="w-12 h-12 text-primary-400 mx-auto mb-3" />
-                <p className="font-body text-primary-700">[Map Placeholder]</p>
-              </div>
-            </div>
+            <LocationMap
+              lat={content.lat}
+              lng={content.lng}
+              location={content.location}
+            />
           </motion.div>
         </div>
       </div>
