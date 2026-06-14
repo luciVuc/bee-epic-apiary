@@ -3,6 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { AdminNavbar } from "../AdminNavbar";
+import { ThemeProvider } from "../../../hooks/useTheme";
 
 const mockGetSettings = vi.fn();
 const mockGetOrders = vi.fn();
@@ -24,7 +25,11 @@ vi.mock("react-router-dom", async () => {
 });
 
 function renderWithRouter(ui: React.ReactElement) {
-  return render(<MemoryRouter>{ui}</MemoryRouter>);
+  return render(
+    <MemoryRouter>
+      <ThemeProvider>{ui}</ThemeProvider>
+    </MemoryRouter>,
+  );
 }
 
 describe("AdminNavbar", () => {

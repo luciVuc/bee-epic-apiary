@@ -1,7 +1,8 @@
 /** Fixed top navigation bar with mobile hamburger menu, dynamic title from settings, notifications panel, and user indicator */
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, User, Menu } from "lucide-react";
+import { Bell, User, Menu, Sun, Moon } from "lucide-react";
+import { useTheme } from "../../hooks/useTheme";
 import * as api from "../../utils/api";
 import type { ISiteContent } from "../../types/settings";
 import type { IOrder } from "../../types/order";
@@ -19,6 +20,7 @@ export interface IAdminNavbarProps {
 
 export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   const navigate = useNavigate();
+  const { isDark, toggleTheme } = useTheme();
   const [businessName, setBusinessName] = useState<string>("");
   const [logo, setLogo] = useState<string>("");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
@@ -40,7 +42,6 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
 
   const fetchNotifications = useCallback(() => {
     api.api
-      // .getOrders({ order_status: "new", limit: 50 })
       .getOrders({ order_status: "new", limit: 50, payment_status: "paid" })
       .then((result) => {
         const sorted = [...result.orders].sort((a, b) => b.created - a.created);
@@ -98,7 +99,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   return (
     <>
       <header
-        className="fixed top-0 left-0 right-0 z-30 bg-white border-b border-gray-200 px-4 md:px-6 py-4 lg:left-64"
+        className="fixed top-0 left-0 right-0 z-30 bg-white dark:bg-dark-950 border-b border-gray-200 dark:border-dark-700 px-4 md:px-6 py-4 lg:left-64"
         data-testid="admin-navbar"
       >
         <div
@@ -109,12 +110,11 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
             data-testid="admin-navbar_branding"
             className="flex items-center gap-4"
           >
-            {/* Mobile menu button */}
             <button
               onClick={onMenuClick}
               aria-label="Toggle navigation menu"
               title="Toggle navigation menu"
-              className="lg:hidden p-2 hover:bg-gray-100 rounded-lg"
+              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
               data-testid="admin-navbar_menu-btn"
             >
               <Menu className="w-5 h-5" />
@@ -132,7 +132,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
                 className="h-7 w-auto"
               />
               <h1
-                className="font-heading text-xl font-bold text-dark-900 hidden sm:block"
+                className="font-heading text-xl font-bold text-dark-900"
                 data-testid="admin-navbar_title"
               >
                 {title}
@@ -163,11 +163,27 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
             className="flex items-center gap-4"
           >
             <button
+              data-testid="admin-navbar_theme-toggle"
+              onClick={toggleTheme}
+              className="p-2 text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
+              aria-label={
+                isDark ? "Switch to light mode" : "Switch to dark mode"
+              }
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? (
+                <Sun className="w-5 h-5" aria-hidden="true" />
+              ) : (
+                <Moon className="w-5 h-5" aria-hidden="true" />
+              )}
+            </button>
+
+            <button
               onClick={() => setIsPanelOpen(true)}
               aria-label="Notifications"
               title="Notifications"
               data-testid="admin-navbar_notifications"
-              className="relative p-2 text-dark-600 hover:bg-gray-100 rounded-lg"
+              className="relative p-2 text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
             >
               <Bell
                 data-testid="admin-navbar_notification-icon"
@@ -181,7 +197,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               )}
             </button>
             <div
-              className="flex items-center gap-2 px-3 py-2 bg-gray-100 rounded-lg"
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-dark-800 rounded-lg"
               data-testid="admin-navbar_user"
             >
               <User

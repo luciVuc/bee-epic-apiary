@@ -40,11 +40,11 @@ export function Sidebar({ onClose }: ISidebarProps) {
 
   return (
     <aside
-      className="w-64 bg-white border-r border-gray-200 flex flex-col h-full"
+      className="w-64 bg-white dark:bg-dark-950 border-r border-gray-200 dark:border-dark-700 flex flex-col h-full"
       data-testid="sidebar"
     >
       <div
-        className="px-6 py-4 border-b border-gray-200 flex items-center justify-between"
+        className="px-6 py-4 border-b border-gray-200 dark:border-dark-700 flex items-center justify-between"
         data-testid="sidebar_header"
       >
         <NavLink
@@ -58,12 +58,11 @@ export function Sidebar({ onClose }: ISidebarProps) {
             Admin Panel
           </span>
         </NavLink>
-        {/* Mobile close button */}
         <button
           onClick={onClose}
           aria-label="Close sidebar"
           title="Close sidebar"
-          className="lg:hidden p-1 hover:bg-gray-100 rounded"
+          className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-dark-800 rounded"
           data-testid="sidebar_close-btn"
         >
           <X className="w-5 h-5" />
@@ -83,8 +82,8 @@ export function Sidebar({ onClose }: ISidebarProps) {
             className={({ isActive }) =>
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive
-                  ? "bg-primary-50 text-primary-700 font-medium"
-                  : "text-dark-600 hover:bg-gray-100"
+                  ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
+                  : "text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-800"
               }`
             }
           >

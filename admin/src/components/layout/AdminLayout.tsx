@@ -8,7 +8,10 @@ export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex" data-testid="admin-layout">
+    <div
+      className="min-h-screen bg-gray-50 dark:bg-dark-900 flex"
+      data-testid="admin-layout"
+    >
       {/* Mobile sidebar overlay */}
       {sidebarOpen && (
         <div
@@ -37,7 +40,7 @@ export function AdminLayout() {
         <AdminNavbar onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <main
           className="flex-1 overflow-y-auto p-4 md:p-6"
-          style={{ paddingTop: "93px" /* matches fixed AdminNavbar height */ }}
+          style={{ paddingTop: "93px" }}
           data-testid="admin-layout_content"
         >
           <Outlet />

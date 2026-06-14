@@ -46,14 +46,39 @@
   --shadow-amber-lg: 0 10px 25px 0 rgba(245, 158, 11, 0.15);
 }
 
+.dark {
+  --color-dark-50: #0c0a09;
+  --color-dark-100: #1c1917;
+  --color-dark-200: #292524;
+  --color-dark-300: #44403c;
+  --color-dark-400: #57534e;
+  --color-dark-500: #78716c;
+  --color-dark-600: #a8a29e;
+  --color-dark-700: #d6d3d1;
+  --color-dark-800: #f5f5f4;
+  --color-dark-900: #fafaf9;
+  --color-dark-950: #0c0a09;
+  --shadow-amber: 0 4px 14px 0 rgba(245, 158, 11, 0.3);
+  --shadow-amber-lg: 0 10px 25px 0 rgba(245, 158, 11, 0.3);
+}
+
 html {
   scroll-behavior: smooth;
 }
 
+html,
 body {
-  /* eslint-disable css/no-invalid-properties */
+  background-color: #ffffff;
+}
+
+.dark html,
+.dark body {
+  background-color: #0c0a09;
+}
+
+body {
+  /* eslint-disable-next-line css/no-invalid-properties */
   font-family: var(--font-family-body);
-  /* eslint-disable css/no-invalid-properties */
   color: var(--color-dark-900);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -85,17 +110,32 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  /* eslint-disable css/no-invalid-properties */
+  /* eslint-disable-next-line css/no-invalid-properties */
   background-color: var(--color-primary-50);
 }
 
+.dark ::-webkit-scrollbar-track {
+  /* eslint-disable-next-line css/no-invalid-properties */
+  background-color: var(--color-primary-950);
+}
+
 ::-webkit-scrollbar-thumb {
-  /* eslint-disable css/no-invalid-properties */
+  /* eslint-disable-next-line css/no-invalid-properties */
   background-color: var(--color-primary-300);
   border-radius: 9999px;
 }
 
+.dark ::-webkit-scrollbar-thumb {
+  /* eslint-disable-next-line css/no-invalid-properties */
+  background-color: var(--color-primary-700);
+}
+
 ::-webkit-scrollbar-thumb:hover {
-  /* eslint-disable css/no-invalid-properties */
+  /* eslint-disable-next-line css/no-invalid-properties */
   background-color: var(--color-primary-400);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  /* eslint-disable-next-line css/no-invalid-properties */
+  background-color: var(--color-primary-600);
 }

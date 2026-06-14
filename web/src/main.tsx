@@ -6,6 +6,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { CheckCircle } from "lucide-react";
 import App from "./App.tsx";
 import { store } from "./store";
+import { ThemeProvider } from "./hooks/useTheme";
 import "./index.css";
 
 interface IBeforeInstallPromptEvent extends Event {
@@ -66,8 +67,10 @@ createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
       <HelmetProvider>
         <BrowserRouter>
-          <App />
-          <InstallPrompt />
+          <ThemeProvider>
+            <App />
+            <InstallPrompt />
+          </ThemeProvider>
         </BrowserRouter>
       </HelmetProvider>
     </Provider>

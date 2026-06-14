@@ -25,14 +25,17 @@ export const Footer = ({ content }: IFooterProps) => {
     }));
 
   return (
-    <footer data-testid="footer" className="bg-dark-900 text-white">
+    <footer
+      data-testid="footer"
+      className="bg-dark-900 dark:bg-dark-950 text-white"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div className="lg:col-span-2">
             <h3 className="font-heading text-2xl font-bold text-primary-400 mb-4">
               {content.businessName}
             </h3>
-            <p className="font-body text-dark-300 mb-6 max-w-md">
+            <p className="font-body text-dark-300 dark:text-dark-600 mb-6 max-w-md">
               {content.tagline}
             </p>
             <div className="flex space-x-4">
@@ -42,7 +45,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_instagram-link"
-                  className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Instagram"
                   title="Instagram"
                 >
@@ -55,7 +58,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_facebook-link"
-                  className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Facebook"
                   title="Facebook"
                 >
@@ -68,7 +71,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_etsy-link"
-                  className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Etsy"
                   title="Etsy"
                 >
@@ -81,7 +84,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_twitter-link"
-                  className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Twitter"
                   title="Twitter"
                 >
@@ -94,7 +97,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_youtube-link"
-                  className="p-2 bg-dark-800 rounded-lg hover:bg-primary-600 transition-colors duration-200"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="YouTube"
                   title="YouTube"
                 >
@@ -114,7 +117,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   <Link
                     to={link.path}
                     data-testid={`footer_link-${link.label.toLowerCase().replace(/\s+/g, "-")}`}
-                    className="font-body text-dark-300 hover:text-primary-400 transition-colors duration-200"
+                    className="font-body text-dark-300 dark:text-dark-600 hover:text-primary-400 transition-colors duration-200"
                   >
                     {link.label}
                   </Link>
@@ -136,7 +139,7 @@ export const Footer = ({ content }: IFooterProps) => {
                 <a
                   href={`mailto:${content.email}`}
                   data-testid="footer_email-link"
-                  className="font-body text-dark-300 hover:text-primary-400 transition-colors duration-200"
+                  className="font-body text-dark-300 dark:text-dark-600 hover:text-primary-400 transition-colors duration-200"
                 >
                   {content.email}
                 </a>
@@ -149,7 +152,7 @@ export const Footer = ({ content }: IFooterProps) => {
                 <a
                   href={`tel:${content.phone}`}
                   data-testid="footer_phone-link"
-                  className="font-body text-dark-300 hover:text-primary-400 transition-colors duration-200"
+                  className="font-body text-dark-300 dark:text-dark-600 hover:text-primary-400 transition-colors duration-200"
                 >
                   {content.phone}
                 </a>
@@ -159,7 +162,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   className="w-5 h-5 text-primary-400 mt-0.5"
                   aria-hidden="true"
                 />
-                <span className="font-body text-dark-300">
+                <span className="font-body text-dark-300 dark:text-dark-600">
                   {content.location}
                 </span>
               </li>
@@ -167,9 +170,9 @@ export const Footer = ({ content }: IFooterProps) => {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-dark-800">
-          <p className="font-body text-center text-dark-400">
-            © {currentYear} {content.businessName}. All rights reserved.
+        <div className="mt-12 pt-8 border-t border-dark-800 dark:border-dark-700">
+          <p className="font-body text-center text-dark-400 dark:text-dark-500">
+            &copy; {currentYear} {content.businessName}. All rights reserved.
           </p>
           <p className="font-body text-center text-dark-500 mt-2">
             {content.footerTagline}

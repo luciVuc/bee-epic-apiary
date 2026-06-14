@@ -30,7 +30,7 @@ export const CartDrawer = () => {
 
           <motion.div
             data-testid="cart-drawer"
-            className="fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-xl z-50 flex flex-col"
+            className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-dark-950 shadow-xl z-50 flex flex-col"
             role="dialog"
             aria-modal="true"
             aria-labelledby="cart-drawer_title"
@@ -108,8 +108,8 @@ export const CartDrawer = () => {
                   </p>
                 )}
 
-                <div className="p-3 bg-amber-50 rounded-lg">
-                  <p className="font-body text-xs text-amber-800">
+                <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+                  <p className="font-body text-xs text-amber-800 dark:text-amber-300">
                     Note: Stripe is in TEST MODE. Replace your Stripe keys in
                     .env for production.
                   </p>

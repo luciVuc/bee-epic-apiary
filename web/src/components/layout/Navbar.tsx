@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShoppingCart, Menu, X } from "lucide-react";
+import { ShoppingCart, Menu, X, Sun, Moon } from "lucide-react";
 import { useCart } from "../../hooks/useCart";
+import { useTheme } from "../../hooks/useTheme";
 import type { ISiteContent } from "../../types";
 import { DEFAULT_LOGO } from "../../utils/constants";
 
@@ -14,6 +15,7 @@ export const Navbar = ({ content }: INavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { totalItems, open } = useCart();
+  const { isDark, toggleTheme } = useTheme();
   const location = useLocation();
 
   useEffect(() => {
@@ -41,7 +43,9 @@ export const Navbar = ({ content }: INavbarProps) => {
     <motion.nav
       data-testid="navbar"
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white/90 backdrop-blur-md shadow-sm" : "bg-transparent"
+        isScrolled
+          ? "bg-white/90 backdrop-blur-md shadow-sm dark:bg-dark-950/90"
+          : "bg-transparent"
       }`}
       initial={{ y: -100 }}
       animate={{ y: 0 }}
@@ -94,8 +98,24 @@ export const Navbar = ({ content }: INavbarProps) => {
 
           <div
             data-testid="navbar_cart-container"
-            className="flex items-center space-x-4"
+            className="flex items-center space-x-2"
           >
+            <button
+              data-testid="navbar_theme-toggle"
+              onClick={toggleTheme}
+              className="p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+              aria-label={
+                isDark ? "Switch to light mode" : "Switch to dark mode"
+              }
+              title={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? (
+                <Sun className="w-5 h-5 text-dark-700" aria-hidden="true" />
+              ) : (
+                <Moon className="w-5 h-5 text-dark-700" aria-hidden="true" />
+              )}
+            </button>
+
             <button
               data-testid="navbar_cart-btn"
               onClick={open}
@@ -143,7 +163,7 @@ export const Navbar = ({ content }: INavbarProps) => {
           <motion.div
             id="navbar_mobile-menu"
             data-testid="navbar_mobile-menu"
-            className="md:hidden bg-white border-t border-dark-100"
+            className="md:hidden bg-white dark:bg-dark-950 border-t border-dark-100"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -162,7 +182,7 @@ export const Navbar = ({ content }: INavbarProps) => {
                     data-testid={`navbar_mobile-link-${link.id}`}
                     className={`block w-full text-left py-2 px-4 rounded-lg font-body font-medium transition-colors duration-200 ${
                       isActive(link.id)
-                        ? "bg-primary-50 text-primary-600"
+                        ? "bg-primary-50 dark:bg-primary-950 text-primary-600"
                         : "text-dark-600 hover:bg-dark-50"
                     }`}
                     aria-current={isActive(link.id) ? "page" : undefined}
