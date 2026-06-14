@@ -58,11 +58,13 @@ export function LocationMap({ lat, lng, location }: ILocationMapProps) {
     return (
       <div
         data-testid="contact-map"
-        className="aspect-[4/3] bg-primary-50 rounded-2xl flex items-center justify-center"
+        className="aspect-[4/3] bg-primary-50 dark:bg-dark-100 rounded-2xl flex items-center justify-center"
       >
         <div className="text-center" aria-hidden="true">
-          <MapPin className="w-12 h-12 text-primary-400 mx-auto mb-3" />
-          <p className="font-body text-primary-700">{location}</p>
+          <MapPin className="w-12 h-12 text-primary-400 dark:text-primary-300 mx-auto mb-3" />
+          <p className="font-body text-primary-700 dark:text-primary-300">
+            {location}
+          </p>
         </div>
       </div>
     );

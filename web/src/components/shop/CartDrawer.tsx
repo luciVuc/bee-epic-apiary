@@ -58,7 +58,7 @@ export const CartDrawer = () => {
               <button
                 data-testid="cart-drawer_close-btn"
                 onClick={close}
-                className="p-2 hover:bg-dark-100 rounded-lg transition-colors"
+                className="p-2 hover:bg-dark-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
                 aria-label="Close cart"
                 title="Close cart"
                 autoFocus
@@ -103,7 +103,10 @@ export const CartDrawer = () => {
                 </div>
 
                 {error && (
-                  <p className="font-body text-sm text-red-600" role="alert">
+                  <p
+                    className="font-body text-sm text-red-600 dark:text-red-400"
+                    role="alert"
+                  >
                     {error}
                   </p>
                 )}

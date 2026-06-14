@@ -21,7 +21,7 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
     <section
       id="process"
       data-testid="process-section"
-      className="py-20 bg-primary-50"
+      className="py-20 bg-primary-50 dark:bg-dark-950"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
@@ -31,7 +31,7 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
 
         <div className="relative">
           <div
-            className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-primary-200 -translate-y-1/2"
+            className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-primary-200 dark:bg-primary-800 -translate-y-1/2"
             aria-hidden="true"
           />
 
@@ -51,7 +51,7 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
                 >
                   <div className="flex flex-col items-center text-center">
                     <motion.div
-                      className="w-16 h-16 bg-white rounded-full shadow-amber flex items-center justify-center mb-4 relative z-10"
+                      className="w-16 h-16 bg-white dark:bg-dark-100 rounded-full shadow-amber flex items-center justify-center mb-4 relative z-10"
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.2 }}
                     >
@@ -61,7 +61,7 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
                       />
                     </motion.div>
 
-                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary-500 text-white rounded-full flex items-center justify-center font-heading font-bold text-sm">
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-primary-500 dark:bg-primary-600 text-white rounded-full flex items-center justify-center font-heading font-bold text-sm">
                       {processStep.step}
                     </div>
 
@@ -80,7 +80,7 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
         </div>
 
         <div className="mt-16 md:hidden">
-          <div className="border-l-2 border-primary-200 ml-8">
+          <div className="border-l-2 border-primary-200 dark:border-primary-800 ml-8">
             {steps.map((processStep, index) => {
               const IconComponent = iconMap[processStep.icon] || ChevronRight;
 
@@ -93,8 +93,8 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
-                  <div className="absolute -left-[9px] top-0 w-4 h-4 bg-primary-500 rounded-full" />
-                  <div className="w-12 h-12 bg-white rounded-full shadow-amber flex items-center justify-center mb-3">
+                  <div className="absolute -left-[9px] top-0 w-4 h-4 bg-primary-500 dark:bg-primary-600 rounded-full" />
+                  <div className="w-12 h-12 bg-white dark:bg-dark-100 rounded-full shadow-amber flex items-center justify-center mb-3">
                     <IconComponent
                       className="w-6 h-6 text-primary-500"
                       aria-hidden="true"

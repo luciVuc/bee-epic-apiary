@@ -86,8 +86,8 @@ export const Navbar = ({ content }: INavbarProps) => {
                   data-testid={`navbar_link-${link.id}`}
                   className={`font-body text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded ${
                     isActive(link.id)
-                      ? "text-primary-600"
-                      : "text-dark-600 hover:text-primary-600"
+                      ? "text-primary-600 dark:text-primary-400"
+                      : "text-dark-600 hover:text-primary-600 dark:hover:text-primary-400"
                   }`}
                   aria-current={isActive(link.id) ? "page" : undefined}
                 >
@@ -110,9 +110,15 @@ export const Navbar = ({ content }: INavbarProps) => {
               title={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {isDark ? (
-                <Sun className="w-5 h-5 text-dark-700" aria-hidden="true" />
+                <Sun
+                  className="w-5 h-5 text-dark-700 dark:text-dark-600"
+                  aria-hidden="true"
+                />
               ) : (
-                <Moon className="w-5 h-5 text-dark-700" aria-hidden="true" />
+                <Moon
+                  className="w-5 h-5 text-dark-700 dark:text-dark-600"
+                  aria-hidden="true"
+                />
               )}
             </button>
 
@@ -124,7 +130,7 @@ export const Navbar = ({ content }: INavbarProps) => {
               title={`Shopping cart with ${totalItems} items`}
             >
               <ShoppingCart
-                className="w-6 h-6 text-dark-700"
+                className="w-6 h-6 text-dark-700 dark:text-dark-600"
                 aria-hidden="true"
               />
               {totalItems > 0 && (
@@ -149,9 +155,15 @@ export const Navbar = ({ content }: INavbarProps) => {
               aria-controls="navbar_mobile-menu"
             >
               {isMobileMenuOpen ? (
-                <X className="w-6 h-6 text-dark-700" aria-hidden="true" />
+                <X
+                  className="w-6 h-6 text-dark-700 dark:text-dark-600"
+                  aria-hidden="true"
+                />
               ) : (
-                <Menu className="w-6 h-6 text-dark-700" aria-hidden="true" />
+                <Menu
+                  className="w-6 h-6 text-dark-700 dark:text-dark-600"
+                  aria-hidden="true"
+                />
               )}
             </button>
           </div>
@@ -182,8 +194,8 @@ export const Navbar = ({ content }: INavbarProps) => {
                     data-testid={`navbar_mobile-link-${link.id}`}
                     className={`block w-full text-left py-2 px-4 rounded-lg font-body font-medium transition-colors duration-200 ${
                       isActive(link.id)
-                        ? "bg-primary-50 dark:bg-primary-950 text-primary-600"
-                        : "text-dark-600 hover:bg-dark-50"
+                        ? "bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400"
+                        : "text-dark-600 hover:bg-dark-50 dark:hover:bg-dark-800"
                     }`}
                     aria-current={isActive(link.id) ? "page" : undefined}
                   >

@@ -39,7 +39,11 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
   ];
 
   return (
-    <section id="about" data-testid="about-section" className="py-20 bg-white">
+    <section
+      id="about"
+      data-testid="about-section"
+      className="py-20 bg-white dark:bg-dark-950"
+    >
       <div
         data-testid="about-content"
         className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
@@ -83,7 +87,7 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
           >
             <div
               data-testid="about-image-content"
-              className="about-image-grid aspect-[4/3] rounded-2xl overflow-hidden bg-primary-100 shadow-amber-lg relative"
+              className="about-image-grid aspect-[4/3] rounded-2xl overflow-hidden bg-primary-100 dark:bg-dark-100 shadow-amber-lg relative"
             >
               {images.length > 0 ? (
                 <>
@@ -103,24 +107,24 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
                       <button
                         data-testid="about-image_prev-btn"
                         onClick={prevImage}
-                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors"
+                        className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 dark:bg-dark-950/80 rounded-full flex items-center justify-center shadow-md hover:bg-white dark:hover:bg-dark-950 transition-colors"
                         aria-label="Previous image"
                         title="Previous image"
                       >
                         <ChevronLeft
-                          className="w-5 h-5 text-dark-700"
+                          className="w-5 h-5 text-dark-700 dark:text-dark-700"
                           aria-hidden="true"
                         />
                       </button>
                       <button
                         data-testid="about-image_next-btn"
                         onClick={nextImage}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 bg-white/80 dark:bg-dark-950/80 rounded-full flex items-center justify-center shadow-md hover:bg-white dark:hover:bg-dark-950 transition-colors"
                         aria-label="Next image"
                         title="Next image"
                       >
                         <ChevronRight
-                          className="w-5 h-5 text-dark-700"
+                          className="w-5 h-5 text-dark-700 dark:text-dark-700"
                           aria-hidden="true"
                         />
                       </button>
@@ -133,7 +137,7 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
                             key={idx}
                             data-testid={`about-image_indicator-${idx}`}
                             onClick={() => setCurrentImageIndex(idx)}
-                            className={`w-2 h-2 rounded-full transition-colors ${idx === currentImageIndex ? "bg-primary-500" : "bg-dark-300"}`}
+                            className={`w-2 h-2 rounded-full transition-colors ${idx === currentImageIndex ? "bg-primary-500 dark:bg-primary-400" : "bg-dark-300 dark:bg-dark-600"}`}
                             aria-label={`Go to image ${idx + 1}`}
                             title={`Go to image ${idx + 1}`}
                           />
@@ -151,7 +155,7 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
                     <span className="text-6xl" aria-hidden="true">
                       🐝
                     </span>
-                    <p className="font-body text-primary-700 mt-4">
+                    <p className="font-body text-primary-700 dark:text-primary-300 mt-4">
                       [About Image]
                     </p>
                   </div>
@@ -161,16 +165,16 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
 
             <motion.div
               data-testid="about-stats"
-              className="absolute -bottom-6 -left-6 bg-white rounded-xl shadow-amber p-4"
+              className="absolute -bottom-6 -left-6 bg-white dark:bg-dark-100 rounded-xl shadow-amber p-4"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <p className="font-heading text-2xl font-bold text-primary-600">
+              <p className="font-heading text-2xl font-bold text-primary-600 dark:text-primary-400">
                 {content.sinceYear}
               </p>
-              <p className="font-body text-sm text-dark-500">
+              <p className="font-body text-sm text-dark-500 dark:text-dark-600">
                 {content.sinceYearLabel}
               </p>
             </motion.div>
@@ -188,14 +192,14 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
           {stats.map((stat, index) => (
             <motion.div
               key={stat.label}
-              className="bg-primary-50 rounded-xl p-6 text-center"
+              className="bg-primary-50 dark:bg-dark-100 rounded-xl p-6 text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
               <stat.icon
-                className="w-10 h-10 text-primary-500 mx-auto mb-3"
+                className="w-10 h-10 text-primary-500 dark:text-primary-400 mx-auto mb-3"
                 aria-hidden="true"
               />
               <p className="font-heading text-3xl font-bold text-dark-900">

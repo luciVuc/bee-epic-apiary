@@ -23,7 +23,7 @@ export const LoadingSpinner = ({
       aria-live="polite"
     >
       <motion.div
-        className={`border-2 border-primary-200 border-t-primary-500 rounded-full ${sizes[size]}`}
+        className={`border-2 border-primary-200 dark:border-primary-800 border-t-primary-500 dark:border-t-primary-400 rounded-full ${sizes[size]}`}
         animate={{ rotate: 360 }}
         transition={{
           duration: 1,

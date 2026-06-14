@@ -32,7 +32,7 @@ export const SectionHeader = ({
         {title}
       </h2>
       {subtitle && (
-        <p className="font-body text-lg text-dark-600 max-w-2xl mx-auto">
+        <p className="font-body text-lg text-dark-600 dark:text-dark-400 max-w-2xl mx-auto">
           {subtitle}
         </p>
       )}

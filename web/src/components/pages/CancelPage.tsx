@@ -19,7 +19,7 @@ export const CancelPage = ({ content }: ICancelPageProps) => {
   return (
     <div
       data-testid="cancel-page"
-      className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white dark:from-amber-950/30 dark:via-dark-950 dark:to-dark-950 flex items-center justify-center p-4"
     >
       <SeoHead
         title="Checkout Cancelled"
@@ -28,21 +28,21 @@ export const CancelPage = ({ content }: ICancelPageProps) => {
       />
       <motion.div
         data-testid="cancel-page_container"
-        className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
+        className="bg-white dark:bg-dark-100 rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         <motion.div
           data-testid="cancel-page_icon"
-          className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6"
+          className="w-20 h-20 bg-amber-100 dark:bg-amber-900/30 rounded-full flex items-center justify-center mx-auto mb-6"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring" }}
         >
           <XCircle
             data-testid="cancel-page_icon"
-            className="w-10 h-10 text-amber-600"
+            className="w-10 h-10 text-amber-600 dark:text-amber-400"
             aria-hidden="true"
           />
         </motion.div>
@@ -64,7 +64,7 @@ export const CancelPage = ({ content }: ICancelPageProps) => {
 
         <div
           data-testid="cancel-page_help"
-          className="bg-dark-50 rounded-xl p-4 mb-6 text-left"
+          className="bg-dark-50 dark:bg-dark-100 rounded-xl p-4 mb-6 text-left"
         >
           <h3
             data-testid="cancel-page_help-title"
@@ -132,7 +132,7 @@ export const CancelPage = ({ content }: ICancelPageProps) => {
           <a
             data-testid="cancel-page_contact-email"
             href={`mailto:${content.email}`}
-            className="text-primary-600 hover:underline"
+            className="text-primary-600 dark:text-primary-400 hover:underline"
           >
             {content.email}
           </a>

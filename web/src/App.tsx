@@ -56,7 +56,7 @@ function AppContent() {
     return (
       <div
         data-testid="app-loading"
-        className="min-h-screen flex items-center justify-center bg-primary-50"
+        className="min-h-screen flex items-center justify-center bg-primary-50 dark:bg-dark-950"
       >
         <LoadingSpinner size="lg" />
       </div>
@@ -67,7 +67,7 @@ function AppContent() {
     return (
       <div
         data-testid="app-error"
-        className="min-h-screen flex items-center justify-center bg-primary-50"
+        className="min-h-screen flex items-center justify-center bg-primary-50 dark:bg-dark-950"
       >
         <div className="text-center">
           <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
@@ -135,14 +135,14 @@ function AppContent() {
           >
             <motion.div
               data-testid="success-modal"
-              className="bg-white rounded-2xl p-8 max-w-md w-full"
+              className="bg-white dark:bg-dark-100 rounded-2xl p-8 max-w-md w-full"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="text-center">
-                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
                   <span className="text-3xl" aria-hidden="true">
                     🎉
                   </span>
@@ -156,13 +156,13 @@ function AppContent() {
                 <p className="font-body text-dark-600 mb-2">
                   {siteContent.orderConfirmationMessage}
                 </p>
-                <p className="font-body text-sm text-dark-500 mb-6">
+                <p className="font-body text-sm text-dark-500 dark:text-dark-600 mb-6">
                   {siteContent.questionsContact} {siteContent.email}
                 </p>
                 <button
                   data-testid="success-modal_continue-btn"
                   onClick={() => setShowSuccessModal(false)}
-                  className="px-6 py-2 bg-primary-500 text-white rounded-xl font-body font-medium hover:bg-primary-600 transition-colors"
+                  className="px-6 py-2 bg-primary-500 dark:bg-primary-600 text-white rounded-xl font-body font-medium hover:bg-primary-600 dark:hover:bg-primary-700 transition-colors"
                   aria-label={siteContent.continueShopping}
                   title={siteContent.continueShopping}
                 >

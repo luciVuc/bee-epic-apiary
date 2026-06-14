@@ -13,7 +13,7 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
     <section
       id="home"
       data-testid="hero-section"
-      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-amber-50 via-primary-50 to-white"
+      className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-b from-amber-50 via-primary-50 to-white dark:from-amber-950/30 dark:via-dark-950 dark:to-dark-950"
     >
       <div
         data-testid="hero-section_background"
@@ -22,7 +22,7 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
       >
         <motion.div
           data-testid="hero-section_animated-bg-1"
-          className="absolute -top-20 -right-20 w-96 h-96 bg-primary-200 rounded-full opacity-30"
+          className="absolute -top-20 -right-20 w-96 h-96 bg-primary-200 dark:bg-primary-800 rounded-full opacity-30 dark:opacity-20"
           animate={{
             scale: [1, 1.1, 1],
             rotate: [0, 90, 0],
@@ -35,7 +35,7 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
         />
         <motion.div
           data-testid="hero-section_animated-bg-2"
-          className="absolute bottom-20 -left-20 w-64 h-64 bg-amber-200 rounded-full opacity-30"
+          className="absolute bottom-20 -left-20 w-64 h-64 bg-amber-200 dark:bg-amber-800 rounded-full opacity-30 dark:opacity-20"
           animate={{
             scale: [1, 1.2, 1],
             rotate: [0, -90, 0],
@@ -59,13 +59,13 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
         >
           <motion.div
             data-testid="hero-section_tagline"
-            className="inline-flex items-center space-x-2 bg-primary-100 rounded-full px-4 py-1.5 mb-6"
+            className="inline-flex items-center space-x-2 bg-primary-100 dark:bg-dark-100 rounded-full px-4 py-1.5 mb-6"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.2 }}
           >
             <Heart className="w-4 h-4 text-primary-500" aria-hidden="true" />
-            <span className="font-body text-sm text-primary-700">
+            <span className="font-body text-sm text-primary-700 dark:text-primary-300">
               {content.tagline}
             </span>
           </motion.div>
@@ -112,9 +112,9 @@ export const HeroSection = ({ content }: IHeroSectionProps) => {
         transition={{ duration: 2, repeat: Infinity }}
         aria-hidden="true"
       >
-        <div className="w-6 h-10 border-2 border-dark-300 rounded-full flex justify-center pt-1">
+        <div className="w-6 h-10 border-2 border-dark-300 dark:border-dark-600 rounded-full flex justify-center pt-1">
           <motion.div
-            className="w-1.5 h-1.5 bg-dark-400 rounded-full"
+            className="w-1.5 h-1.5 bg-dark-400 dark:bg-dark-500 rounded-full"
             animate={{ y: [0, 12, 0] }}
             transition={{ duration: 1.5, repeat: Infinity }}
           />

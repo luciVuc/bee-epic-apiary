@@ -45,7 +45,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_instagram-link"
-                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 dark:bg-dark-200 dark:hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Instagram"
                   title="Instagram"
                 >
@@ -58,7 +58,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_facebook-link"
-                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 dark:bg-dark-200 dark:hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Facebook"
                   title="Facebook"
                 >
@@ -71,7 +71,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_etsy-link"
-                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 dark:bg-dark-200 dark:hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Etsy"
                   title="Etsy"
                 >
@@ -84,7 +84,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_twitter-link"
-                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 dark:bg-dark-200 dark:hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="Twitter"
                   title="Twitter"
                 >
@@ -97,7 +97,7 @@ export const Footer = ({ content }: IFooterProps) => {
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer_youtube-link"
-                  className="p-2 bg-dark-800 hover:bg-primary-600 transition-colors duration-200 rounded-lg"
+                  className="p-2 bg-dark-800 hover:bg-primary-600 dark:bg-dark-200 dark:hover:bg-primary-600 transition-colors duration-200 rounded-lg"
                   aria-label="YouTube"
                   title="YouTube"
                 >
@@ -170,7 +170,7 @@ export const Footer = ({ content }: IFooterProps) => {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-dark-800 dark:border-dark-700">
+        <div className="mt-12 pt-8 border-t border-dark-800 dark:border-dark-700/50">
           <p className="font-body text-center text-dark-400 dark:text-dark-500">
             &copy; {currentYear} {content.businessName}. All rights reserved.
           </p>

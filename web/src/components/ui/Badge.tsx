@@ -14,11 +14,14 @@ export const Badge = ({
   "data-testid": testId = "badge",
 }: IBadgeProps) => {
   const variants = {
-    default: "bg-dark-100 text-dark-700",
-    success: "bg-green-100 text-green-800",
-    warning: "bg-amber-100 text-amber-800",
-    error: "bg-red-100 text-red-800",
-    featured: "bg-primary-100 text-primary-800",
+    default: "bg-dark-100 text-dark-700 dark:bg-dark-800 dark:text-dark-300",
+    success:
+      "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300",
+    warning:
+      "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300",
+    error: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300",
+    featured:
+      "bg-primary-100 text-primary-800 dark:bg-primary-950 dark:text-primary-300",
   };
 
   return (

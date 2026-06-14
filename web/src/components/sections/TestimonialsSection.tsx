@@ -17,7 +17,7 @@ export const TestimonialsSection = ({
     <section
       id="testimonials"
       data-testid="testimonials-section"
-      className="py-20 bg-primary-50"
+      className="py-20 bg-primary-50 dark:bg-dark-950"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader
@@ -30,7 +30,7 @@ export const TestimonialsSection = ({
             <motion.div
               key={testimonial.id}
               data-testid={`testimonials-section_card-${testimonial.id}`}
-              className="bg-white rounded-2xl p-6 shadow-sm"
+              className="bg-white dark:bg-dark-100 rounded-2xl p-6 shadow-sm"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -42,7 +42,7 @@ export const TestimonialsSection = ({
                     key={i}
                     className={`w-4 h-4 ${
                       i < testimonial.rating
-                        ? "fill-primary-500 text-primary-500"
+                        ? "fill-primary-500 text-primary-500 dark:fill-primary-400 dark:text-primary-400"
                         : "fill-dark-200 text-dark-200"
                     }`}
                     aria-hidden="true"
@@ -51,7 +51,7 @@ export const TestimonialsSection = ({
               </div>
 
               <Quote
-                className="w-8 h-8 text-primary-200 mb-3"
+                className="w-8 h-8 text-primary-200 dark:text-primary-800 mb-3"
                 aria-hidden="true"
               />
 
@@ -64,11 +64,11 @@ export const TestimonialsSection = ({
                   <p className="font-heading font-semibold text-dark-900">
                     {testimonial.name}
                   </p>
-                  <p className="font-body text-sm text-dark-500">
+                  <p className="font-body text-sm text-dark-500 dark:text-dark-600">
                     {testimonial.location}
                   </p>
                 </div>
-                <p className="font-body text-xs text-dark-400">
+                <p className="font-body text-xs text-dark-400 dark:text-dark-600">
                   {formatDate(testimonial.date)}
                 </p>
               </div>

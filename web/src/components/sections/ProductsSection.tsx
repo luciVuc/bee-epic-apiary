@@ -214,7 +214,7 @@ export const ProductsSection = ({
     <section
       id="products"
       data-testid="products-section"
-      className="py-20 bg-white"
+      className="py-20 bg-white dark:bg-dark-950"
       ref={sectionRef}
     >
       <div
@@ -227,10 +227,23 @@ export const ProductsSection = ({
         />
 
         {/* Search and Sort toolbar */}
-        <div className="flex flex-col sm:flex-row gap-4 mb-8">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
-            <label htmlFor="products-search" className="sr-only">
+        <div
+          data-testid="products-section_toolbar"
+          className="flex flex-col sm:flex-row gap-4 mb-8"
+        >
+          <div
+            data-testid="products-section_search-container"
+            className="relative flex-1"
+          >
+            <Search
+              data-testid="products-section_search-icon"
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400 dark:text-dark-600"
+            />
+            <label
+              data-testid="products-section_search-label"
+              htmlFor="products-search"
+              className="sr-only"
+            >
               Search products
             </label>
             <input
@@ -240,28 +253,34 @@ export const ProductsSection = ({
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               data-testid="products-section_search-input"
-              className="w-full pl-10 pr-10 py-2.5 border border-dark-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-body text-sm"
+              className="w-full pl-10 pr-10 py-2.5 border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-body text-sm"
             />
             {searchTerm && (
               <button
                 onClick={() => handleSearchChange("")}
                 aria-label="Clear search"
                 data-testid="products-section_search-clear"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-500 dark:text-dark-400 hover:text-dark-700 dark:hover:text-dark-300 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <ArrowUpDown className="w-4 h-4 text-dark-400" />
+          <div
+            data-testid="products-section_sort-container"
+            className="flex items-center gap-2 shrink-0"
+          >
+            <ArrowUpDown
+              data-testid="products-section_sort-icon"
+              className="w-4 h-4 text-dark-400 dark:text-dark-600"
+            />
             <select
               value={sortValue}
               onChange={(e) => handleSortChange(e.target.value)}
               aria-label="Sort products"
               data-testid="products-section_sort-select"
-              className="px-4 py-2.5 border border-dark-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-body text-sm"
+              className="px-4 py-2.5 border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-body text-sm"
             >
               <option value="name-asc">Name (A-Z)</option>
               <option value="name-desc">Name (Z-A)</option>
@@ -280,8 +299,8 @@ export const ProductsSection = ({
               onClick={() => handleCategoryClick(category.id)}
               className={`px-4 py-2 rounded-full font-body text-sm font-medium transition-all duration-200 ${
                 activeCategory === category.id
-                  ? "bg-primary-500 text-white shadow-amber"
-                  : "bg-primary-50 text-dark-600 hover:bg-primary-100"
+                  ? "bg-primary-500 dark:bg-primary-600 text-white shadow-amber"
+                  : "bg-primary-50 dark:bg-primary-950 text-dark-600 dark:text-dark-700 hover:bg-primary-100 dark:hover:bg-primary-900"
               }`}
               aria-label={`Filter by ${category.label}`}
               title={`Filter by ${category.label}`}
@@ -301,8 +320,8 @@ export const ProductsSection = ({
                 onClick={() => handleTagClick(tag)}
                 className={`px-4 py-2 rounded-full font-body text-sm font-medium transition-all duration-200 ${
                   activeTag === tag
-                    ? "bg-secondary-500 text-white"
-                    : "bg-secondary-50 text-dark-600 hover:bg-secondary-100"
+                    ? "bg-secondary-500 dark:bg-secondary-700 text-white"
+                    : "bg-secondary-50 dark:bg-secondary-950 text-dark-600 dark:text-dark-700 hover:bg-secondary-100 dark:hover:bg-secondary-900"
                 }`}
                 aria-label={`Filter by tag ${tag}`}
                 title={`Filter by tag ${tag}`}

@@ -37,8 +37,8 @@ export const CheckoutButton = ({
       </Button>
 
       {showDevNote && (
-        <div className="mt-3 p-3 bg-amber-50 rounded-lg">
-          <p className="font-body text-xs text-amber-800">
+        <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
+          <p className="font-body text-xs text-amber-800 dark:text-amber-300">
             Note: Stripe is in TEST MODE. Replace your Stripe publishable key in
             .env for production.
           </p>
@@ -46,7 +46,10 @@ export const CheckoutButton = ({
       )}
 
       {error && (
-        <p className="mt-2 font-body text-sm text-red-600" role="alert">
+        <p
+          className="mt-2 font-body text-sm text-red-600 dark:text-red-400"
+          role="alert"
+        >
           {error}
         </p>
       )}

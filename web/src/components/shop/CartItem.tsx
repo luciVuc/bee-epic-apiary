@@ -22,7 +22,7 @@ export const CartItem = ({ item }: ICartItemProps) => {
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
     >
-      <div className="w-16 h-16 bg-primary-50 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+      <div className="w-16 h-16 bg-primary-50 dark:bg-dark-800 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
         {product.imageUrls && product.imageUrls[0] ? (
           <img
             src={product.imageUrls[0]}
@@ -41,7 +41,7 @@ export const CartItem = ({ item }: ICartItemProps) => {
           <Link
             to={`/products/${product.slug}`}
             data-testid={`cart-item_${product.id}_name-link`}
-            className="hover:text-primary-600 transition-colors"
+            className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
           >
             {product.name}
           </Link>
@@ -53,7 +53,7 @@ export const CartItem = ({ item }: ICartItemProps) => {
         <button
           data-testid={`cart-item_${product.id}_decrease-btn`}
           onClick={() => update(product.id, quantity - 1)}
-          className="p-1 hover:bg-dark-100 rounded transition-colors"
+          className="p-1 hover:bg-dark-100 dark:hover:bg-dark-800 rounded transition-colors"
           aria-label="Decrease quantity"
           title="Decrease quantity"
         >
@@ -65,7 +65,7 @@ export const CartItem = ({ item }: ICartItemProps) => {
         <button
           data-testid={`cart-item_${product.id}_increase-btn`}
           onClick={() => update(product.id, quantity + 1)}
-          className="p-1 hover:bg-dark-100 rounded transition-colors"
+          className="p-1 hover:bg-dark-100 dark:hover:bg-dark-800 rounded transition-colors"
           aria-label="Increase quantity"
           title="Increase quantity"
         >
@@ -82,11 +82,14 @@ export const CartItem = ({ item }: ICartItemProps) => {
       <button
         data-testid={`cart-item_${product.id}_remove-btn`}
         onClick={() => remove(product.id)}
-        className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+        className="p-2 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg transition-colors"
         aria-label={`Remove ${product.name} from cart`}
         title={`Remove ${product.name} from cart`}
       >
-        <Trash2 className="w-4 h-4 text-red-500" aria-hidden="true" />
+        <Trash2
+          className="w-4 h-4 text-red-500 dark:text-red-400"
+          aria-hidden="true"
+        />
       </button>
     </motion.div>
   );

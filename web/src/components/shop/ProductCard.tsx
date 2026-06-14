@@ -33,14 +33,14 @@ export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
       <motion.div
         ref={ref}
         data-testid={`product-card-${product.slug}`}
-        className="bg-white rounded-2xl shadow-sm hover:shadow-amber transition-shadow duration-300 overflow-hidden"
+        className="bg-white dark:bg-dark-100 rounded-2xl shadow-sm hover:shadow-amber transition-shadow duration-300 overflow-hidden"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true }}
         transition={{ duration: 0.4 }}
         whileHover={{ y: -5 }}
       >
-        <div className="aspect-[4/3] bg-primary-50 relative overflow-hidden">
+        <div className="aspect-[4/3] bg-primary-50 dark:bg-dark-800 relative overflow-hidden">
           <Link
             to={`/products/${product.slug}`}
             aria-label={`View ${product.name}`}
@@ -80,13 +80,13 @@ export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
               <Link
                 to={`/products/${product.slug}`}
                 data-testid={`product-card_${product.slug}_name-link`}
-                className="hover:text-primary-600 transition-colors"
+                className="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                 onClick={handleNavigate}
               >
                 {product.name}
               </Link>
             </h3>
-            <span className="font-body text-sm text-dark-500">
+            <span className="font-body text-sm text-dark-500 dark:text-dark-600">
               {product.weight}
             </span>
           </div>
@@ -96,7 +96,7 @@ export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
           </p>
 
           <div className="flex items-center justify-between">
-            <span className="font-heading text-xl font-bold text-primary-600">
+            <span className="font-heading text-xl font-bold text-primary-600 dark:text-primary-400">
               {formatPrice(product.price)}
             </span>
 

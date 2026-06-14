@@ -77,7 +77,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
       <section
         id="contact"
         data-testid="contact-section"
-        className="py-20 bg-white"
+        className="py-20 bg-white dark:bg-dark-950"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <SectionHeader
@@ -90,8 +90,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Send className="w-8 h-8 text-green-600" aria-hidden="true" />
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Send
+                className="w-8 h-8 text-green-600 dark:text-green-400"
+                aria-hidden="true"
+              />
             </div>
             <h3 className="font-heading text-2xl font-semibold text-dark-900 mb-4">
               Message Sent!
@@ -113,7 +116,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
     <section
       id="contact"
       data-testid="contact-section"
-      className="py-20 bg-white"
+      className="py-20 bg-white dark:bg-dark-950"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <SectionHeader title={content.contactTitle} />
@@ -140,7 +143,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   value={formData.name}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body"
+                  className="w-full px-4 py-3 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 outline-none transition-all font-body"
                   placeholder="Your name"
                   aria-label="Your name"
                   title="Enter your name"
@@ -162,7 +165,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body"
+                  className="w-full px-4 py-3 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 outline-none transition-all font-body"
                   placeholder="you@example.com"
                   aria-label="Your email address"
                   title="Enter your email address"
@@ -182,7 +185,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   data-testid="contact-section_select-subject"
                   value={formData.subject}
                   onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body"
+                  className="w-full px-4 py-3 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 outline-none transition-all font-body"
                   aria-label="Subject"
                   title="Select a subject"
                 >
@@ -209,7 +212,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   onChange={handleChange}
                   required
                   rows={5}
-                  className="w-full px-4 py-3 rounded-xl border border-dark-200 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 outline-none transition-all font-body resize-none"
+                  className="w-full px-4 py-3 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 outline-none transition-all font-body resize-none"
                   placeholder="Your message..."
                   aria-label="Your message"
                   title="Enter your message"
@@ -227,14 +230,14 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
 
               {status === "error" && errorMessage && (
                 <div
-                  className="flex items-center space-x-2 p-3 bg-red-50 rounded-lg"
+                  className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg"
                   role="alert"
                 >
                   <AlertCircle
-                    className="w-5 h-5 text-red-500 flex-shrink-0"
+                    className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0"
                     aria-hidden="true"
                   />
-                  <p className="font-body text-sm text-red-600">
+                  <p className="font-body text-sm text-red-600 dark:text-red-400">
                     {errorMessage}
                   </p>
                 </div>
@@ -257,7 +260,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
             viewport={{ once: true }}
             className="space-y-8"
           >
-            <div className="bg-primary-50 rounded-2xl p-8">
+            <div className="bg-primary-50 dark:bg-dark-100 rounded-2xl p-8">
               <h3 className="font-heading text-xl font-semibold text-dark-900 mb-6">
                 Get in Touch
               </h3>
@@ -268,10 +271,12 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                     aria-hidden="true"
                   />
                   <div>
-                    <p className="font-body text-sm text-dark-500">Email</p>
+                    <p className="font-body text-sm text-dark-500 dark:text-dark-600">
+                      Email
+                    </p>
                     <a
                       href={`mailto:${content.email}`}
-                      className="font-body text-dark-900 hover:text-primary-600 transition-colors"
+                      className="font-body text-dark-900 dark:text-dark-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     >
                       {content.email}
                     </a>
@@ -284,10 +289,12 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                     aria-hidden="true"
                   />
                   <div>
-                    <p className="font-body text-sm text-dark-500">Phone</p>
+                    <p className="font-body text-sm text-dark-500 dark:text-dark-600">
+                      Phone
+                    </p>
                     <a
                       href={`tel:${content.phone}`}
-                      className="font-body text-dark-900 hover:text-primary-600 transition-colors"
+                      className="font-body text-dark-900 dark:text-dark-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     >
                       {formatPhoneNumber(content.phone)}
                     </a>
@@ -300,8 +307,10 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                     aria-hidden="true"
                   />
                   <div>
-                    <p className="font-body text-sm text-dark-500">Location</p>
-                    <p className="font-body text-dark-900">
+                    <p className="font-body text-sm text-dark-500 dark:text-dark-600">
+                      Location
+                    </p>
+                    <p className="font-body text-dark-900 dark:text-dark-900">
                       {content.location}
                     </p>
                   </div>

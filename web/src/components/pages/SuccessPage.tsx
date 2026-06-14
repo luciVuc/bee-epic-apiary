@@ -64,7 +64,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
   return (
     <div
       data-testid="success-page"
-      className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white flex items-center justify-center p-4"
+      className="min-h-screen bg-gradient-to-b from-amber-50 via-primary-50 to-white dark:from-amber-950/30 dark:via-dark-950 dark:to-dark-950 flex items-center justify-center p-4"
     >
       <SeoHead
         title="Order Confirmed"
@@ -73,21 +73,21 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
       />
       <motion.div
         data-testid="success-page_container"
-        className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
+        className="bg-white dark:bg-dark-100 rounded-2xl shadow-xl p-8 max-w-md w-full text-center"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ duration: 0.3 }}
       >
         <motion.div
           data-testid="success-page_icon"
-          className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6"
+          className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ delay: 0.2, type: "spring" }}
         >
           <ShoppingBag
             data-testid="success-page_icon"
-            className="w-10 h-10 text-green-600"
+            className="w-10 h-10 text-green-600 dark:text-green-400"
             aria-hidden="true"
           />
         </motion.div>
@@ -109,7 +109,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
         {sessionId && (
           <p
             data-testid="success-page_session-id"
-            className="font-body text-sm text-dark-500 mb-6 flex items-center justify-center gap-1"
+            className="font-body text-sm text-dark-500 dark:text-dark-600 mb-6 flex items-center justify-center gap-1"
           >
             <span data-testid="success-page_session-id-label">Order ID:</span>
             <button
@@ -122,7 +122,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
               {sessionId.slice(0, 12)}...
               {copied ? (
                 <Check
-                  className="w-3.5 h-3.5 text-green-500"
+                  className="w-3.5 h-3.5 text-green-500 dark:text-green-400"
                   aria-hidden="true"
                 />
               ) : (
@@ -134,7 +134,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
 
         <div
           data-testid="success-page_next-steps"
-          className="bg-primary-50 rounded-xl p-4 mb-6 text-left"
+          className="bg-primary-50 dark:bg-dark-100 rounded-xl p-4 mb-6 text-left"
         >
           <h3
             data-testid="success-page_next-steps-title"
@@ -197,7 +197,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
           <a
             data-testid="success-page_contact-email"
             href={`mailto:${content.email}`}
-            className="text-primary-600 hover:underline"
+            className="text-primary-600 dark:text-primary-400 hover:underline"
           >
             {content.email}
           </a>

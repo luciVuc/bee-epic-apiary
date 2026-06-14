@@ -60,7 +60,7 @@ export function ProductDetailPage() {
     return (
       <div
         data-testid="product-detail-page"
-        className="min-h-screen bg-primary-50 flex items-center justify-center"
+        className="min-h-screen bg-primary-50 dark:bg-dark-950 flex items-center justify-center"
       >
         <LoadingSpinner size="lg" />
       </div>
@@ -71,7 +71,7 @@ export function ProductDetailPage() {
     return (
       <div
         data-testid="product-detail-page"
-        className="min-h-screen bg-primary-50 flex items-center justify-center"
+        className="min-h-screen bg-primary-50 dark:bg-dark-950 flex items-center justify-center"
       >
         <div className="text-center">
           <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
@@ -90,7 +90,7 @@ export function ProductDetailPage() {
     return (
       <div
         data-testid="product-detail-page"
-        className="min-h-screen bg-primary-50 flex items-center justify-center"
+        className="min-h-screen bg-primary-50 dark:bg-dark-950 flex items-center justify-center"
       >
         <div className="text-center">
           <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
@@ -131,7 +131,7 @@ export function ProductDetailPage() {
   return (
     <motion.div
       data-testid="product-detail-page"
-      className="min-h-screen bg-primary-50 py-8 px-4 sm:px-6 lg:px-8"
+      className="min-h-screen bg-primary-50 dark:bg-dark-950 py-8 px-4 sm:px-6 lg:px-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
@@ -162,7 +162,7 @@ export function ProductDetailPage() {
               navigate("/products");
             }
           }}
-          className="flex items-center text-dark-600 hover:text-primary-600 transition-colors mb-6 font-body"
+          className="flex items-center text-dark-600 dark:text-dark-600 hover:text-primary-600 dark:hover:text-primary-400 transition-colors mb-6 font-body"
           aria-label="Back to products"
           title="Back to products"
         >
@@ -172,7 +172,7 @@ export function ProductDetailPage() {
 
         <div
           data-testid="product-detail-page_content"
-          className="bg-white rounded-3xl shadow-sm overflow-hidden"
+          className="bg-white dark:bg-dark-100 rounded-3xl shadow-sm overflow-hidden"
         >
           <div
             data-testid="product-detail-page_image-grid"
@@ -180,7 +180,7 @@ export function ProductDetailPage() {
           >
             <div
               data-testid="product-detail-page_image"
-              className="relative aspect-square bg-primary-50"
+              className="relative aspect-square bg-primary-50 dark:bg-dark-800"
             >
               {images.length > 0 ? (
                 <>
@@ -200,24 +200,24 @@ export function ProductDetailPage() {
                       <button
                         data-testid="product-detail-page_prev-image-btn"
                         onClick={prevImage}
-                        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors"
+                        className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-dark-950/80 rounded-full flex items-center justify-center shadow-md hover:bg-white dark:hover:bg-dark-950 transition-colors"
                         aria-label="Previous image"
                         title="Previous image"
                       >
                         <ChevronLeft
-                          className="w-6 h-6 text-dark-700"
+                          className="w-6 h-6 text-dark-700 dark:text-dark-700"
                           aria-hidden="true"
                         />
                       </button>
                       <button
                         data-testid="product-detail-page_next-image-btn"
                         onClick={nextImage}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 rounded-full flex items-center justify-center shadow-md hover:bg-white transition-colors"
+                        className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/80 dark:bg-dark-950/80 rounded-full flex items-center justify-center shadow-md hover:bg-white dark:hover:bg-dark-950 transition-colors"
                         aria-label="Next image"
                         title="Next image"
                       >
                         <ChevronRight
-                          className="w-6 h-6 text-dark-700"
+                          className="w-6 h-6 text-dark-700 dark:text-dark-700"
                           aria-hidden="true"
                         />
                       </button>
@@ -232,8 +232,8 @@ export function ProductDetailPage() {
                             onClick={() => setCurrentImageIndex(idx)}
                             className={`w-2 h-2 rounded-full transition-colors ${
                               idx === currentImageIndex
-                                ? "bg-primary-500"
-                                : "bg-dark-300"
+                                ? "bg-primary-500 dark:bg-primary-400"
+                                : "bg-dark-300 dark:bg-dark-600"
                             }`}
                             aria-label={`Go to image ${idx + 1}`}
                             title={`Go to image ${idx + 1}`}
@@ -262,7 +262,7 @@ export function ProductDetailPage() {
 
             <div className="p-6 sm:p-8 lg:p-12 flex flex-col">
               <div className="mb-2">
-                <span className="text-sm font-body text-primary-600 uppercase tracking-wider">
+                <span className="text-sm font-body text-primary-600 dark:text-primary-400 uppercase tracking-wider">
                   {product.category}
                 </span>
               </div>
@@ -272,7 +272,7 @@ export function ProductDetailPage() {
               </h1>
 
               <div className="flex items-center gap-4 mb-6">
-                <span className="font-heading text-3xl font-bold text-primary-600">
+                <span className="font-heading text-3xl font-bold text-primary-600 dark:text-primary-400">
                   {formatPrice(product.price)}
                 </span>
                 <span className="font-body text-dark-500">
@@ -295,7 +295,7 @@ export function ProductDetailPage() {
                   {product.tags.map((tag) => (
                     <span
                       key={tag}
-                      className="px-3 py-1 bg-primary-50 text-primary-700 rounded-full text-sm font-body"
+                      className="px-3 py-1 bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 rounded-full text-sm font-body"
                     >
                       {tag}
                     </span>
@@ -311,7 +311,7 @@ export function ProductDetailPage() {
                       <button
                         data-testid="product-detail-page_decrease-qty-btn"
                         onClick={() => handleQuantityChange(-1)}
-                        className="p-1 hover:bg-dark-100 rounded transition-colors"
+                        className="p-1 hover:bg-dark-100 dark:hover:bg-dark-800 rounded transition-colors"
                         aria-label="Decrease quantity"
                         title="Decrease quantity"
                       >
@@ -326,7 +326,7 @@ export function ProductDetailPage() {
                       <button
                         data-testid="product-detail-page_increase-qty-btn"
                         onClick={() => handleQuantityChange(1)}
-                        className="p-1 hover:bg-dark-100 rounded transition-colors"
+                        className="p-1 hover:bg-dark-100 dark:hover:bg-dark-800 rounded transition-colors"
                         aria-label="Increase quantity"
                         title="Increase quantity"
                       >
