@@ -351,11 +351,11 @@ export function ProductFormDialog({
       data-testid="product-form-dialog"
     >
       <div
-        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
+        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
         data-testid="product-form-dialog_content"
       >
         <div
-          className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between dark:bg-dark-950 dark:border-gray-700"
+          className="shrink-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between dark:bg-dark-950 dark:border-gray-700"
           data-testid="product-form-dialog_header"
         >
           <h2
@@ -378,7 +378,7 @@ export function ProductFormDialog({
 
         {isEditMode && fetchingEditData ? (
           <div
-            className="flex items-center justify-center h-64"
+            className="flex items-center justify-center h-64 overflow-y-auto"
             role="status"
             aria-live="polite"
           >
@@ -388,7 +388,7 @@ export function ProductFormDialog({
         ) : (
           <form
             onSubmit={handleSubmit}
-            className="p-6 space-y-6"
+            className="p-6 space-y-6 overflow-y-auto flex-1 min-h-0"
             data-testid="product-form-dialog_form"
           >
             {/* Basic Info */}

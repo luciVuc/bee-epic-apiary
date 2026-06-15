@@ -834,8 +834,8 @@ function OrderEditDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       data-testid="order-edit-dialog"
     >
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200 dark:bg-dark-950 dark:border-gray-700">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between dark:border-gray-700">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden border border-gray-200 dark:bg-dark-950 dark:border-gray-700">
+        <div className="shrink-0 px-6 py-4 border-b border-gray-200 flex items-center justify-between dark:border-gray-700">
           <h3
             id="order-edit-title"
             className="font-heading text-xl font-semibold text-dark-900"
@@ -850,7 +850,7 @@ function OrderEditDialog({
             <ArrowLeft className="w-5 h-5" />
           </button>
         </div>
-        <div className="px-6 py-4 space-y-6">
+        <div className="px-6 py-4 space-y-6 overflow-y-auto flex-1 min-h-0">
           <p className="text-sm text-dark-500">
             Update details for order{" "}
             <span className="font-mono">{truncateOrderId(order.id)}</span>
@@ -1032,7 +1032,7 @@ function OrderEditDialog({
             </div>
           </fieldset>
         </div>
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 dark:border-gray-700">
+        <div className="shrink-0 px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 dark:border-gray-700">
           <button
             onClick={onClose}
             className="px-4 py-2 text-dark-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors dark:text-dark-800 dark:bg-dark-200 dark:hover:bg-dark-300"

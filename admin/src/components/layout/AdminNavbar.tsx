@@ -114,7 +114,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               onClick={onMenuClick}
               aria-label="Toggle navigation menu"
               title="Toggle navigation menu"
-              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
+              className="lg:hidden p-2 hover:bg-gray-100 dark:hover:bg-dark-200 rounded-lg"
               data-testid="admin-navbar_menu-btn"
             >
               <Menu className="w-5 h-5" />

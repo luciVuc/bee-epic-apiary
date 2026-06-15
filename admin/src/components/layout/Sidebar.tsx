@@ -62,7 +62,7 @@ export function Sidebar({ onClose }: ISidebarProps) {
           onClick={onClose}
           aria-label="Close sidebar"
           title="Close sidebar"
-          className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-dark-800 rounded"
+          className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-dark-200 rounded"
           data-testid="sidebar_close-btn"
         >
           <X className="w-5 h-5" />
