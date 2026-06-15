@@ -237,7 +237,7 @@ export function OrderDetailPage() {
                   data-testid="order-detail-page_line-items-table"
                   className="w-full"
                 >
-                  <thead className="bg-gray-50 border-b border-gray-200 dark:bg-dark-800 dark:border-gray-700">
+                  <thead className="bg-gray-50 border-b border-gray-200 dark:bg-dark-100 dark:border-gray-700">
                     <tr
                       data-testid="order-detail-page_line-items-table-header"
                       className="text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
@@ -278,7 +278,7 @@ export function OrderDetailPage() {
                     {lineItems.map((item) => (
                       <tr
                         key={item.id}
-                        className="hover:bg-gray-50 transition-colors dark:hover:bg-dark-800"
+                        className="hover:bg-gray-50 transition-colors dark:hover:bg-dark-100"
                         data-testid="order-detail-page_line-items-table-row"
                       >
                         <td
@@ -294,7 +294,7 @@ export function OrderDetailPage() {
                             />
                           ) : (
                             <div
-                              className="w-12 h-12 bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center dark:bg-dark-800 dark:border-gray-700"
+                              className="w-12 h-12 bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center dark:bg-dark-100 dark:border-gray-700"
                               data-testid="order-detail-page_line-items-table-cell-image-placeholder"
                             >
                               <svg
@@ -364,7 +364,7 @@ export function OrderDetailPage() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-50 border-t-2 border-gray-200 dark:bg-dark-800 dark:border-gray-700">
+                  <tfoot className="bg-gray-50 border-t-2 border-gray-200 dark:bg-dark-100 dark:border-gray-700">
                     <tr
                       data-testid="order-detail-page_line-items-table-footer-subtotal"
                       className="text-right"
@@ -689,7 +689,7 @@ export function OrderDetailPage() {
           onClick={() => setShowOrderIdPopup(false)}
         >
           <div
-            className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 dark:bg-dark-950"
+            className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -834,7 +834,7 @@ function OrderEditDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       data-testid="order-edit-dialog"
     >
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto dark:bg-dark-950">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-gray-200 dark:bg-dark-950 dark:border-gray-700">
         <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between dark:border-gray-700">
           <h3
             id="order-edit-title"
@@ -845,7 +845,7 @@ function OrderEditDialog({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1 hover:bg-gray-100 rounded dark:hover:bg-dark-800"
+            className="p-1 hover:bg-gray-100 rounded dark:hover:bg-dark-200"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>

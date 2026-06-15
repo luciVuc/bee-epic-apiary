@@ -351,7 +351,7 @@ export function ProductFormDialog({
       data-testid="product-form-dialog"
     >
       <div
-        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto dark:bg-dark-950"
+        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
         data-testid="product-form-dialog_content"
       >
         <div
@@ -370,7 +370,7 @@ export function ProductFormDialog({
             aria-label="Close dialog"
             title="Close dialog"
             data-testid="product-form-dialog_close-btn"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-800"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-200"
           >
             <X className="w-5 h-5 text-dark-500 dark:text-dark-400" />
           </button>
@@ -805,7 +805,7 @@ export function ProductFormDialog({
                 type="button"
                 onClick={onClose}
                 data-testid="product-form-dialog_cancel-btn"
-                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:border-gray-600 dark:hover:bg-dark-800 dark:text-dark-800"
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:border-gray-600 dark:hover:bg-dark-200 dark:text-dark-800"
               >
                 Cancel
               </button>

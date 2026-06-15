@@ -83,7 +83,7 @@ export function Sidebar({ onClose }: ISidebarProps) {
               `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive
                   ? "bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 font-medium"
-                  : "text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-800"
+                  : "text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-200"
               }`
             }
           >

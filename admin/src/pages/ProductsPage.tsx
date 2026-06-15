@@ -289,7 +289,7 @@ export function ProductsPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             data-testid="products-page_filter-toggle"
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-800"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-200"
           >
             <Filter className="w-4 h-4 text-dark-600" />
             <span className="text-sm font-medium text-dark-700">Filters</span>
@@ -323,7 +323,7 @@ export function ProductsPage() {
                   onChange={(e) => handleCategoryChange(e.target.value)}
                   aria-label="Filter by category"
                   data-testid="products-page_category-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:hover:bg-dark-200 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   <option value="ALL">All Categories</option>
                   {categories.length === 0 ? (
@@ -489,7 +489,7 @@ export function ProductsPage() {
                           }}
                           aria-label="Edit product"
                           title="Edit product"
-                          className="p-2 text-dark-600 hover:bg-dark-100 rounded-lg transition-colors dark:text-dark-400 dark:hover:bg-dark-800"
+                          className="p-2 text-dark-600 hover:bg-dark-100 rounded-lg transition-colors dark:text-dark-400 dark:hover:bg-dark-200"
                         >
                           <Edit className="w-4 h-4" />
                         </button>

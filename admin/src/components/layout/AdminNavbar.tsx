@@ -165,7 +165,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
             <button
               data-testid="admin-navbar_theme-toggle"
               onClick={toggleTheme}
-              className="p-2 text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
+              className="p-2 text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-200 rounded-lg"
               aria-label={
                 isDark ? "Switch to light mode" : "Switch to dark mode"
               }
@@ -183,7 +183,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               aria-label="Notifications"
               title="Notifications"
               data-testid="admin-navbar_notifications"
-              className="relative p-2 text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-800 rounded-lg"
+              className="relative p-2 text-dark-600 hover:bg-gray-100 dark:hover:bg-dark-200 rounded-lg"
             >
               <Bell
                 data-testid="admin-navbar_notification-icon"
@@ -197,7 +197,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               )}
             </button>
             <div
-              className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-dark-800 rounded-lg"
+              className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-dark-200 rounded-lg"
               data-testid="admin-navbar_user"
             >
               <User

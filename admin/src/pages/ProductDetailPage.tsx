@@ -119,7 +119,7 @@ export function ProductDetailPage() {
             onClick={() => navigate(backUrl)}
             aria-label="Back to products"
             title="Back to products"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-800"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-200"
           >
             <ArrowLeft className="w-5 h-5 text-dark-600" />
           </button>

@@ -220,6 +220,16 @@ export function DashboardPage() {
             className="space-y-3"
           >
             <Link
+              data-testid="dashboard-page_quick-actions_view-orders-link"
+              to="/orders"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-dark-100 dark:hover:bg-dark-200"
+            >
+              <span className="font-medium text-dark-700 dark:text-dark-800">
+                View Orders
+              </span>
+              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
+            </Link>
+            <Link
               data-testid="dashboard-page_quick-actions_manage-products-link"
               to="/products"
               className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-dark-100 dark:hover:bg-dark-200"

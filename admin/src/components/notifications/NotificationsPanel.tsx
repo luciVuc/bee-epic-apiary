@@ -43,7 +43,7 @@ export function NotificationsPanel({
             onClick={onClose}
             aria-label="Close notifications panel"
             data-testid="notifications-panel_close"
-            className="p-1 hover:bg-gray-100 rounded-lg text-dark-600 dark:hover:bg-dark-800"
+            className="p-1 hover:bg-gray-100 rounded-lg text-dark-600 dark:hover:bg-dark-200"
           >
             <X className="w-5 h-5" />
           </button>
@@ -66,7 +66,7 @@ export function NotificationsPanel({
                   <button
                     onClick={() => onSelect(order)}
                     data-testid="notifications-panel_item"
-                    className="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-dark-800"
+                    className="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-dark-200"
                   >
                     <p className="font-medium text-dark-900 truncate">
                       {order.customerName ||

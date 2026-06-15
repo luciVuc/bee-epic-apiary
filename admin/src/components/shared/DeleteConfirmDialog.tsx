@@ -27,7 +27,7 @@ export function DeleteConfirmDialog({
       data-testid="delete-confirm-dialog"
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-md w-full mx-4 dark:bg-dark-950"
+        className="bg-white rounded-xl p-6 max-w-md w-full mx-4 border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
         data-testid="delete-confirm-dialog_content"
       >
         <h3

@@ -312,7 +312,7 @@ export function OrdersPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             data-testid="orders-page_filter-toggle"
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-800"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-200"
           >
             <Filter className="w-4 h-4 text-dark-600" />
             <span className="text-sm font-medium text-dark-700">Filters</span>
@@ -346,7 +346,7 @@ export function OrdersPage() {
                   onChange={(e) => handleStatusChange(e.target.value)}
                   aria-label="Filter by status"
                   data-testid="orders-page_status-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:hover:bg-dark-200 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   {STATUS_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -373,7 +373,7 @@ export function OrdersPage() {
                   onChange={(e) => handlePaymentStatusChange(e.target.value)}
                   aria-label="Filter by payment status"
                   data-testid="orders-page_payment-status-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:hover:bg-dark-200 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   {PAYMENT_STATUS_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -400,7 +400,7 @@ export function OrdersPage() {
                   onChange={(e) => handleOrderStatusChange(e.target.value)}
                   aria-label="Filter by order status"
                   data-testid="orders-page_order-status-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:hover:bg-dark-200 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   {ORDER_STATUS_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
