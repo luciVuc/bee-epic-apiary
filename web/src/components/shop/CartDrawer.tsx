@@ -58,7 +58,7 @@ export const CartDrawer = () => {
               <button
                 data-testid="cart-drawer_close-btn"
                 onClick={close}
-                className="p-2 hover:bg-dark-100 dark:hover:bg-dark-800 rounded-lg transition-colors"
+                className="p-2 hover:bg-dark-100 dark:hover:bg-dark-200 rounded-lg transition-colors"
                 aria-label="Close cart"
                 title="Close cart"
                 autoFocus

@@ -137,7 +137,7 @@ export function orderMetadataStatusBadge(status: string | null): string {
     case "fulfilled":
       return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
     default:
-      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-100 dark:text-gray-800";
   }
 }
 

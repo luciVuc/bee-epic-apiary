@@ -31,7 +31,7 @@ export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
 
         <div className="relative">
           <div
-            className="hidden md:block absolute top-1/2 left-0 right-0 h-0.5 bg-primary-200 dark:bg-primary-800 -translate-y-1/2"
+            className="hidden md:block absolute top-[7rem] left-0 right-0 h-0.5 bg-primary-200 dark:bg-primary-800"
             aria-hidden="true"
           />
 

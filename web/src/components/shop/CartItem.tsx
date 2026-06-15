@@ -53,7 +53,7 @@ export const CartItem = ({ item }: ICartItemProps) => {
         <button
           data-testid={`cart-item_${product.id}_decrease-btn`}
           onClick={() => update(product.id, quantity - 1)}
-          className="p-1 hover:bg-dark-100 dark:hover:bg-dark-800 rounded transition-colors"
+          className="p-1 hover:bg-dark-100 dark:hover:bg-dark-200 rounded transition-colors"
           aria-label="Decrease quantity"
           title="Decrease quantity"
         >
@@ -65,7 +65,7 @@ export const CartItem = ({ item }: ICartItemProps) => {
         <button
           data-testid={`cart-item_${product.id}_increase-btn`}
           onClick={() => update(product.id, quantity + 1)}
-          className="p-1 hover:bg-dark-100 dark:hover:bg-dark-800 rounded transition-colors"
+          className="p-1 hover:bg-dark-100 dark:hover:bg-dark-200 rounded transition-colors"
           aria-label="Increase quantity"
           title="Increase quantity"
         >

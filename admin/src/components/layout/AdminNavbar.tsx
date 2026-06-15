@@ -132,7 +132,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
                 className="h-7 w-auto"
               />
               <h1
-                className="font-heading text-xl font-bold text-dark-900"
+                className="font-heading text-xl font-bold text-dark-900 hidden sm:block"
                 data-testid="admin-navbar_title"
               >
                 {title}

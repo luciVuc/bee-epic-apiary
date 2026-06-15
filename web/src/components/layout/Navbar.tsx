@@ -195,7 +195,7 @@ export const Navbar = ({ content }: INavbarProps) => {
                     className={`block w-full text-left py-2 px-4 rounded-lg font-body font-medium transition-colors duration-200 ${
                       isActive(link.id)
                         ? "bg-primary-50 dark:bg-primary-950 text-primary-600 dark:text-primary-400"
-                        : "text-dark-600 hover:bg-dark-50 dark:hover:bg-dark-800"
+                        : "text-dark-600 hover:bg-dark-50 dark:hover:bg-dark-200"
                     }`}
                     aria-current={isActive(link.id) ? "page" : undefined}
                   >

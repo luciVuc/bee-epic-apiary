@@ -331,21 +331,21 @@ export function OrdersPage() {
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Status Filter */}
               <div
-                data-testid="orders-page_status-filter-container"
+                data-testid="orders-page_checkout-status-filter-container"
                 className="flex flex-col gap-1.5"
               >
                 <label
                   htmlFor="orders-status-filter"
                   className="text-sm font-medium text-dark-700"
                 >
-                  Status
+                  Checkout Status
                 </label>
                 <select
                   id="orders-status-filter"
                   value={selectedStatus}
                   onChange={(e) => handleStatusChange(e.target.value)}
                   aria-label="Filter by status"
-                  data-testid="orders-page_status-filter"
+                  data-testid="orders-page_checkout-status-filter"
                   className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:hover:bg-dark-200 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   {STATUS_OPTIONS.map((opt) => (
