@@ -26,14 +26,17 @@ export function CategoriesTab({
         Define and manage product categories used across the store.
       </p>
       {categoriesContent.map((cat, i) => (
-        <div key={i} className="p-4 border border-gray-200 rounded-lg">
+        <div
+          key={i}
+          className="p-4 border border-gray-200 rounded-lg dark:border-gray-700"
+        >
           <div className="flex items-center justify-between mb-3">
             <span className="font-medium text-dark-700">Category {i + 1}</span>
             <button
               onClick={() => removeCategoryItem(i)}
               aria-label={`Remove category ${i + 1}`}
               title={`Remove category ${i + 1}`}
-              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg dark:hover:bg-red-900/30"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -57,7 +60,7 @@ export function CategoriesTab({
       <button
         onClick={addCategoryItem}
         data-testid="categories-tab_add-btn"
-        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
       >
         <Plus className="w-4 h-4" /> Add Category
       </button>

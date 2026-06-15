@@ -25,7 +25,7 @@ export function TestimonialsTab({
       {testimonialsContent.map((testimonial, i) => (
         <div
           key={testimonial.id}
-          className="p-4 border border-gray-200 rounded-lg"
+          className="p-4 border border-gray-200 rounded-lg dark:border-gray-700"
         >
           <div className="flex items-center justify-between mb-3">
             <span className="font-medium text-dark-700">
@@ -36,7 +36,7 @@ export function TestimonialsTab({
               aria-label={`Remove testimonial ${i + 1}`}
               title={`Remove testimonial ${i + 1}`}
               data-testid={`testimonials-tab_remove-btn-${i}`}
-              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg dark:hover:bg-red-900/30"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -74,7 +74,7 @@ export function TestimonialsTab({
                     }
                     aria-label={`${star} star${star > 1 ? "s" : ""}`}
                     title={`${star} star${star > 1 ? "s" : ""}`}
-                    className={`p-1 rounded transition-colors ${star <= testimonial.rating ? "text-yellow-400" : "text-gray-300"}`}
+                    className={`p-1 rounded transition-colors ${star <= testimonial.rating ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"}`}
                   >
                     <Star className="w-5 h-5 fill-current" />
                   </button>
@@ -105,7 +105,7 @@ export function TestimonialsTab({
       <button
         onClick={addTestimonial}
         data-testid="testimonials-tab_add-btn"
-        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
       >
         <Plus className="w-4 h-4" /> Add Testimonial
       </button>

@@ -11,11 +11,15 @@ import { EProductCategory } from "../../types";
 
 describe("stockBadgeClass", () => {
   it("returns green classes when inStock is true", () => {
-    expect(stockBadgeClass(true)).toBe("bg-green-100 text-green-700");
+    expect(stockBadgeClass(true)).toBe(
+      "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300",
+    );
   });
 
   it("returns red classes when inStock is false", () => {
-    expect(stockBadgeClass(false)).toBe("bg-red-100 text-red-700");
+    expect(stockBadgeClass(false)).toBe(
+      "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300",
+    );
   });
 });
 
@@ -32,25 +36,25 @@ describe("stockLabel", () => {
 describe("categoryBadgeClass", () => {
   it("returns blue classes for SUBSCRIPTIONS", () => {
     expect(categoryBadgeClass(EProductCategory.SUBSCRIPTIONS)).toBe(
-      "bg-blue-100 text-blue-700",
+      "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300",
     );
   });
 
   it("returns primary classes for non-subscription categories", () => {
     expect(categoryBadgeClass(EProductCategory.HONEY)).toBe(
-      "bg-primary-50 text-primary-700",
+      "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300",
     );
     expect(categoryBadgeClass(EProductCategory.BEESWAX)).toBe(
-      "bg-primary-50 text-primary-700",
+      "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300",
     );
     expect(categoryBadgeClass(EProductCategory.GIFTS)).toBe(
-      "bg-primary-50 text-primary-700",
+      "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300",
     );
   });
 
   it("returns primary classes for unknown categories", () => {
     expect(categoryBadgeClass("UNKNOWN")).toBe(
-      "bg-primary-50 text-primary-700",
+      "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300",
     );
   });
 });

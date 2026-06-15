@@ -25,13 +25,13 @@ export function NotificationsPanel({
         aria-hidden="true"
       />
       <div
-        className="fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 translate-x-0"
+        className="fixed top-0 right-0 h-full w-80 bg-white shadow-xl z-50 transform transition-transform duration-300 translate-x-0 dark:bg-dark-950"
         role="dialog"
         aria-modal="true"
         aria-labelledby="notifications-panel_title"
         data-testid="notifications-panel"
       >
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700">
           <h2
             id="notifications-panel_title"
             className="text-lg font-semibold text-dark-900 py-1"
@@ -43,7 +43,7 @@ export function NotificationsPanel({
             onClick={onClose}
             aria-label="Close notifications panel"
             data-testid="notifications-panel_close"
-            className="p-1 hover:bg-gray-100 rounded-lg text-dark-600"
+            className="p-1 hover:bg-gray-100 rounded-lg text-dark-600 dark:hover:bg-dark-800"
           >
             <X className="w-5 h-5" />
           </button>
@@ -54,7 +54,7 @@ export function NotificationsPanel({
         >
           {notifications.length === 0 ? (
             <p
-              className="p-4 text-gray-500 text-center"
+              className="p-4 text-dark-400 text-center"
               data-testid="notifications-panel_empty"
             >
               No new notifications
@@ -66,18 +66,18 @@ export function NotificationsPanel({
                   <button
                     onClick={() => onSelect(order)}
                     data-testid="notifications-panel_item"
-                    className="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                    className="w-full text-left p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors dark:border-gray-700 dark:hover:bg-dark-800"
                   >
                     <p className="font-medium text-dark-900 truncate">
                       {order.customerName ||
                         order.customerEmail ||
                         "Unknown customer"}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-dark-400">
                       New order &middot; ${(order.amountTotal / 100).toFixed(2)}{" "}
                       {order.currency.toUpperCase()}
                     </p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-dark-500">
                       {new Date(order.created * 1000).toLocaleString()}
                     </p>
                   </button>

@@ -13,7 +13,7 @@ export interface ISectionProps {
 export function Section({ title, icon, children }: ISectionProps) {
   return (
     <div
-      className="p-4 border border-gray-200 rounded-lg"
+      className="p-4 border border-gray-200 rounded-lg dark:border-gray-700"
       data-testid="section"
     >
       <h3

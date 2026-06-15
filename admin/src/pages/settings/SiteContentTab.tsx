@@ -123,7 +123,7 @@ export function SiteContentTab({
                 onClick={() => removeAboutParagraph(i)}
                 aria-label={`Remove paragraph ${i + 1}`}
                 title={`Remove paragraph ${i + 1}`}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
+                className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1 dark:hover:bg-red-900/30"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -131,7 +131,7 @@ export function SiteContentTab({
           ))}
           <button
             onClick={addAboutParagraph}
-            className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+            className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
             <Plus className="w-4 h-4" /> Add Paragraph
           </button>
@@ -154,7 +154,7 @@ export function SiteContentTab({
                 onClick={() => removeAboutImage(i)}
                 aria-label={`Remove image ${i + 1}`}
                 title={`Remove image ${i + 1}`}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
+                className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1 dark:hover:bg-red-900/30"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -162,7 +162,7 @@ export function SiteContentTab({
           ))}
           <button
             onClick={addAboutImage}
-            className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+            className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
             <Plus className="w-4 h-4" /> Add Image
           </button>
@@ -279,7 +279,7 @@ export function SiteContentTab({
                 onClick={() => removeNavLink(i)}
                 aria-label={`Remove nav link ${i + 1}`}
                 title={`Remove nav link ${i + 1}`}
-                className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1"
+                className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1 dark:hover:bg-red-900/30"
               >
                 <Trash2 className="w-4 h-4" />
               </button>
@@ -287,7 +287,7 @@ export function SiteContentTab({
           ))}
           <button
             onClick={addNavLink}
-            className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+            className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
             <Plus className="w-4 h-4" /> Add Nav Link
           </button>

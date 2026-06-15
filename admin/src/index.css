@@ -1,5 +1,9 @@
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap");
+
 @theme {
   --color-gray-50: #f9fafb;
   --color-gray-100: #f3f4f6;
@@ -11,55 +15,56 @@
   --color-gray-700: #374151;
   --color-gray-800: #1f2937;
   --color-gray-900: #111827;
-  --color-primary-50: #fefce8;
-  --color-primary-100: #fef9c3;
-  --color-primary-200: #fef08a;
-  --color-primary-300: #fde047;
-  --color-primary-400: #facc15;
-  --color-primary-500: #eab308;
-  --color-primary-600: #ca8a04;
-  --color-primary-700: #a16207;
-  --color-primary-800: #854d0e;
-  --color-primary-900: #713f12;
+  --color-primary-50: #fffbeb;
+  --color-primary-100: #fef3c7;
+  --color-primary-200: #fde68a;
+  --color-primary-300: #fcd34d;
+  --color-primary-400: #fbbf24;
+  --color-primary-500: #f59e0b;
+  --color-primary-600: #d97706;
+  --color-primary-700: #b45309;
+  --color-primary-800: #92400e;
+  --color-primary-900: #78350f;
+  --color-primary-950: #451b03;
   --color-dark: #000000;
-  --color-dark-50: #f8fafc;
-  --color-dark-100: #f1f5f9;
-  --color-dark-200: #e2e8f0;
-  --color-dark-300: #cbd5e1;
-  --color-dark-400: #94a3b8;
-  --color-dark-500: #64748b;
-  --color-dark-600: #475569;
-  --color-dark-700: #334155;
-  --color-dark-800: #1e293b;
-  --color-dark-900: #0f172a;
-  --color-dark-950: #020617;
+  --color-dark-50: #fafaf9;
+  --color-dark-100: #f5f5f4;
+  --color-dark-200: #e7e5e4;
+  --color-dark-300: #d6d3d1;
+  --color-dark-400: #a8a29e;
+  --color-dark-500: #78716c;
+  --color-dark-600: #57534e;
+  --color-dark-700: #44403c;
+  --color-dark-800: #292524;
+  --color-dark-900: #1c1917;
+  --color-dark-950: #0c0a09;
   --color-white: #ffffff;
   --font-family-heading: "Lato", "Open Sans", "Poppins", sans-serif;
   --font-family-body: "Inter", sans-serif;
 }
 
 .dark {
-  --color-gray-50: #0f172a;
-  --color-gray-100: #1e293b;
-  --color-gray-200: #334155;
-  --color-gray-300: #475569;
-  --color-gray-400: #64748b;
-  --color-gray-500: #94a3b8;
-  --color-gray-600: #cbd5e1;
-  --color-gray-700: #e2e8f0;
-  --color-gray-800: #f1f5f9;
-  --color-gray-900: #f8fafc;
-  --color-dark-50: #0f172a;
-  --color-dark-100: #1e293b;
-  --color-dark-200: #334155;
-  --color-dark-300: #475569;
-  --color-dark-400: #64748b;
-  --color-dark-500: #94a3b8;
-  --color-dark-600: #cbd5e1;
-  --color-dark-700: #e2e8f0;
-  --color-dark-800: #f1f5f9;
-  --color-dark-900: #f8fafc;
-  --color-dark-950: #020617;
+  --color-gray-50: #1c1917;
+  --color-gray-100: #292524;
+  --color-gray-200: #44403c;
+  --color-gray-300: #57534e;
+  --color-gray-400: #78716c;
+  --color-gray-500: #a8a29e;
+  --color-gray-600: #d6d3d1;
+  --color-gray-700: #e7e5e4;
+  --color-gray-800: #f5f5f4;
+  --color-gray-900: #fafaf9;
+  --color-dark-50: #0c0a09;
+  --color-dark-100: #1c1917;
+  --color-dark-200: #292524;
+  --color-dark-300: #44403c;
+  --color-dark-400: #57534e;
+  --color-dark-500: #78716c;
+  --color-dark-600: #a8a29e;
+  --color-dark-700: #d6d3d1;
+  --color-dark-800: #f5f5f4;
+  --color-dark-900: #fafaf9;
+  --color-dark-950: #0c0a09;
   --color-dark: #ffffff;
 }
 
@@ -67,10 +72,14 @@ html {
   scroll-behavior: smooth;
 }
 
+html.dark,
+.dark body {
+  background-color: #0c0a09;
+}
+
 body {
   background-color: var(--color-gray-50);
   color: var(--color-dark-800);
-  /* eslint-disable-next-line css/no-invalid-properties */
   font-family: var(--font-family-body);
 }
 
@@ -80,6 +89,34 @@ h3,
 h4,
 h5,
 h6 {
-  /* eslint-disable-next-line css/no-invalid-properties */
   font-family: var(--font-family-heading);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: var(--color-primary-50);
+}
+
+.dark ::-webkit-scrollbar-track {
+  background-color: var(--color-primary-950);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-300);
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-700);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-400);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary-600);
 }

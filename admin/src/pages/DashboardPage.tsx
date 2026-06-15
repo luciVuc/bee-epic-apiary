@@ -90,7 +90,7 @@ export function DashboardPage() {
 
   return (
     <div>
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between">
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between dark:bg-dark-950 dark:border-gray-700">
         <h2
           className="font-heading text-3xl font-bold text-dark-900"
           data-testid="dashboard-page_title"
@@ -143,8 +143,8 @@ export function DashboardPage() {
 
       {/* Category Breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <h3 className="font-heading text-xl font-semibold mb-4">
+        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700">
+          <h3 className="font-heading text-xl font-semibold mb-4 dark:text-dark-800">
             Products by Category
           </h3>
           <div className="space-y-3">
@@ -205,55 +205,87 @@ export function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-          <h3 className="font-heading text-xl font-semibold mb-4">
+        <div
+          data-testid="dashboard-page_quick-actions"
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
+        >
+          <h3
+            data-testid="dashboard-page_quick-actions_title"
+            className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
+          >
             Quick Actions
           </h3>
-          <div className="space-y-3">
+          <div
+            data-testid="dashboard-page_quick-actions_list"
+            className="space-y-3"
+          >
             <Link
+              data-testid="dashboard-page_quick-actions_manage-products-link"
               to="/products"
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-dark-100 dark:hover:bg-dark-200"
             >
-              <span className="font-medium text-dark-700">Manage Products</span>
-              <ArrowRight className="w-4 h-4 text-dark-400" />
+              <span className="font-medium text-dark-700 dark:text-dark-800">
+                Manage Products
+              </span>
+              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
             </Link>
             <Link
+              data-testid="dashboard-page_quick-actions_add-product-link"
               to="/products/new"
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-dark-100 dark:hover:bg-dark-200"
             >
-              <span className="font-medium text-dark-700">Add New Product</span>
-              <ArrowRight className="w-4 h-4 text-dark-400" />
+              <span className="font-medium text-dark-700 dark:text-dark-800">
+                Add New Product
+              </span>
+              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
             </Link>
             <Link
+              data-testid="dashboard-page_quick-actions_update-settings-link"
               to="/settings"
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-dark-100 dark:hover:bg-dark-200"
             >
-              <span className="font-medium text-dark-700">Update Settings</span>
-              <ArrowRight className="w-4 h-4 text-dark-400" />
+              <span className="font-medium text-dark-700 dark:text-dark-800">
+                Update Settings
+              </span>
+              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
             </Link>
           </div>
         </div>
       </div>
 
       {/* Recent Products */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="font-heading text-xl font-semibold">
+      <div
+        data-testid="dashboard-page_recent-products"
+        className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
+      >
+        <div
+          data-testid="dashboard-page_recent-products_title"
+          className="flex items-center justify-between mb-4"
+        >
+          <h3
+            data-testid="dashboard-page_recent-products_title-text"
+            className="font-heading text-xl font-semibold dark:text-dark-800"
+          >
             Recent Products
           </h3>
           <Link
+            data-testid="dashboard-page_recent-products_view-all-link"
             to="/products"
-            className="text-primary-500 hover:text-primary-600 text-sm font-medium"
+            className="text-primary-500 hover:text-primary-600 text-sm font-medium dark:text-primary-400 dark:hover:text-primary-300"
           >
             View All →
           </Link>
         </div>
-        <div className="space-y-3">
+        <div
+          data-testid="dashboard-page_recent-products_list"
+          className="space-y-3"
+        >
           {products.slice(0, 5).map((product) => (
             <Link
+              data-testid={`dashboard-page_recent-products_product-${product.id}`}
               key={product.id}
               to={`/products/${product.id}`}
-              className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+              className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-dark-100 dark:hover:bg-dark-200"
             >
               <img
                 src={product.thumbnailUrls[0] || DEFAULT_PRODUCT_THUMBNAIL}
@@ -276,15 +308,15 @@ export function DashboardPage() {
               </div>
               <div className="flex items-center gap-2">
                 {product.category === EProductCategory.SUBSCRIPTIONS && (
-                  <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700">
+                  <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                     Subscription
                   </span>
                 )}
                 <span
                   className={`px-2 py-1 text-xs rounded-full ${
                     product.inStock
-                      ? "bg-green-100 text-green-700"
-                      : "bg-red-100 text-red-700"
+                      ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+                      : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300"
                   }`}
                 >
                   {product.inStock ? "In Stock" : "Out of Stock"}
@@ -310,27 +342,32 @@ function StatCard({
   color: string;
 }) {
   const colorClasses = {
-    blue: "bg-blue-50 text-blue-600",
-    green: "bg-green-50 text-green-600",
-    yellow: "bg-yellow-50 text-yellow-600",
-    purple: "bg-purple-50 text-purple-600",
-    red: "bg-red-50 text-red-600",
+    blue: "bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-300",
+    green:
+      "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-300",
+    yellow:
+      "bg-yellow-50 text-yellow-600 dark:bg-yellow-900/30 dark:text-yellow-300",
+    purple:
+      "bg-purple-50 text-purple-600 dark:bg-purple-900/30 dark:text-purple-300",
+    red: "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-300",
   };
 
   return (
     <div
-      className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+      className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
       data-testid={`stat-card`}
     >
       <div className="flex items-center justify-between mb-4">
-        <span className="text-dark-500 text-sm">{title}</span>
+        <span className="text-dark-500 text-sm dark:text-dark-400">
+          {title}
+        </span>
         <div
           className={`w-10 h-10 rounded-lg flex items-center justify-center ${colorClasses[color as keyof typeof colorClasses]}`}
         >
           <Icon className="w-5 h-5" />
         </div>
       </div>
-      <div className="font-heading text-3xl font-bold text-dark-900">
+      <div className="font-heading text-3xl font-bold text-dark-900 dark:text-dark-800">
         {value}
       </div>
     </div>
@@ -369,7 +406,7 @@ function CategoryBar({
         </span>
       </div>
       <div
-        className="w-full h-2 bg-gray-200 rounded-full overflow-hidden"
+        className="w-full h-2 bg-gray-200 rounded-full overflow-hidden dark:bg-gray-700"
         role="progressbar"
         aria-valuenow={count}
         aria-valuemin={0}

@@ -56,7 +56,7 @@ export const Navbar = ({ content }: INavbarProps) => {
           <Link
             to="/"
             data-testid="navbar_logo-link"
-            className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+            className="flex items-center space-x-2 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 rounded-lg"
             aria-label={`${content.businessName} - Home`}
             title={`${content.businessName} - Home`}
           >
@@ -84,7 +84,7 @@ export const Navbar = ({ content }: INavbarProps) => {
                   key={link.id}
                   to={getPath(link.id)}
                   data-testid={`navbar_link-${link.id}`}
-                  className={`font-body text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded ${
+                  className={`font-body text-sm font-medium transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 rounded ${
                     isActive(link.id)
                       ? "text-primary-600 dark:text-primary-400"
                       : "text-dark-600 hover:text-primary-600 dark:hover:text-primary-400"
@@ -103,7 +103,7 @@ export const Navbar = ({ content }: INavbarProps) => {
             <button
               data-testid="navbar_theme-toggle"
               onClick={toggleTheme}
-              className="p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+              className="p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 rounded-lg"
               aria-label={
                 isDark ? "Switch to light mode" : "Switch to dark mode"
               }
@@ -125,7 +125,7 @@ export const Navbar = ({ content }: INavbarProps) => {
             <button
               data-testid="navbar_cart-btn"
               onClick={open}
-              className="relative p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+              className="relative p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 rounded-lg"
               aria-label={`Shopping cart with ${totalItems} items`}
               title={`Shopping cart with ${totalItems} items`}
             >
@@ -148,7 +148,7 @@ export const Navbar = ({ content }: INavbarProps) => {
             <button
               data-testid="navbar_menu-btn"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="md:hidden p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded-lg"
+              className="md:hidden p-2 focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 rounded-lg"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
               title={isMobileMenuOpen ? "Close menu" : "Open menu"}
               aria-expanded={isMobileMenuOpen}

@@ -32,19 +32,19 @@ export function AdminConfigTab({
       {adminError && (
         <div
           role="alert"
-          className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+          className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 dark:bg-red-900/20 dark:border-red-800/30"
         >
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-          <span className="text-red-700">{adminError}</span>
+          <span className="text-red-700 dark:text-red-300">{adminError}</span>
         </div>
       )}
       {adminSaved && (
         <div
           role="status"
-          className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+          className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 dark:bg-green-900/20 dark:border-green-800/30"
         >
           <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-          <span className="text-green-700">
+          <span className="text-green-700 dark:text-green-300">
             Admin settings saved successfully!
           </span>
         </div>
@@ -95,7 +95,7 @@ export function AdminConfigTab({
         </p>
       </Section>
 
-      <div className="flex justify-end pt-4 border-t border-gray-200">
+      <div className="flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
         <button
           onClick={onAdminSave}
           disabled={saveDisabled}

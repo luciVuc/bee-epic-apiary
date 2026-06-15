@@ -24,13 +24,13 @@ export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
 
     const variants = {
       primary:
-        "bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white focus:ring-primary-500 shadow-amber hover:shadow-amber-lg",
+        "bg-primary-500 hover:bg-primary-600 dark:bg-primary-600 dark:hover:bg-primary-700 text-white focus:ring-primary-500 dark:focus:ring-primary-400 shadow-amber hover:shadow-amber-lg",
       secondary:
-        "bg-secondary-600 hover:bg-secondary-700 dark:bg-secondary-700 dark:hover:bg-secondary-800 text-white focus:ring-secondary-600",
+        "bg-secondary-600 hover:bg-secondary-700 dark:bg-secondary-700 dark:hover:bg-secondary-800 text-white focus:ring-secondary-600 dark:focus:ring-secondary-400",
       outline:
-        "border-2 border-primary-500 dark:border-primary-400 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950 focus:ring-primary-500",
+        "border-2 border-primary-500 dark:border-primary-400 text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-950 focus:ring-primary-500 dark:focus:ring-primary-400",
       ghost:
-        "text-dark-600 hover:text-dark-900 hover:bg-dark-100 dark:hover:text-dark-100 dark:hover:bg-dark-800 focus:ring-dark-400",
+        "text-dark-600 hover:text-dark-900 hover:bg-dark-100 dark:hover:text-dark-100 dark:hover:bg-dark-800 focus:ring-dark-400 dark:focus:ring-dark-300",
     };
 
     const sizes = {

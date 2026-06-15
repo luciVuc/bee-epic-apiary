@@ -108,7 +108,7 @@ export function ProductDetailPage() {
     <div data-testid="product-detail-page">
       <div
         data-testid="product-detail-page_header"
-        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-start justify-between mb-6"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-start justify-between mb-6 dark:bg-dark-950 dark:border-gray-700"
       >
         <div
           data-testid="product-detail-page_header-content"
@@ -119,7 +119,7 @@ export function ProductDetailPage() {
             onClick={() => navigate(backUrl)}
             aria-label="Back to products"
             title="Back to products"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-800"
           >
             <ArrowLeft className="w-5 h-5 text-dark-600" />
           </button>
@@ -177,11 +177,11 @@ export function ProductDetailPage() {
           {/* Images */}
           <div
             data-testid="product-detail-page_images"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="product-detail-page_images_header"
-              className="font-heading text-xl font-semibold mb-4"
+              className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
             >
               Product Images
             </h3>
@@ -205,11 +205,11 @@ export function ProductDetailPage() {
           {/* Description */}
           <div
             data-testid="product-detail-page_description"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="product-detail-page_description_header"
-              className="font-heading text-xl font-semibold mb-4"
+              className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
             >
               Description
             </h3>
@@ -230,11 +230,11 @@ export function ProductDetailPage() {
           {product.tags.length > 0 && (
             <div
               data-testid="product-detail-page_tags"
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
             >
               <h3
                 data-testid="product-detail-page_tags_header"
-                className="font-heading text-xl font-semibold mb-4"
+                className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
               >
                 Tags
               </h3>
@@ -243,7 +243,7 @@ export function ProductDetailPage() {
                   <span
                     key={tag}
                     data-testid={`product-detail-page_tag_${tag}`}
-                    className="px-3 py-1 bg-gray-100 text-dark-700 rounded-full text-sm"
+                    className="px-3 py-1 bg-gray-100 text-dark-700 rounded-full text-sm dark:bg-dark-200 dark:text-dark-800"
                   >
                     {tag}
                   </span>
@@ -258,11 +258,11 @@ export function ProductDetailPage() {
           {/* Status Card */}
           <div
             data-testid="product-detail-page_status"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="product-detail-page_status_header"
-              className="font-heading text-lg font-semibold mb-4"
+              className="font-heading text-lg font-semibold mb-4 dark:text-dark-800"
             >
               Status
             </h3>
@@ -284,7 +284,7 @@ export function ProductDetailPage() {
               >
                 <span className="text-dark-600">Featured</span>
                 {product.featured ? (
-                  <span className="flex items-center gap-1 text-yellow-600">
+                  <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
                     <Star className="w-4 h-4 fill-current" />
                     Yes
                   </span>
@@ -298,7 +298,7 @@ export function ProductDetailPage() {
                   className="flex items-center justify-between"
                 >
                   <span className="text-dark-600">Type</span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                     Subscription
                   </span>
                 </div>
@@ -309,11 +309,11 @@ export function ProductDetailPage() {
           {/* Details Card */}
           <div
             data-testid="product-detail-page_details"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="product-detail-page_details_header"
-              className="font-heading text-lg font-semibold mb-4"
+              className="font-heading text-lg font-semibold mb-4 dark:text-dark-800"
             >
               Details
             </h3>
@@ -378,11 +378,11 @@ export function ProductDetailPage() {
           {/* Stripe Info */}
           <div
             data-testid="product-detail-page_stripe-info"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="product-detail-page_stripe-info_header"
-              className="font-heading text-lg font-semibold mb-4"
+              className="font-heading text-lg font-semibold mb-4 dark:text-dark-800"
             >
               Stripe Integration
             </h3>

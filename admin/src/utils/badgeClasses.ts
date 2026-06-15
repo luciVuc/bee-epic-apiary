@@ -3,7 +3,9 @@ import { EProductCategory } from "../types";
 
 /** Returns Tailwind classes for in-stock vs out-of-stock badge */
 export function stockBadgeClass(inStock: boolean): string {
-  return inStock ? "bg-green-100 text-green-700" : "bg-red-100 text-red-700";
+  return inStock
+    ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300"
+    : "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
 }
 
 /** Returns human-readable stock label */
@@ -14,8 +16,8 @@ export function stockLabel(inStock: boolean): string {
 /** Returns Tailwind classes for category badge (subscription vs standard) */
 export function categoryBadgeClass(category: string): string {
   return category === EProductCategory.SUBSCRIPTIONS
-    ? "bg-blue-100 text-blue-700"
-    : "bg-primary-50 text-primary-700";
+    ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+    : "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300";
 }
 
 /** Returns human-readable category label (subscription mapping) */
@@ -45,13 +47,13 @@ export function formatPrice(cents: number): string {
 export function orderStatusBadge(status: string): string {
   switch (status) {
     case "complete":
-      return "bg-green-100 text-green-700";
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
     case "open":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
     case "expired":
-      return "bg-red-100 text-red-700";
+      return "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
   }
 }
 
@@ -73,13 +75,13 @@ export function orderStatusLabel(status: string): string {
 export function orderPaymentStatusBadge(status: string): string {
   switch (status) {
     case "paid":
-      return "bg-green-100 text-green-700";
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
     case "unpaid":
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
     case "no_payment_required":
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
   }
 }
 
@@ -101,13 +103,13 @@ export function orderPaymentStatusLabel(status: string): string {
 export function orderModeBadge(mode: string): string {
   switch (mode) {
     case "payment":
-      return "bg-primary-50 text-primary-700";
+      return "bg-primary-50 text-primary-700 dark:bg-primary-900/30 dark:text-primary-300";
     case "subscription":
-      return "bg-purple-100 text-purple-700";
+      return "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300";
     case "setup":
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
   }
 }
 
@@ -129,13 +131,13 @@ export function orderModeLabel(mode: string): string {
 export function orderMetadataStatusBadge(status: string | null): string {
   switch (status) {
     case "new":
-      return "bg-blue-100 text-blue-700";
+      return "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300";
     case "pending":
-      return "bg-yellow-100 text-yellow-700";
+      return "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300";
     case "fulfilled":
-      return "bg-green-100 text-green-700";
+      return "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300";
     default:
-      return "bg-gray-100 text-gray-700";
+      return "bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300";
   }
 }
 

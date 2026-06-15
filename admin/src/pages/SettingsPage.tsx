@@ -377,7 +377,7 @@ export function SettingsPage() {
 
   return (
     <div data-testid="settings-page">
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6">
+      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 dark:bg-dark-950 dark:border-gray-700">
         <h2
           className="font-heading text-3xl font-bold text-dark-900"
           data-testid="settings-page_title"
@@ -390,25 +390,27 @@ export function SettingsPage() {
       {contentError && (
         <div
           role="alert"
-          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+          className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 dark:bg-red-900/20 dark:border-red-800/30"
         >
           <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-          <span className="text-red-700">{contentError}</span>
+          <span className="text-red-700 dark:text-red-300">{contentError}</span>
         </div>
       )}
       {contentStatus === "success" && (
         <div
           role="status"
-          className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2"
+          className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 dark:bg-green-900/20 dark:border-green-800/30"
         >
           <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
-          <span className="text-green-700">Content saved successfully!</span>
+          <span className="text-green-700 dark:text-green-300">
+            Content saved successfully!
+          </span>
         </div>
       )}
 
       {/* Content Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
-        <div className="border-b border-gray-200">
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 dark:bg-dark-950 dark:border-gray-700">
+        <div className="border-b border-gray-200 dark:border-gray-700">
           <nav className="flex -mb-px">
             {(
               [
@@ -425,8 +427,8 @@ export function SettingsPage() {
                 data-testid={`settings-page_tab-${tab}`}
                 className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
                   activeTab === tab
-                    ? "border-primary-500 text-primary-600"
-                    : "border-transparent text-dark-500 hover:text-dark-700 hover:border-dark-300"
+                    ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                    : "border-transparent text-dark-500 hover:text-dark-700 hover:border-dark-300 dark:text-dark-400 dark:hover:text-dark-200 dark:hover:border-dark-600"
                 }`}
               >
                 {tab === "admin"
@@ -450,7 +452,7 @@ export function SettingsPage() {
               role="status"
               aria-live="polite"
             >
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500"></div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-500 dark:border-primary-400"></div>
               <span className="sr-only">Loading settings...</span>
             </div>
           ) : (
@@ -511,7 +513,7 @@ export function SettingsPage() {
 
               {/* Save Content Button */}
               {activeTab !== "admin" && (
-                <div className="mt-6 flex justify-end pt-4 border-t border-gray-200">
+                <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={handleSaveContent}
                     disabled={contentSaveDisabled}

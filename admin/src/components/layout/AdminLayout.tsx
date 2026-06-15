@@ -9,7 +9,7 @@ export function AdminLayout() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 dark:bg-dark-900 flex"
+      className="min-h-screen bg-gray-50 dark:bg-dark-950 flex"
       data-testid="admin-layout"
     >
       {/* Mobile sidebar overlay */}

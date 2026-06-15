@@ -78,7 +78,7 @@ function UrlInputList({
             value={url}
             onChange={(e) => onUrlChange(index, e.target.value)}
             aria-label={`${inputLabel} ${index + 1}`}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
             placeholder={placeholder}
           />
           <button
@@ -86,7 +86,7 @@ function UrlInputList({
             onClick={() => onRemove(index)}
             aria-label={`${removeButtonLabelPrefix} ${index + 1}`}
             title={`${removeButtonLabelPrefix} ${index + 1}`}
-            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
           >
             <Trash2 className="w-4 h-4" />
           </button>
@@ -95,7 +95,7 @@ function UrlInputList({
       <button
         type="button"
         onClick={onAdd}
-        className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600"
+        className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300"
         title={`Add ${inputLabel.toLowerCase()}`}
       >
         <Plus className="w-4 h-4" />
@@ -351,11 +351,11 @@ export function ProductFormDialog({
       data-testid="product-form-dialog"
     >
       <div
-        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto dark:bg-dark-950"
         data-testid="product-form-dialog_content"
       >
         <div
-          className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between"
+          className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between dark:bg-dark-950 dark:border-gray-700"
           data-testid="product-form-dialog_header"
         >
           <h2
@@ -370,9 +370,9 @@ export function ProductFormDialog({
             aria-label="Close dialog"
             title="Close dialog"
             data-testid="product-form-dialog_close-btn"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-800"
           >
-            <X className="w-5 h-5 text-dark-500" />
+            <X className="w-5 h-5 text-dark-500 dark:text-dark-400" />
           </button>
         </div>
 
@@ -382,7 +382,7 @@ export function ProductFormDialog({
             role="status"
             aria-live="polite"
           >
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 dark:border-primary-400"></div>
             <span className="sr-only">Loading product data...</span>
           </div>
         ) : (
@@ -406,7 +406,7 @@ export function ProductFormDialog({
                   required
                   value={formData.name}
                   onChange={(e) => handleInputChange("name", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   placeholder="Enter product name"
                   data-testid="product-form-dialog_input-name"
                 />
@@ -424,7 +424,7 @@ export function ProductFormDialog({
                   required
                   value={formData.slug}
                   onChange={(e) => handleInputChange("slug", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   placeholder="product-slug"
                   data-testid="product-form-dialog_input-slug"
                 />
@@ -447,7 +447,7 @@ export function ProductFormDialog({
                 onChange={(e) =>
                   handleInputChange("description", e.target.value)
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 placeholder="Short description of the product"
                 data-testid="product-form-dialog_input-description"
                 aria-label="Short description"
@@ -468,7 +468,7 @@ export function ProductFormDialog({
                 onChange={(e) =>
                   handleInputChange("longDescription", e.target.value)
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 rows={4}
                 placeholder="Detailed description of the product..."
                 data-testid="product-form-dialog_textarea-long-description"
@@ -495,7 +495,7 @@ export function ProductFormDialog({
                   onChange={(e) =>
                     handleInputChange("price", parseInt(e.target.value) || 0)
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   placeholder="1400"
                   data-testid="product-form-dialog_input-price"
                   aria-label="Price in cents"
@@ -518,7 +518,7 @@ export function ProductFormDialog({
                       e.target.value as EProductCategory,
                     )
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   data-testid="product-form-dialog_select-category"
                   aria-label="Category"
                   title="Select a category"
@@ -554,7 +554,7 @@ export function ProductFormDialog({
                   required
                   value={formData.weight}
                   onChange={(e) => handleInputChange("weight", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   placeholder="16 oz"
                   data-testid="product-form-dialog_input-weight"
                   aria-label="Weight"
@@ -565,7 +565,7 @@ export function ProductFormDialog({
 
             {/* Recurring (Subscription) */}
             {formData.category === EProductCategory.SUBSCRIPTIONS && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-blue-50 border border-blue-200 rounded-lg dark:bg-blue-900/20 dark:border-blue-800/30">
                 <div>
                   <label
                     htmlFor="product-interval"
@@ -579,7 +579,7 @@ export function ProductFormDialog({
                     onChange={(e) =>
                       handleInputChange("recurringInterval", e.target.value)
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                     data-testid="product-form-dialog_select-interval"
                     aria-label="Recurring interval"
                     title="Select a billing interval"
@@ -609,7 +609,7 @@ export function ProductFormDialog({
                         parseInt(e.target.value) || 1,
                       )
                     }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                     placeholder="1"
                     data-testid="product-form-dialog_input-interval-count"
                     aria-label="Recurring interval count"
@@ -632,12 +632,14 @@ export function ProductFormDialog({
                   onChange={(e) =>
                     handleInputChange("inStock", e.target.checked)
                   }
-                  className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                  className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:focus:ring-primary-400"
                   data-testid="product-form-dialog_checkbox-in-stock"
                   aria-label="In Stock"
                   title="Toggle in stock status"
                 />
-                <span className="text-sm text-dark-700">In Stock</span>
+                <span className="text-sm text-dark-700 dark:text-dark-800">
+                  In Stock
+                </span>
               </label>
               <label
                 htmlFor="product-featured"
@@ -650,12 +652,14 @@ export function ProductFormDialog({
                   onChange={(e) =>
                     handleInputChange("featured", e.target.checked)
                   }
-                  className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500"
+                  className="w-4 h-4 text-primary-500 border-gray-300 rounded focus:ring-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:focus:ring-primary-400"
                   data-testid="product-form-dialog_checkbox-featured"
                   aria-label="Featured product"
                   title="Toggle featured status"
                 />
-                <span className="text-sm text-dark-700">Featured Product</span>
+                <span className="text-sm text-dark-700 dark:text-dark-800">
+                  Featured Product
+                </span>
               </label>
             </div>
 
@@ -706,7 +710,7 @@ export function ProductFormDialog({
                 onChange={(e) =>
                   handleInputChange("stripePaymentLinkId", e.target.value)
                 }
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 placeholder="plink_..."
                 data-testid="product-form-dialog_input-stripe-link"
                 aria-label="Stripe payment link ID"
@@ -734,7 +738,7 @@ export function ProductFormDialog({
                       handleAddTag();
                     }
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   placeholder="Add a tag"
                   data-testid="product-form-dialog_input-tags"
                   aria-label="Add a tag"
@@ -754,7 +758,7 @@ export function ProductFormDialog({
                 {formData.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-dark-700 rounded-full text-sm"
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-gray-100 text-dark-700 rounded-full text-sm dark:bg-dark-200 dark:text-dark-800"
                   >
                     {tag}
                     <button
@@ -774,10 +778,10 @@ export function ProductFormDialog({
             {submitError && (
               <div
                 role="alert"
-                className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2"
+                className="p-4 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2 dark:bg-red-900/20 dark:border-red-800/30"
                 data-testid="product-form-dialog_error"
               >
-                <span className="text-red-600 text-sm flex-1">
+                <span className="text-red-600 text-sm flex-1 dark:text-red-400">
                   {submitError}
                 </span>
                 <button
@@ -794,14 +798,14 @@ export function ProductFormDialog({
 
             {/* Actions */}
             <div
-              className="flex gap-3 justify-end border-t border-gray-200 pt-6"
+              className="flex gap-3 justify-end border-t border-gray-200 pt-6 dark:border-gray-700"
               data-testid="product-form-dialog_actions"
             >
               <button
                 type="button"
                 onClick={onClose}
                 data-testid="product-form-dialog_cancel-btn"
-                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:border-gray-600 dark:hover:bg-dark-800 dark:text-dark-800"
               >
                 Cancel
               </button>
@@ -813,7 +817,7 @@ export function ProductFormDialog({
                   !!submitError
                 }
                 data-testid="product-form-dialog_submit_btn"
-                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-primary-600 dark:hover:bg-primary-700"
               >
                 {loading
                   ? "Saving..."

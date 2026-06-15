@@ -23,14 +23,17 @@ export function ProcessTab({
   return (
     <div className="space-y-4" data-testid="process-tab">
       {processContent.map((step, i) => (
-        <div key={step.id} className="p-4 border border-gray-200 rounded-lg">
+        <div
+          key={step.id}
+          className="p-4 border border-gray-200 rounded-lg dark:border-gray-700"
+        >
           <div className="flex items-center justify-between mb-3">
             <span className="font-medium text-dark-700">Step {step.step}</span>
             <button
               onClick={() => removeProcessStep(i)}
               aria-label={`Remove process step ${i + 1}`}
               title={`Remove process step ${i + 1}`}
-              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg"
+              className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg dark:hover:bg-red-900/30"
             >
               <Trash2 className="w-4 h-4" />
             </button>
@@ -69,7 +72,7 @@ export function ProcessTab({
       <button
         onClick={addProcessStep}
         data-testid="process-tab_add-btn"
-        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700"
+        className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
       >
         <Plus className="w-4 h-4" /> Add Step
       </button>

@@ -250,7 +250,7 @@ export function OrdersPage() {
     <div data-testid="orders-page">
       <div
         data-testid="orders-page_header"
-        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between dark:bg-dark-950 dark:border-gray-700"
       >
         <h2
           className="font-heading text-3xl font-bold text-dark-900"
@@ -263,17 +263,17 @@ export function OrdersPage() {
       {error && (
         <div
           role="alert"
-          className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+          className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 dark:bg-red-900/20 dark:border-red-800/30"
           data-testid="orders-page_error"
         >
           <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-red-700">{error}</span>
+          <span className="text-red-700 dark:text-red-300">{error}</span>
         </div>
       )}
 
       <div
         data-testid="orders-page_filter"
-        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6"
+        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 dark:bg-dark-950 dark:border-gray-700"
       >
         <div
           data-testid="orders-page_filter-content"
@@ -294,7 +294,7 @@ export function OrdersPage() {
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               data-testid="orders-page_search-input"
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
             />
             {searchTerm && (
               <button
@@ -312,7 +312,7 @@ export function OrdersPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             data-testid="orders-page_filter-toggle"
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-800"
           >
             <Filter className="w-4 h-4 text-dark-600" />
             <span className="text-sm font-medium text-dark-700">Filters</span>
@@ -327,7 +327,7 @@ export function OrdersPage() {
           data-testid="orders-page_filters-panel"
           className={`overflow-hidden transition-all duration-200 ease-in-out ${showFilters ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"}`}
         >
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Status Filter */}
               <div
@@ -346,7 +346,7 @@ export function OrdersPage() {
                   onChange={(e) => handleStatusChange(e.target.value)}
                   aria-label="Filter by status"
                   data-testid="orders-page_status-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   {STATUS_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -373,7 +373,7 @@ export function OrdersPage() {
                   onChange={(e) => handlePaymentStatusChange(e.target.value)}
                   aria-label="Filter by payment status"
                   data-testid="orders-page_payment-status-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   {PAYMENT_STATUS_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -400,7 +400,7 @@ export function OrdersPage() {
                   onChange={(e) => handleOrderStatusChange(e.target.value)}
                   aria-label="Filter by order status"
                   data-testid="orders-page_order-status-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   {ORDER_STATUS_OPTIONS.map((opt) => (
                     <option key={opt.value} value={opt.value}>
@@ -452,9 +452,9 @@ export function OrdersPage() {
               data-testid="orders-page_loading-overlay"
               role="status"
               aria-live="polite"
-              className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px]"
+              className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px] dark:bg-dark-950/60"
             >
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 dark:border-primary-400"></div>
               <span className="sr-only">Loading orders...</span>
             </div>
           )}
@@ -464,7 +464,7 @@ export function OrdersPage() {
             className="hidden md:flex flex-col overflow-x-auto"
           >
             <table data-testid="orders-page_table" className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-dark-100 dark:border-gray-700">
                 <tr
                   data-testid="orders-page_table-header"
                   className="text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
@@ -525,11 +525,11 @@ export function OrdersPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {orders.map((order) => (
                   <tr
                     key={order.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-gray-50 transition-colors dark:hover:bg-dark-100"
                     data-testid="orders-page_table-row"
                   >
                     <td
@@ -572,7 +572,7 @@ export function OrdersPage() {
                         to={`/orders/${order.id}`}
                         onClick={saveScroll}
                         state={{ from: currentUrl }}
-                        className="font-mono text-sm text-primary-600 hover:text-primary-700"
+                        className="font-mono text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
                       >
                         {truncateOrderId(order.id)}
                       </Link>
@@ -658,7 +658,7 @@ export function OrdersPage() {
             {orders.map((order) => (
               <div
                 key={order.id}
-                className="bg-white p-4 rounded-xl shadow-sm border border-gray-200"
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
                 data-testid="orders-page_mobile-card"
               >
                 <div
@@ -667,7 +667,7 @@ export function OrdersPage() {
                 >
                   <div
                     data-testid="orders-page_mobile-card-order-id"
-                    className="font-mono text-sm text-primary-600"
+                    className="font-mono text-sm text-primary-600 dark:text-primary-400"
                   >
                     {truncateOrderId(order.id)}
                   </div>
@@ -743,7 +743,7 @@ export function OrdersPage() {
                 </div>
                 <div
                   data-testid="orders-page_mobile-card-actions"
-                  className="flex gap-2 mt-3 pt-3 border-t border-gray-200"
+                  className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700"
                 >
                   <Link
                     to={`/orders/${order.id}`}

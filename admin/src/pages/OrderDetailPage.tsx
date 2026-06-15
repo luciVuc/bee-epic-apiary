@@ -130,7 +130,7 @@ export function OrderDetailPage() {
     <div data-testid="order-detail-page">
       <div
         data-testid="order-detail-page_header"
-        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-start justify-between mb-6"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 flex items-start justify-between mb-6 dark:bg-dark-950 dark:border-gray-700"
       >
         <div
           data-testid="order-detail-page_header-content"
@@ -140,7 +140,7 @@ export function OrderDetailPage() {
             data-testid="order-detail-page_back-button"
             onClick={() => navigate(backUrl)}
             aria-label="Back to orders"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-800"
           >
             <ArrowLeft className="w-5 h-5 text-dark-600" />
           </button>
@@ -158,7 +158,7 @@ export function OrderDetailPage() {
                   setCopyStatus("idle");
                 }}
                 aria-label="Show full order ID"
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors"
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-800"
               >
                 <Eye className="w-5 h-5 text-dark-400" />
               </button>
@@ -178,7 +178,7 @@ export function OrderDetailPage() {
               target="_blank"
               rel="noopener noreferrer"
               data-testid="order-detail-page_checkout-link"
-              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
               title="Open Checkout Session"
             >
               <ExternalLink className="w-4 h-4" />
@@ -213,11 +213,11 @@ export function OrderDetailPage() {
           {/* Line Items */}
           <div
             data-testid="order-detail-page_line-items"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="order-detail-page_line-items_header"
-              className="font-heading text-xl font-semibold mb-4"
+              className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
             >
               Order Items
             </h3>
@@ -237,7 +237,7 @@ export function OrderDetailPage() {
                   data-testid="order-detail-page_line-items-table"
                   className="w-full"
                 >
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50 border-b border-gray-200 dark:bg-dark-800 dark:border-gray-700">
                     <tr
                       data-testid="order-detail-page_line-items-table-header"
                       className="text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
@@ -274,11 +274,11 @@ export function OrderDetailPage() {
                       </th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                     {lineItems.map((item) => (
                       <tr
                         key={item.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        className="hover:bg-gray-50 transition-colors dark:hover:bg-dark-800"
                         data-testid="order-detail-page_line-items-table-row"
                       >
                         <td
@@ -289,16 +289,16 @@ export function OrderDetailPage() {
                             <img
                               src={item.imageUrls[0]}
                               alt={item.description}
-                              className="w-12 h-12 object-cover rounded-md border border-gray-200"
+                              className="w-12 h-12 object-cover rounded-md border border-gray-200 dark:border-gray-700"
                               data-testid="order-detail-page_line-items-table-cell-image-img"
                             />
                           ) : (
                             <div
-                              className="w-12 h-12 bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center"
+                              className="w-12 h-12 bg-gray-100 rounded-md border border-gray-200 flex items-center justify-center dark:bg-dark-800 dark:border-gray-700"
                               data-testid="order-detail-page_line-items-table-cell-image-placeholder"
                             >
                               <svg
-                                className="w-6 h-6 text-gray-400"
+                                className="w-6 h-6 text-gray-400 dark:text-dark-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -321,7 +321,7 @@ export function OrderDetailPage() {
                           {item.productId ? (
                             <Link
                               to={`/products/${item.productId}`}
-                              className="text-primary-600 hover:text-primary-800 hover:underline"
+                              className="text-primary-600 hover:text-primary-800 hover:underline dark:text-primary-400 dark:hover:text-primary-300"
                               data-testid="order-detail-page_line-items-table-cell-item-description"
                             >
                               {item.description}
@@ -364,7 +364,7 @@ export function OrderDetailPage() {
                       </tr>
                     ))}
                   </tbody>
-                  <tfoot className="bg-gray-50 border-t-2 border-gray-200">
+                  <tfoot className="bg-gray-50 border-t-2 border-gray-200 dark:bg-dark-800 dark:border-gray-700">
                     <tr
                       data-testid="order-detail-page_line-items-table-footer-subtotal"
                       className="text-right"
@@ -411,11 +411,11 @@ export function OrderDetailPage() {
           {order.description && (
             <div
               data-testid="order-detail-page_description"
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
             >
               <h3
                 data-testid="order-detail-page_description_header"
-                className="font-heading text-xl font-semibold mb-4"
+                className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
               >
                 Description
               </h3>
@@ -429,11 +429,11 @@ export function OrderDetailPage() {
           {Object.keys(order.metadata).length > 0 && (
             <div
               data-testid="order-detail-page_metadata"
-              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+              className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
             >
               <h3
                 data-testid="order-detail-page_metadata_header"
-                className="font-heading text-xl font-semibold mb-4"
+                className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
               >
                 Order Metadata
               </h3>
@@ -441,7 +441,7 @@ export function OrderDetailPage() {
                 {Object.entries(order.metadata).map(([key, value]) => (
                   <div
                     key={key}
-                    className="flex items-center justify-between py-1 border-b border-gray-100 last:border-0"
+                    className="flex items-center justify-between py-1 border-b border-gray-100 last:border-0 dark:border-gray-700"
                   >
                     <span className="text-sm text-dark-500 font-mono">
                       {key}
@@ -458,11 +458,11 @@ export function OrderDetailPage() {
           {/* Status Card */}
           <div
             data-testid="order-detail-page_status"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="order-detail-page_status_header"
-              className="font-heading text-lg font-semibold mb-4"
+              className="font-heading text-lg font-semibold mb-4 dark:text-dark-800"
             >
               Status
             </h3>
@@ -497,7 +497,7 @@ export function OrderDetailPage() {
               {order.orderStatus && (
                 <div className="flex items-center justify-between">
                   <span className="text-dark-600">Order Status</span>
-                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                  <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                     {order.orderStatus.charAt(0).toUpperCase() +
                       order.orderStatus.slice(1)}
                   </span>
@@ -509,11 +509,11 @@ export function OrderDetailPage() {
           {/* Customer Card */}
           <div
             data-testid="order-detail-page_customer"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="order-detail-page_customer_header"
-              className="font-heading text-lg font-semibold mb-4"
+              className="font-heading text-lg font-semibold mb-4 dark:text-dark-800"
             >
               Customer
             </h3>
@@ -536,7 +536,7 @@ export function OrderDetailPage() {
                 <p className="text-dark-700">{order.customerPhone || "—"}</p>
               </div>
               {order.shippingAddress && (
-                <div className="pt-2 border-t border-gray-100">
+                <div className="pt-2 border-t border-gray-100 dark:border-gray-700">
                   <span className="text-sm text-dark-500 block mb-1">
                     Shipping Address
                   </span>
@@ -564,11 +564,11 @@ export function OrderDetailPage() {
           {/* Details Card */}
           <div
             data-testid="order-detail-page_details"
-            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200"
+            className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
           >
             <h3
               data-testid="order-detail-page_details_header"
-              className="font-heading text-lg font-semibold mb-4"
+              className="font-heading text-lg font-semibold mb-4 dark:text-dark-800"
             >
               Details
             </h3>
@@ -600,7 +600,7 @@ export function OrderDetailPage() {
                       setCopyStatus("idle");
                     }}
                     aria-label="Show full order ID"
-                    className="p-1 hover:bg-gray-100 rounded transition-colors"
+                    className="p-1 hover:bg-gray-100 rounded transition-colors dark:hover:bg-dark-800"
                   >
                     <Eye className="w-3.5 h-3.5 text-dark-400" />
                   </button>
@@ -689,7 +689,7 @@ export function OrderDetailPage() {
           onClick={() => setShowOrderIdPopup(false)}
         >
           <div
-            className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6"
+            className="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4 p-6 dark:bg-dark-950"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-4">
@@ -703,13 +703,13 @@ export function OrderDetailPage() {
                 onClick={() => setShowOrderIdPopup(false)}
                 aria-label="Close"
                 autoFocus
-                className="p-1 hover:bg-gray-100 rounded"
+                className="p-1 hover:bg-gray-100 rounded dark:hover:bg-dark-800"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <div className="flex items-stretch gap-2">
-              <p className="flex-1 text-dark-700 font-mono text-sm break-all bg-gray-50 rounded-lg p-3 select-all">
+              <p className="flex-1 text-dark-700 font-mono text-sm break-all bg-gray-50 rounded-lg p-3 select-all dark:bg-dark-200 dark:text-dark-800">
                 {order.id}
               </p>
               <button
@@ -718,7 +718,7 @@ export function OrderDetailPage() {
                   copyStatus === "copied" ? "Copied" : "Copy order ID"
                 }
                 data-testid="order-detail-page_order-id-popup_copy-btn"
-                className="px-3 py-2 bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors shrink-0"
+                className="px-3 py-2 bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors shrink-0 dark:bg-dark-200 dark:text-dark-800 dark:hover:bg-dark-300"
               >
                 {copyStatus === "copied" ? (
                   <span className="text-green-600 text-sm font-medium whitespace-nowrap">
@@ -834,8 +834,8 @@ function OrderEditDialog({
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
       data-testid="order-edit-dialog"
     >
-      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto dark:bg-dark-950">
+        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between dark:border-gray-700">
           <h3
             id="order-edit-title"
             className="font-heading text-xl font-semibold text-dark-900"
@@ -845,7 +845,7 @@ function OrderEditDialog({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="p-1 hover:bg-gray-100 rounded"
+            className="p-1 hover:bg-gray-100 rounded dark:hover:bg-dark-800"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
@@ -858,7 +858,7 @@ function OrderEditDialog({
           {error && (
             <div
               role="alert"
-              className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700"
+              className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700 dark:bg-red-900/20 dark:border-red-800/30 dark:text-red-300"
             >
               {error}
             </div>
@@ -876,7 +876,7 @@ function OrderEditDialog({
               id="order-status"
               value={orderStatus}
               onChange={(e) => setOrderStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
               data-testid="order-edit-dialog_status-select"
             >
               {ORDER_STATUS_OPTIONS.map((opt) => (
@@ -900,7 +900,7 @@ function OrderEditDialog({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
               data-testid="order-edit-dialog_description-input"
             />
           </div>
@@ -918,7 +918,7 @@ function OrderEditDialog({
               type="text"
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
               data-testid="order-edit-dialog_customer-name-input"
             />
           </div>
@@ -941,7 +941,7 @@ function OrderEditDialog({
                   type="text"
                   value={addressLine1}
                   onChange={(e) => setAddressLine1(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   data-testid="order-edit-dialog_address-line1-input"
                 />
               </div>
@@ -957,7 +957,7 @@ function OrderEditDialog({
                   type="text"
                   value={addressLine2}
                   onChange={(e) => setAddressLine2(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   data-testid="order-edit-dialog_address-line2-input"
                 />
               </div>
@@ -974,7 +974,7 @@ function OrderEditDialog({
                     type="text"
                     value={addressCity}
                     onChange={(e) => setAddressCity(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                     data-testid="order-edit-dialog_address-city-input"
                   />
                 </div>
@@ -990,7 +990,7 @@ function OrderEditDialog({
                     type="text"
                     value={addressState}
                     onChange={(e) => setAddressState(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                     data-testid="order-edit-dialog_address-state-input"
                   />
                 </div>
@@ -1008,7 +1008,7 @@ function OrderEditDialog({
                     type="text"
                     value={addressPostalCode}
                     onChange={(e) => setAddressPostalCode(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                     data-testid="order-edit-dialog_address-postal-code-input"
                   />
                 </div>
@@ -1024,7 +1024,7 @@ function OrderEditDialog({
                     type="text"
                     value={addressCountry}
                     onChange={(e) => setAddressCountry(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                     data-testid="order-edit-dialog_address-country-input"
                   />
                 </div>
@@ -1032,10 +1032,10 @@ function OrderEditDialog({
             </div>
           </fieldset>
         </div>
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3">
+        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-end gap-3 dark:border-gray-700">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-dark-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-4 py-2 text-dark-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors dark:text-dark-800 dark:bg-dark-200 dark:hover:bg-dark-300"
           >
             Cancel
           </button>

@@ -219,7 +219,7 @@ export function ProductsPage() {
     <div data-testid="products-page">
       <div
         data-testid="products-page_header"
-        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4 dark:bg-dark-950 dark:border-gray-700"
       >
         <h2
           data-testid="products-page_title"
@@ -240,18 +240,18 @@ export function ProductsPage() {
       {error && (
         <div
           role="alert"
-          className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2"
+          className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 dark:bg-red-900/20 dark:border-red-800/30"
           data-testid="products-page_error"
         >
           <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-red-700">{error}</span>
+          <span className="text-red-700 dark:text-red-300">{error}</span>
         </div>
       )}
 
       {/* Toolbar */}
       <div
         data-testid="products-page_toolbar"
-        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6"
+        className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-6 dark:bg-dark-950 dark:border-gray-700"
       >
         <div
           data-testid="products-page_toolbar-content"
@@ -270,7 +270,7 @@ export function ProductsPage() {
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               data-testid="products-page_search-input"
-              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+              className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
             />
             {searchTerm && (
               <button
@@ -278,7 +278,7 @@ export function ProductsPage() {
                 aria-label="Clear search"
                 title="Clear search"
                 data-testid="products-page_search-clear"
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors dark:text-dark-500 dark:hover:text-dark-300"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -289,7 +289,7 @@ export function ProductsPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             data-testid="products-page_filter-toggle"
-            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-800"
           >
             <Filter className="w-4 h-4 text-dark-600" />
             <span className="text-sm font-medium text-dark-700">Filters</span>
@@ -304,7 +304,7 @@ export function ProductsPage() {
           data-testid="products-page_filters-panel"
           className={`overflow-hidden transition-all duration-200 ease-in-out ${showFilters ? "max-h-96 opacity-100 mt-4" : "max-h-0 opacity-0"}`}
         >
-          <div className="pt-4 border-t border-gray-200">
+          <div className="pt-4 border-t border-gray-200 dark:border-gray-700">
             <div className="flex flex-col sm:flex-row gap-4">
               {/* Category Filter */}
               <div
@@ -323,7 +323,7 @@ export function ProductsPage() {
                   onChange={(e) => handleCategoryChange(e.target.value)}
                   aria-label="Filter by category"
                   data-testid="products-page_category-filter"
-                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                 >
                   <option value="ALL">All Categories</option>
                   {categories.length === 0 ? (
@@ -378,9 +378,9 @@ export function ProductsPage() {
             <div
               role="status"
               aria-live="polite"
-              className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px]"
+              className="absolute inset-0 bg-white/60 flex items-center justify-center z-10 min-h-[200px] dark:bg-dark-950/60"
             >
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-500 dark:border-primary-400"></div>
               <span className="sr-only">Loading products...</span>
             </div>
           )}
@@ -391,7 +391,7 @@ export function ProductsPage() {
             className="hidden md:flex flex-col overflow-x-auto"
           >
             <table data-testid="products-page_table" className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-dark-100 dark:border-gray-700">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
                     Product
@@ -413,11 +413,11 @@ export function ProductsPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200">
+              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {products.map((product) => (
                   <tr
                     key={product.id}
-                    className="hover:bg-gray-50 transition-colors"
+                    className="hover:bg-gray-50 transition-colors dark:hover:bg-dark-100"
                   >
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Link
@@ -457,7 +457,7 @@ export function ProductsPage() {
                         {formatPrice(product.price)}
                       </span>
                       {product.recurringInterval && (
-                        <p className="text-xs text-blue-600 mt-0.5">
+                        <p className="text-xs text-blue-600 mt-0.5 dark:text-blue-400">
                           /{" "}
                           {recurringText(
                             product.recurringInterval,
@@ -475,7 +475,7 @@ export function ProductsPage() {
                     </td>
                     <td className="px-1 py-4">
                       {product.featured && (
-                        <span className="px-1 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">
+                        <span className="px-1 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
                           Featured
                         </span>
                       )}
@@ -489,7 +489,7 @@ export function ProductsPage() {
                           }}
                           aria-label="Edit product"
                           title="Edit product"
-                          className="p-2 text-dark-600 hover:bg-dark-100 rounded-lg transition-colors"
+                          className="p-2 text-dark-600 hover:bg-dark-100 rounded-lg transition-colors dark:text-dark-400 dark:hover:bg-dark-800"
                         >
                           <Edit className="w-4 h-4" />
                         </button>
@@ -500,7 +500,7 @@ export function ProductsPage() {
                           }}
                           aria-label="Delete product"
                           title="Delete product"
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -517,7 +517,7 @@ export function ProductsPage() {
             {products.map((product) => (
               <div
                 key={product.id}
-                className="bg-white p-4 rounded-xl shadow-sm border border-gray-200"
+                className="bg-white p-4 rounded-xl shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
               >
                 <div className="flex items-center gap-3 mb-3">
                   <img
@@ -548,7 +548,7 @@ export function ProductsPage() {
                       {formatPrice(product.price)}
                     </span>
                     {product.recurringInterval && (
-                      <span className="ml-1 text-xs text-blue-600">
+                      <span className="ml-1 text-xs text-blue-600 dark:text-blue-400">
                         /{" "}
                         {recurringText(
                           product.recurringInterval,
@@ -567,18 +567,18 @@ export function ProductsPage() {
                   </div>
                   <div>
                     {product.featured && (
-                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700">
+                      <span className="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300">
                         Featured
                       </span>
                     )}
                   </div>
                 </div>
-                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200">
+                <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
                   <Link
                     to={`/products/${product.id}`}
                     onClick={saveScroll}
                     state={{ from: currentUrl }}
-                    className="flex-1 text-center px-3 py-2 text-sm bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="flex-1 text-center px-3 py-2 text-sm bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors dark:bg-dark-200 dark:text-dark-800 dark:hover:bg-dark-300"
                   >
                     View
                   </Link>

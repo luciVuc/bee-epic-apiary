@@ -253,7 +253,7 @@ export const ProductsSection = ({
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               data-testid="products-section_search-input"
-              className="w-full pl-10 pr-10 py-2.5 border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-body text-sm"
+              className="w-full pl-10 pr-10 py-2.5 border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 font-body text-sm"
             />
             {searchTerm && (
               <button
@@ -280,7 +280,7 @@ export const ProductsSection = ({
               onChange={(e) => handleSortChange(e.target.value)}
               aria-label="Sort products"
               data-testid="products-section_sort-select"
-              className="px-4 py-2.5 border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 font-body text-sm"
+              className="px-4 py-2.5 border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-primary-500 dark:focus:ring-primary-400 focus:border-primary-500 font-body text-sm"
             >
               <option value="name-asc">Name (A-Z)</option>
               <option value="name-desc">Name (Z-A)</option>

@@ -27,12 +27,12 @@ export function DeleteConfirmDialog({
       data-testid="delete-confirm-dialog"
     >
       <div
-        className="bg-white rounded-xl p-6 max-w-md w-full mx-4"
+        className="bg-white rounded-xl p-6 max-w-md w-full mx-4 dark:bg-dark-950"
         data-testid="delete-confirm-dialog_content"
       >
         <h3
           id="delete-confirm-dialog_title"
-          className="font-heading text-xl font-semibold mb-4"
+          className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
           data-testid="delete-confirm-dialog_title"
         >
           Confirm Delete
@@ -48,14 +48,14 @@ export function DeleteConfirmDialog({
           <button
             onClick={onCancel}
             data-testid="delete-confirm-dialog_cancel-btn"
-            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors dark:border-gray-600 dark:hover:bg-dark-800 dark:text-dark-800"
           >
             Cancel
           </button>
           <button
             onClick={onConfirm}
             data-testid="delete-confirm-dialog_confirm-btn"
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors dark:bg-red-600 dark:hover:bg-red-700"
           >
             Delete
           </button>
