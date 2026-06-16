@@ -11,6 +11,7 @@ import {
   NEW_ORDER_EVENT,
   DEFAULT_LOGO,
 } from "../../utils/constants";
+import { DEFAULT_API_URL } from "../../utils/constants";
 import { NotificationsPanel } from "../notifications/NotificationsPanel";
 
 export interface IAdminNavbarProps {
@@ -51,7 +52,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   }, []);
 
   useEffect(() => {
-    const apiBaseUrl = import.meta.env.VITE_API_URL || "/api";
+    const apiBaseUrl = DEFAULT_API_URL;
     const eventSource = new EventSource(`${apiBaseUrl}/notifications/stream`);
 
     eventSource.addEventListener("connected", () => {

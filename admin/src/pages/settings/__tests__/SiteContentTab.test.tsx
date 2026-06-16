@@ -14,6 +14,9 @@ function renderTab(
       addAboutParagraph={vi.fn()}
       updateAboutParagraph={vi.fn()}
       removeAboutParagraph={vi.fn()}
+      addAboutImage={vi.fn()}
+      updateAboutImage={vi.fn()}
+      removeAboutImage={vi.fn()}
       addNavLink={vi.fn()}
       updateNavLink={vi.fn()}
       removeNavLink={vi.fn()}

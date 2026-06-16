@@ -10,6 +10,7 @@ import {
   Clipboard,
   Check,
 } from "lucide-react";
+import { DEFAULT_API_URL } from "../../utils/constants";
 import { clearCart } from "../../store/cartSlice";
 import { Button } from "../ui/Button";
 import { SeoHead } from "../seo/SeoHead";
@@ -48,8 +49,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
   useEffect(() => {
     if (sessionId && !hasConfirmed.current) {
       hasConfirmed.current = true;
-      const apiBaseUrl =
-        import.meta.env.VITE_API_URL || "http://localhost:8787";
+      const apiBaseUrl = DEFAULT_API_URL;
       fetch(`${apiBaseUrl}/orders/confirm`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

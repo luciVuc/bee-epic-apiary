@@ -8,6 +8,7 @@ import {
   DEFAULT_TESTIMONIALS,
   DEFAULT_CATEGORIES,
 } from "../utils/constants";
+import { DEFAULT_API_URL } from "../utils/constants";
 import type { IAdminSettings } from "../types";
 import type {
   ISiteContent,
@@ -85,8 +86,7 @@ export function SettingsPage() {
       setAdminSettings((prev) => ({ ...prev, ...parsed }));
       initialAdminRef.current = { ...initialAdminRef.current, ...parsed };
     } else {
-      const defaultUrl =
-        import.meta.env.VITE_API_URL || "http://localhost:8787";
+      const defaultUrl = DEFAULT_API_URL;
       setAdminSettings((prev) => ({ ...prev, apiUrl: defaultUrl }));
       initialAdminRef.current = {
         ...initialAdminRef.current,

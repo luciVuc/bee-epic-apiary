@@ -11,9 +11,9 @@ import {
   transformToStripeParams,
   transformToStripePriceParams,
 } from "./transform";
-import { SETTINGS_STORAGE_KEY } from "./constants";
+import { DEFAULT_API_URL, SETTINGS_STORAGE_KEY } from "./constants";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const API_BASE_URL = DEFAULT_API_URL;
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,

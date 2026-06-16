@@ -50,21 +50,21 @@
 	"kv_namespaces": [
 		{
 			"binding": "CONTENT_KV",
-			"id": "CONTENT_KV_ID",
-			"preview_id": "CONTENT_KV_PREVIEW_ID",
+			"id": "fdc9777103a94fd18fb9b1dab54bc730",
+			"preview_id": "fdc9777103a94fd18fb9b1dab54bc730",
 		},
 		{
 			"binding": "RATE_LIMIT_KV",
-			"id": "RATE_LIMIT_KV_ID",
-			"preview_id": "RATE_LIMIT_KV_PREVIEW_ID",
+			"id": "b41a9fa19833481fb7cee6415cccb4f4",
+			"preview_id": "b41a9fa19833481fb7cee6415cccb4f4",
 		},
 	],
 	"send_email": [{ "name": "EMAIL", "remote": true }],
 	"env": {
 		"development": {
 			"kv_namespaces": [
-				{ "binding": "CONTENT_KV", "id": "CONTENT_KV_ID", "preview_id": "CONTENT_KV_PREVIEW_ID" },
-				{ "binding": "RATE_LIMIT_KV", "id": "RATE_LIMIT_KV_ID", "preview_id": "RATE_LIMIT_KV_PREVIEW_ID" },
+				{ "binding": "CONTENT_KV", "id": "fdc9777103a94fd18fb9b1dab54bc730", "preview_id": "fdc9777103a94fd18fb9b1dab54bc730" },
+				{ "binding": "RATE_LIMIT_KV", "id": "b41a9fa19833481fb7cee6415cccb4f4", "preview_id": "b41a9fa19833481fb7cee6415cccb4f4" },
 			],
 			"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "" },
 			"send_email": [{ "name": "EMAIL", "remote": false }],

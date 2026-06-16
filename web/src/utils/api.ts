@@ -6,10 +6,11 @@ import type {
   IProcessStep,
   ICategory,
 } from "../types";
+import { DEFAULT_API_URL } from "./constants";
 import { transformStripeProductsList } from "./transform";
 
 /** Base URL for the services API, configured via VITE_API_URL env var */
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8787";
+const API_BASE_URL = DEFAULT_API_URL;
 
 /** Fetch site content (business info, hero, about, nav, etc.) from GET /settings/site */
 export async function fetchSiteContent(): Promise<ISiteContent> {

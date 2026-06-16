@@ -24,6 +24,7 @@ vi.mock("../constants", () => ({
   SETTINGS_STORAGE_KEY: "beeEpicAdminSettings",
   DEFAULT_PRODUCT_IMAGE: "/default-product.png",
   DEFAULT_PRODUCT_THUMBNAIL: "/default-thumbnail.png",
+  DEFAULT_API_URL: "/api",
 }));
 
 const mockedAxios = vi.mocked(axios);

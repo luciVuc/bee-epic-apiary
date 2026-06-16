@@ -31,6 +31,9 @@ const mockOrders: IOrder[] = [
     mode: "payment",
     metadata: {},
     url: "https://checkout.stripe.com/cs_test_1",
+    orderStatus: null,
+    description: null,
+    shippingAddress: null,
   },
   {
     id: "cs_test_2",
@@ -46,6 +49,9 @@ const mockOrders: IOrder[] = [
     mode: "payment",
     metadata: { order_ref: "ORD-001" },
     url: null,
+    orderStatus: null,
+    description: null,
+    shippingAddress: null,
   },
 ];
 

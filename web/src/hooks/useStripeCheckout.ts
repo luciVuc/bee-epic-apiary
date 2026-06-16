@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { DEFAULT_API_URL } from "../utils/constants";
 import type { IProduct, ICartItem } from "../types";
 
 interface IUseStripeCheckoutReturn {
@@ -8,7 +9,7 @@ interface IUseStripeCheckoutReturn {
   clearError: () => void;
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:8787";
+const API_BASE_URL = DEFAULT_API_URL;
 
 const isSubscriptionProduct = (product: IProduct): boolean => {
   return product.category?.toUpperCase() === "SUBSCRIPTIONS";
