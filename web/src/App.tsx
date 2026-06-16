@@ -12,6 +12,7 @@ import { SuccessPage } from "./components/pages/SuccessPage";
 import { ProductDetailPage } from "./components/pages/ProductDetailPage";
 import { LoadingSpinner } from "./components/ui/LoadingSpinner";
 import { fetchAllSiteData } from "./utils/api";
+import { DEFAULT_SITE } from "./utils/constants";
 import type {
   ISiteContent,
   ITestimonial,
@@ -21,7 +22,7 @@ import type {
 
 function AppContent() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
-  const [siteContent, setSiteContent] = useState<ISiteContent | null>(null);
+  const [siteContent, setSiteContent] = useState<ISiteContent>(DEFAULT_SITE);
   const [testimonials, setTestimonials] = useState<ITestimonial[]>([]);
   const [processSteps, setProcessSteps] = useState<IProcessStep[]>([]);
   const [categories, setCategories] = useState<ICategory[]>([]);
