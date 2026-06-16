@@ -63,7 +63,7 @@ function AppContent() {
     );
   }
 
-  if (error || !siteContent) {
+  if (error) {
     return (
       <div
         data-testid="app-error"

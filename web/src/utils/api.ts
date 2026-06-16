@@ -6,7 +6,7 @@ import type {
   IProcessStep,
   ICategory,
 } from "../types";
-import { DEFAULT_API_URL } from "./constants";
+import { DEFAULT_API_URL, DEFAULT_SITE } from "./constants";
 import { transformStripeProductsList } from "./transform";
 
 /** Base URL for the services API, configured via VITE_API_URL env var */
@@ -116,19 +116,25 @@ export async function submitContactForm(data: IContactFormData): Promise<void> {
   }
 }
 
-/** Fetch all site data in parallel: site content, testimonials, process steps, and categories */
+/** Fetch all site data in parallel with graceful fallbacks for empty KV stores */
 export async function fetchAllSiteData(): Promise<{
   siteContent: ISiteContent;
   testimonials: ITestimonial[];
   processSteps: IProcessStep[];
   categories: ICategory[];
 }> {
-  const [siteContent, testimonials, processSteps, categories] =
-    await Promise.all([
-      fetchSiteContent(),
-      fetchTestimonials(),
-      fetchProcessSteps(),
-      fetchCategories(),
-    ]);
-  return { siteContent, testimonials, processSteps, categories };
+  const results = await Promise.allSettled([
+    fetchSiteContent(),
+    fetchTestimonials(),
+    fetchProcessSteps(),
+    fetchCategories(),
+  ]);
+
+  return {
+    siteContent:
+      results[0].status === "fulfilled" ? results[0].value : DEFAULT_SITE,
+    testimonials: results[1].status === "fulfilled" ? results[1].value : [],
+    processSteps: results[2].status === "fulfilled" ? results[2].value : [],
+    categories: results[3].status === "fulfilled" ? results[3].value : [],
+  };
 }
