@@ -1,5 +1,5 @@
 {
-	"name": "epic-bee-apiary",
+	"name": "bee-epic-apiary",
 	"main": "src/index.js",
 	"workers_dev": true,
 	"preview_urls": true,

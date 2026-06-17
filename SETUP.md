@@ -220,7 +220,7 @@ variable"):
 
 | Variable name   | Value                                                                                             |
 | --------------- | ------------------------------------------------------------------------------------------------- |
-| `VITE_API_URL`  | Your Worker URL (see Step 7 — e.g., `https://epic-bee-apiary.your-subdomain.workers.dev`)         |
+| `VITE_API_URL`  | Your Worker URL (see Step 7 — e.g., `https://bee-epic-apiary.your-subdomain.workers.dev`)         |
 | `VITE_SITE_URL` | Your storefront URL (e.g., `https://golden-hive-apiary.pages.dev` or `https://beeepicapiary.com`) |
 
 ### 6.2 — Push to trigger deployment
@@ -266,9 +266,9 @@ projects to Cloudflare.
 2. Click **Custom domains** → **Set up a custom domain**
 3. Enter `admin.beeepicapiary.com`
 
-**Backend Worker** (`epic-bee-apiary`):
+**Backend Worker** (`bee-epic-apiary`):
 
-1. Go to **Workers & Pages** → **epic-bee-apiary**
+1. Go to **Workers & Pages** → **bee-epic-apiary**
 2. Click **Triggers** → **Custom domains** → **Add custom domain**
 3. Enter `api.beeepicapiary.com`
 

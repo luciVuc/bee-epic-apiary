@@ -28,14 +28,14 @@ Allow admin users to upload image files directly (drag-and-drop / file picker) i
 
 #### 1. R2 Bucket Binding (services/)
 
-- Create R2 bucket `epic-bee-apiary-images`:
+- Create R2 bucket `bee-epic-apiary-images`:
   ```bash
-  npx wrangler r2 bucket create epic-bee-apiary-images
+  npx wrangler r2 bucket create bee-epic-apiary-images
   ```
 - Add R2 binding to `services/wrangler.jsonc`:
   ```jsonc
   "r2_buckets": [
-    { "binding": "IMAGES_BUCKET", "bucket_name": "epic-bee-apiary-images" }
+    { "binding": "IMAGES_BUCKET", "bucket_name": "bee-epic-apiary-images" }
   ]
   ```
 - Run `npm run cf-typegen` to regenerate `Env` types with `IMAGES_BUCKET: R2Bucket`
