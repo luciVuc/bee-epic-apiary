@@ -1,6 +1,6 @@
 # Bee Epic Apiary
 
-Monorepo: `admin/` (React admin panel) + `services/` (Cloudflare Worker) + `web/` (public storefront PWA).
+Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + `web/` (public storefront PWA).
 
 ## Critical Conventions Agents Often Miss
 
