@@ -60,10 +60,10 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs tests on pushes 
 
 ### Required GitHub Variables
 
-| Variable        | Used by | Default                               |
-| --------------- | ------- | ------------------------------------- |
-| `VITE_API_URL`  | web     | `https://bee-epic-apiary.workers.dev` |
-| `VITE_SITE_URL` | web     | `https://bee-epic-apiary.pages.dev`   |
+| Variable        | Used by | Default                                            |
+| --------------- | ------- | -------------------------------------------------- |
+| `VITE_API_URL`  | web     | `https://bee-epic-apiary.babu-frik-jr.workers.dev` |
+| `VITE_SITE_URL` | web     | `https://bee-epic-apiary.pages.dev`                |
 
 ## Sub-projects
 

@@ -59,7 +59,7 @@ jobs:
       - run: npm ci --prefix web
       - run: npm run build --prefix web
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://bee-epic-apiary.workers.dev' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://bee-epic-apiary.babu-frik-jr.workers.dev' }}
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
           VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://bee-epic-apiary.pages.dev' }}
       - name: Deploy to Cloudflare Pages
@@ -83,7 +83,7 @@ jobs:
       - run: npm ci --prefix admin
       - run: npm run build --prefix admin
         env:
-          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://bee-epic-apiary.workers.dev' }}
+          VITE_API_URL: ${{ vars.VITE_API_URL || 'https://bee-epic-apiary.babu-frik-jr.workers.dev' }}
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
           VITE_API_SECRET_KEY: ${{ secrets.VITE_API_SECRET_KEY }}
       - name: Deploy to Cloudflare Pages
