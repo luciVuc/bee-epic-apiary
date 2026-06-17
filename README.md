@@ -44,7 +44,7 @@ npm run dev
 A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs tests on pushes to `main` or `release` branches, then deploys all 3 projects to Cloudflare:
 
 1. **services** — Worker deployed via `wrangler deploy`
-2. **web** — Storefront built and deployed to Cloudflare Pages (`golden-hive-apiary`)
+2. **web** — Storefront built and deployed to Cloudflare Pages (`bee-epic-apiary`)
 3. **admin** — Admin panel built and deployed to Cloudflare Pages (`bee-epic-apiary-admin`)
 
 ### Required GitHub Secrets
@@ -60,10 +60,10 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs tests on pushes 
 
 ### Required GitHub Variables
 
-| Variable        | Used by | Default                                |
-| --------------- | ------- | -------------------------------------- |
-| `VITE_API_URL`  | web     | `https://bee-epic-apiary.workers.dev`  |
-| `VITE_SITE_URL` | web     | `https://golden-hive-apiary.pages.dev` |
+| Variable        | Used by | Default                               |
+| --------------- | ------- | ------------------------------------- |
+| `VITE_API_URL`  | web     | `https://bee-epic-apiary.workers.dev` |
+| `VITE_SITE_URL` | web     | `https://bee-epic-apiary.pages.dev`   |
 
 ## Sub-projects
 

@@ -149,4 +149,4 @@ Requires `wrangler` to be authenticated (`npx wrangler login`). The `vite.config
 
 ### GitHub Actions
 
-Pushes to `main` or `release` run the `.github/workflows/deploy.yml` workflow, which tests and deploys all projects. Web is deployed to `golden-hive-apiary` Pages project. See the root `README.md` for required secrets.
+Pushes to `main` or `release` run the `.github/workflows/deploy.yml` workflow, which tests and deploys all projects. Web is deployed to `bee-epic-apiary` Pages project. See the root `README.md` for required secrets.

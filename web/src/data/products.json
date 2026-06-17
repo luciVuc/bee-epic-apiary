@@ -10,12 +10,12 @@
     "stripePaymentLinkId": "test_bJeaEXdW9dLQ4I6gkDcjS08",
     "category": "HONEY",
     "imageUrls": [
-      "/golden-hive-apiary/images/products/wildflower.png",
-      "/golden-hive-apiary/images/products/wildflower.png"
+      "/bee-epic-apiary/images/products/wildflower.png",
+      "/bee-epic-apiary/images/products/wildflower.png"
     ],
     "thumbnailUrls": [
-      "/golden-hive-apiary/images/products/wildflower-thumb.png",
-      "/golden-hive-apiary/images/products/wildflower-thumb.png"
+      "/bee-epic-apiary/images/products/wildflower-thumb.png",
+      "/bee-epic-apiary/images/products/wildflower-thumb.png"
     ],
     "inStock": true,
     "featured": true,
@@ -32,8 +32,8 @@
     "stripePriceId": "price_1TPGvODz32YdTgbTCivJIlSE",
     "stripePaymentLinkId": "test_00w14n4lz6jo1vUb0jcjS0d",
     "category": "HONEY",
-    "imageUrls": ["/golden-hive-apiary/images/products/clover.png"],
-    "thumbnailUrls": ["/golden-hive-apiary/images/products/clover-thumb.png"],
+    "imageUrls": ["/bee-epic-apiary/images/products/clover.png"],
+    "thumbnailUrls": ["/bee-epic-apiary/images/products/clover-thumb.png"],
     "inStock": true,
     "featured": true,
     "weight": "12 oz",
@@ -49,10 +49,8 @@
     "stripePriceId": "price_1TPGwgDz32YdTgbTIlD1iJ9t",
     "stripePaymentLinkId": "test_5kQ14n9FT8rw3E21pJcjS0e",
     "category": "HONEY",
-    "imageUrls": ["/golden-hive-apiary/images/products/buckwheat.png"],
-    "thumbnailUrls": [
-      "/golden-hive-apiary/images/products/buckwheat-thumb.png"
-    ],
+    "imageUrls": ["/bee-epic-apiary/images/products/buckwheat.png"],
+    "thumbnailUrls": ["/bee-epic-apiary/images/products/buckwheat-thumb.png"],
     "inStock": true,
     "featured": false,
     "weight": "12 oz",
@@ -68,8 +66,8 @@
     "stripePriceId": "price_1TPGzIDz32YdTgbT2KKUpKMs",
     "stripePaymentLinkId": "test_bJe14nbO17ns1vUgkDcjS0f",
     "category": "BEESWAX",
-    "imageUrls": ["/golden-hive-apiary/images/products/lip-balm.png"],
-    "thumbnailUrls": ["/golden-hive-apiary/images/products/lip-balm-thumb.png"],
+    "imageUrls": ["/bee-epic-apiary/images/products/lip-balm.png"],
+    "thumbnailUrls": ["/bee-epic-apiary/images/products/lip-balm-thumb.png"],
     "inStock": true,
     "featured": false,
     "weight": "4 x 0.15 oz",
@@ -85,8 +83,8 @@
     "stripePriceId": "price_1TPGzrDz32YdTgbT4WiJeNEq",
     "stripePaymentLinkId": "test_7sY6oH5pDbDI2zY6K3cjS0c",
     "category": "BEESWAX",
-    "imageUrls": ["/golden-hive-apiary/images/products/candles.png"],
-    "thumbnailUrls": ["/golden-hive-apiary/images/products/candles-thumb.png"],
+    "imageUrls": ["/bee-epic-apiary/images/products/candles.png"],
+    "thumbnailUrls": ["/bee-epic-apiary/images/products/candles-thumb.png"],
     "inStock": true,
     "featured": false,
     "weight": "4 candles",
@@ -102,10 +100,8 @@
     "stripePriceId": "price_1TPH0WDz32YdTgbT76cSiBib",
     "stripePaymentLinkId": "test_9B628rbO1bDI0rQd8rcjS0b",
     "category": "GIFTS",
-    "imageUrls": ["/golden-hive-apiary/images/products/gift-junior.png"],
-    "thumbnailUrls": [
-      "/golden-hive-apiary/images/products/gift-junior-thumb.png"
-    ],
+    "imageUrls": ["/bee-epic-apiary/images/products/gift-junior.png"],
+    "thumbnailUrls": ["/bee-epic-apiary/images/products/gift-junior-thumb.png"],
     "inStock": true,
     "featured": true,
     "weight": "2 jars + balm + candle",
@@ -121,9 +117,9 @@
     "stripePriceId": "price_1TPH0tDz32YdTgbThDq3b1FL",
     "stripePaymentLinkId": "test_7sYeVd19n6jo3E26K3cjS0a",
     "category": "GIFTS",
-    "imageUrls": ["/golden-hive-apiary/images/products/gift-premium.png"],
+    "imageUrls": ["/bee-epic-apiary/images/products/gift-premium.png"],
     "thumbnailUrls": [
-      "/golden-hive-apiary/images/products/gift-premium-thumb.png"
+      "/bee-epic-apiary/images/products/gift-premium-thumb.png"
     ],
     "inStock": true,
     "featured": false,
@@ -140,9 +136,9 @@
     "stripePriceId": "price_1TPH1VDz32YdTgbTNxPerqyT",
     "stripePaymentLinkId": "test_9B69AT19ngY2eiG5FZcjS09",
     "category": "SUBSCRIPTIONS",
-    "imageUrls": ["/golden-hive-apiary/images/products/subscription.png"],
+    "imageUrls": ["/bee-epic-apiary/images/products/subscription.png"],
     "thumbnailUrls": [
-      "/golden-hive-apiary/images/products/subscription-thumb.png"
+      "/bee-epic-apiary/images/products/subscription-thumb.png"
     ],
     "inStock": true,
     "featured": false,

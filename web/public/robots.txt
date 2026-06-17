@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://golden-hive-apiary.pages.dev/sitemap.xml
+Sitemap: https://bee-epic-apiary.pages.dev/sitemap.xml

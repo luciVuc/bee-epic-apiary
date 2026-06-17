@@ -61,13 +61,13 @@ jobs:
         env:
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://bee-epic-apiary.workers.dev' }}
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
-          VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://golden-hive-apiary.pages.dev' }}
+          VITE_SITE_URL: ${{ vars.VITE_SITE_URL || 'https://bee-epic-apiary.pages.dev' }}
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           workingDirectory: web
-          command: pages deploy dist --project-name=golden-hive-apiary
+          command: pages deploy dist --project-name=bee-epic-apiary
 
   deploy-admin:
     needs: test

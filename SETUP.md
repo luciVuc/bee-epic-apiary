@@ -218,10 +218,10 @@ secret" for each):
 Then add these **variables** (click the "Variables" tab, then "New repository
 variable"):
 
-| Variable name   | Value                                                                                             |
-| --------------- | ------------------------------------------------------------------------------------------------- |
-| `VITE_API_URL`  | Your Worker URL (see Step 7 — e.g., `https://bee-epic-apiary.your-subdomain.workers.dev`)         |
-| `VITE_SITE_URL` | Your storefront URL (e.g., `https://golden-hive-apiary.pages.dev` or `https://beeepicapiary.com`) |
+| Variable name   | Value                                                                                          |
+| --------------- | ---------------------------------------------------------------------------------------------- |
+| `VITE_API_URL`  | Your Worker URL (see Step 7 — e.g., `https://bee-epic-apiary.your-subdomain.workers.dev`)      |
+| `VITE_SITE_URL` | Your storefront URL (e.g., `https://bee-epic-apiary.pages.dev` or `https://beeepicapiary.com`) |
 
 ### 6.2 — Push to trigger deployment
 
@@ -253,9 +253,9 @@ projects to Cloudflare.
 
 ### 7.2 — Connect custom domains to your sites
 
-**Storefront** (`golden-hive-apiary` Pages project):
+**Storefront** (`bee-epic-apiary` Pages project):
 
-1. In Cloudflare, go to **Workers & Pages** → **golden-hive-apiary**
+1. In Cloudflare, go to **Workers & Pages** → **bee-epic-apiary**
 2. Click **Custom domains** → **Set up a custom domain**
 3. Enter `beeepicapiary.com` (or whatever your domain is)
 4. Cloudflare handles the SSL certificate automatically

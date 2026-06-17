@@ -12,7 +12,7 @@ export default defineConfig({
         name: "Golden Hive Apiary",
         short_name: "Golden Hive",
         description: "Raw Honey & Bee Products",
-        id: "golden-hive-apiary",
+        id: "bee-epic-apiary",
         start_url: ".",
         scope: ".",
         display: "standalone",
