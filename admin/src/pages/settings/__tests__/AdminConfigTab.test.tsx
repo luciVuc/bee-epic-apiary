@@ -8,6 +8,7 @@ const defaultSettings: IAdminSettings = {
   apiUrl: "",
   stripePublishableKey: "",
   apiSecretKey: "",
+  formspreeFormId: "",
 };
 
 function renderTab(
@@ -33,6 +34,7 @@ describe("AdminConfigTab", () => {
       1,
     );
     expect(screen.getByText("Stripe Configuration")).toBeInTheDocument();
+    expect(screen.getByText("Formspree Configuration")).toBeInTheDocument();
   });
 
   it("renders admin error message", () => {
@@ -84,5 +86,15 @@ describe("AdminConfigTab", () => {
     const inputs = screen.getAllByRole("textbox");
     await user.type(inputs[1], "x");
     expect(onAdminChange).toHaveBeenCalledWith("stripePublishableKey", "x");
+  });
+
+  it("calls onAdminChange for formspree form ID", async () => {
+    const user = userEvent.setup();
+    const onAdminChange = vi.fn();
+    renderTab({ onAdminChange });
+
+    const inputs = screen.getAllByRole("textbox");
+    await user.type(inputs[2], "x");
+    expect(onAdminChange).toHaveBeenCalledWith("formspreeFormId", "x");
   });
 });

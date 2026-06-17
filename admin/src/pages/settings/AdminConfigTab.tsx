@@ -3,6 +3,7 @@ import {
   Store,
   Globe,
   Key,
+  Send,
   Save,
   AlertCircle,
   CheckCircle,
@@ -92,6 +93,23 @@ export function AdminConfigTab({
         <p className="mt-2 text-xs text-dark-400">
           The Stripe secret key must be set as a Wrangler secret on the
           Cloudflare Worker (not stored client-side).
+        </p>
+      </Section>
+
+      <Section
+        title="Formspree Configuration"
+        icon={<Send className="w-4 h-4" />}
+      >
+        <TextField
+          label="Formspree Form ID"
+          value={adminSettings.formspreeFormId}
+          onChange={(v) => onAdminChange("formspreeFormId", v)}
+          placeholder="xoqblgva"
+        />
+        <p className="mt-2 text-xs text-dark-400">
+          When set, the public contact form submits directly to Formspree. Leave
+          blank to use Cloudflare Email Service (the worker&apos;s POST /contact
+          endpoint).
         </p>
       </Section>
 

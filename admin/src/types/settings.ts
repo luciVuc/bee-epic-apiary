@@ -65,6 +65,7 @@ export interface ISiteContent {
   lng?: number;
   categories: ICategory[];
   socialLinks: ISocialLinks;
+  formspreeFormId: string;
 }
 
 /** A single step in the "From Hive to Table" process */

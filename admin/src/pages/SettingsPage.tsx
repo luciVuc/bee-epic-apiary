@@ -63,6 +63,7 @@ export function SettingsPage() {
     apiUrl: "",
     stripePublishableKey: "",
     apiSecretKey: "",
+    formspreeFormId: "",
   });
   const [adminSaved, setAdminSaved] = useState(false);
 
@@ -70,6 +71,7 @@ export function SettingsPage() {
     apiUrl: "",
     stripePublishableKey: "",
     apiSecretKey: "",
+    formspreeFormId: "",
   });
 
   const initialContentRef = useRef({
@@ -112,6 +114,14 @@ export function SettingsPage() {
       if (site) {
         const merged = { ...DEFAULT_SITE, ...site };
         setSiteContent(merged);
+        setAdminSettings((prev) => ({
+          ...prev,
+          formspreeFormId: prev.formspreeFormId || merged.formspreeFormId || "",
+        }));
+        initialAdminRef.current = {
+          ...initialAdminRef.current,
+          formspreeFormId: merged.formspreeFormId || "",
+        };
         initialContentRef.current = {
           ...initialContentRef.current,
           site: merged,
@@ -165,6 +175,10 @@ export function SettingsPage() {
     if (!isAdminValid) return;
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(adminSettings));
     api.updateApiBaseUrl(adminSettings.apiUrl);
+    setSiteContent((prev) => ({
+      ...prev,
+      formspreeFormId: adminSettings.formspreeFormId || "",
+    }));
     setAdminSaved(true);
     initialAdminRef.current = { ...adminSettings };
     setTimeout(() => setAdminSaved(false), 3000);
