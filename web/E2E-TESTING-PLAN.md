@@ -192,8 +192,8 @@ localStorage.removeItem("goldenHiveCart");
 
 **Assertions**:
 
-- `POST` request made to `http://localhost:8788/create-checkout`
-- Request body has `lineItems` array with `price: "price_1TPGunDz32YdTgbTJiI8WC6d"` and `quantity: 1`
+- `POST` request made to `http://localhost:8787/checkout`
+- Request body has `line_items` array with `price: "price_..."` and `quantity: 1`
 - Response contains `url` pointing to `https://checkout.stripe.com/...`
 - Browser navigates to Stripe Checkout URL
 

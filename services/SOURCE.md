@@ -376,17 +376,25 @@ Handles `GET /orders` and `GET /orders/:id` to retrieve Stripe Checkout Sessions
 
 Case-insensitive substring match against `customer_details.email`, `customer_email`, `customer_details.name`, and session `id`.
 
-##### `buildSearchQuery(search: string, status: string, paymentStatus: string): string`
+##### `matchesStatus(session: Stripe.Checkout.Session, status: string): boolean`
 
-Constructs a Stripe Search API query string from the given filter parameters. Escapes single quotes in search terms to prevent query injection.
+Checks if the session `status` matches (supports `'ALL'` to skip filtering).
 
-##### `searchAllMatchingSessions(stripe: Stripe, query: string, max?: number): Promise<Stripe.Checkout.Session[]>`
+##### `matchesPaymentStatus(session: Stripe.Checkout.Session, paymentStatus: string): boolean`
 
-Fetches sessions matching the Search API query, paginating automatically up to `max` sessions (default 1000). Uses `stripe.checkout.sessions.search()` with `page` tokens for cursor-based pagination.
+Checks if the session `payment_status` matches (supports `'ALL'` to skip filtering).
+
+##### `matchesOrderStatus(session: Stripe.Checkout.Session, orderStatus: string): boolean`
+
+Checks if `metadata.order_status` matches the filter (supports `'ALL'` to skip filtering).
+
+##### `fetchCappedSessions(stripe: Stripe, max?: number): Promise<Stripe.Checkout.Session[]>`
+
+Fetches all Stripe Checkout Sessions by paginating through all pages, capped at `max` sessions (default 1000).
 
 ##### `paginateArray<T>(items: T[], limit: number, startingAfter?: string): { data: T[], hasMore: boolean, lastId: string | null }`
 
-Client-side pagination of an in-memory array by cursor (item ID). Used to slice Search API results into requested page sizes.
+Client-side pagination of an in-memory array by cursor (item ID).
 
 **Handler Logic**:
 
@@ -396,9 +404,9 @@ Client-side pagination of an in-memory array by cursor (item ID). Used to slice 
    - Fetches line items via `stripe.checkout.sessions.listLineItems`
    - Returns combined session + line items response
 3. For `GET /orders` (list):
-   - Parses `search`, `status`, `payment_status`, `limit`, and `starting_after` query params
-   - If any filter is active: builds Search API query, fetches matching sessions server-side, applies client-side name/ID fallback filter, then paginates
-   - Otherwise: fetches from Stripe with cursor-based pagination via `list()`
+   - Parses `search`, `status`, `payment_status`, `order_status`, `limit`, and `starting_after` query params
+   - If any filter is active: fetches all sessions via `fetchCappedSessions`, filters in-memory using match functions, then paginates with `paginateArray`
+   - Otherwise: fetches all sessions via `fetchCappedSessions` and paginates
 4. Returns orders list with `data`, `has_more`, and `total_count`
 
 #### src/stripe/order/update-order.ts

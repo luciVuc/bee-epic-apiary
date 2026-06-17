@@ -115,6 +115,10 @@ Content is managed through the admin panel (`admin/`) or directly via the servic
 
 The JSON files in `src/data/` are legacy and no longer imported.
 
+## Testing
+
+The web app has `vitest` in devDependencies but no test files or vitest configuration — currently untested.
+
 ## PWA
 
 The web app is a Progressive Web App using `vite-plugin-pwa` with:

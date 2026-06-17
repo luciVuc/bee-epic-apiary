@@ -168,11 +168,11 @@ Returns the total count of active products, optionally filtered by search, categ
 
 **Query Parameters**:
 
-| Parameter  | Type   | Description                                                     |
-| ---------- | ------ | --------------------------------------------------------------- |
-| `search`   | string | Filter count by search term (case-insensitive)                  |
-| `category` | string | Filter count by metadata.category (use `ALL` to show all)       |
-| `tag`      | string | Filter count by metadata.tags (comma-separated, case-sensitive) |
+| Parameter  | Type   | Description                                                                  |
+| ---------- | ------ | ---------------------------------------------------------------------------- |
+| `search`   | string | Filter count by search term (case-insensitive)                               |
+| `category` | string | Filter count by metadata.category (use `ALL` to show all)                    |
+| `tag`      | string | Filter count by metadata.tags (comma-separated, exact match, case-sensitive) |
 
 **Response**:
 
@@ -245,10 +245,11 @@ Returns a paginated list of Stripe Checkout Sessions with optional search and fi
 | `search`         | string | Filter by customer email, name, or session ID (case-insensitive substring match)     |
 | `status`         | string | Filter by session status (`open`, `complete`, `expired`, or `ALL` for all)           |
 | `payment_status` | string | Filter by payment status (`paid`, `unpaid`, `no_payment_required`, or `ALL` for all) |
+| `order_status`   | string | Filter by `metadata.order_status` (e.g., `new`, `pending`, `fulfilled`, or `ALL`)    |
 | `limit`          | number | Number of orders per page (default: 10)                                              |
 | `starting_after` | string | Cursor for pagination — session ID to start after                                    |
 
-When filter parameters are active, the API uses Stripe's Search API for server-side filtering with client-side name/ID fallback. Without filters, cursor-based pagination via Stripe's list API is used.
+When any filter is active, the API fetches all sessions (capped at 1000) and filters server-side in memory. Without filters, cursor-based pagination via Stripe's list API is used.
 
 **Response**:
 

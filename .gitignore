@@ -1,6 +1,7 @@
 node_modules
 services/node_modules
 web/node_modules
+epic-bee-apiary/node_modules
 .code-review
 services/coverage
 .playwright-mcp

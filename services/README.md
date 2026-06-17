@@ -33,12 +33,19 @@ A lightweight Cloudflare Worker for integrating Stripe into your application, pr
    ```
 
 3. **Set up environment variables**:
-   Create a `.env` file in the `services/` directory:
+
+   Create a `.env` file (non-secret vars loaded by Wrangler):
+
+   ```env
+   ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+   ```
+
+   Create `.dev.vars` (secrets, never committed):
 
    ```env
    STRIPE_SECRET_KEY=sk_test_your_stripe_test_key
    ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
-   # Optional: API_SECRET_KEY=your-secret-key
+   API_SECRET_KEY=dev-api-key-change-me
    ```
 
 4. **Start local development server**:
@@ -128,4 +135,4 @@ See [AGENTS.md](./AGENTS.md) for architecture details and contribution guideline
 
 ## License
 
-MIT
+ISC

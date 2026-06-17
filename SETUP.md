@@ -110,16 +110,23 @@ API_SECRET_KEY=your-api-secret-key-change-me
 The `API_SECRET_KEY` is a password you choose that protects your admin backend.
 Change `change-me` to something real.
 
-### 4.2 — Create `.env` files
+### 4.2 — Create `.env` and `.dev.vars` files
 
-You need three `.env` files for local development. They're listed in
-`.gitignore` so your secrets stay private.
+You need environment files for local development. Secrets (like `STRIPE_SECRET_KEY`)
+go in `.dev.vars` (never committed). Non-secret config goes in `.env`.
 
-**`services/.env`**:
+**`services/.env`** (non-secret vars):
+
+```env
+ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+```
+
+**`services/.dev.vars`** (secrets):
 
 ```env
 STRIPE_SECRET_KEY=sk_test_your_secret_key_here
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+API_SECRET_KEY=your-api-secret-key-change-me
 ```
 
 **`admin/.env`**:
@@ -127,6 +134,7 @@ ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
 ```env
 VITE_API_URL=http://localhost:8787
 VITE_API_SECRET_KEY=your-api-secret-key-change-me
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
 ```
 
 **`web/.env`**:
@@ -168,7 +176,7 @@ These commands install everything and start the project on your computer so you
 can see it working before going live.
 
 ```bash
-# 1. Install all dependencies
+# 1. Install all dependencies (or just `npm install` from root)
 npm run services:install
 npm run admin:install
 npm run web:install

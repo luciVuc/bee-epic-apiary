@@ -55,20 +55,23 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 
 ### Admin App Specifics
 
-- Dev server proxies `/api` → `http://localhost:8787` (Vite config)
-- API Auth: Bearer token from `VITE_API_SECRET_KEY` or localStorage
+- Dev server proxies `/api` → `http://localhost:8787` (strips `/api` prefix)
+- API Auth: Bearer token from localStorage settings or `VITE_API_SECRET_KEY` fallback
 - Settings storage:
   - Admin config (API URL, keys) → localStorage
   - Site content (business info, etc.) → worker KV
 - **Dynamic navbar title**: `AdminNavbar` fetches `businessName` from `GET /settings/site`
   - Displays `"{businessName} Admin"` (falls back to `"Admin"`)
   - **Never** hardcode site-specific display values from `ISiteContent`
+- Products use Redux Toolkit `productsSlice` (async thunks for CRUD + cursor-based pagination)
+- Orders use Redux Toolkit `ordersSlice` (async thunks for CRUD + cursor-based pagination)
 
 ### Commands
 
 | Command                 | Purpose                                                                 |
 | ----------------------- | ----------------------------------------------------------------------- |
 | `npm run dev`           | Start all 3 dev servers (admin:5174, services:8787, web:5173)           |
+| `npm run dev:all`       | Same as `npm run dev` (alias)                                           |
 | `npm run test`          | services tests → admin tests (Vitest)                                   |
 | `npm run services:test` | Worker tests (Vitest + `@cloudflare/vitest-pool-workers`)               |
 | `npm run admin:test`    | Admin tests (Vitest + jsdom + React Testing Library)                    |
@@ -76,6 +79,7 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 | `npm run format`        | Prettier on entire repo                                                 |
 | `npm run build`         | Deploy services worker + build web + build admin                        |
 | `npm run deploy`        | Deploy all 3 to Cloudflare (worker via Wrangler, web + admin via Pages) |
+| `npm run preview`       | Preview web production build                                            |
 
 ### Testing Thresholds
 
@@ -94,14 +98,6 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - KV namespaces: `CONTENT_KV` (settings storage), `RATE_LIMIT_KV`
 - Env vars: `STRIPE_SECRET_KEY`, `ALLOWED_ORIGINS`, `API_SECRET_KEY` (Wrangler secrets); `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`, `ADMIN_BASE_URL` (wrangler.jsonc vars)
 - **Cloudflare Email Service**: Uses `send_email` binding (`EMAIL`) for transactional emails — contact form submissions and order notifications. `from` domain must be onboarded via `npx wrangler email sending enable yourdomain.com`.
-
-### Admin Specifics
-
-- Dev server proxies `/api` → `http://localhost:8787` (strips `/api` prefix)
-- API Auth: Bearer token from localStorage settings or `VITE_API_SECRET_KEY` fallback
-- Settings saved to localStorage (admin config) or worker KV (site content)
-- `AdminNavbar` fetches `businessName` from `GET /settings/site` — never hardcode
-- Products use Redux Toolkit `productsSlice` (async thunks for CRUD + cursor-based pagination)
 
 ### Web Specifics
 

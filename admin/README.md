@@ -59,7 +59,6 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
    VITE_API_URL=http://localhost:8787
    VITE_API_SECRET_KEY=dev-api-key-change-me
    VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
-   VITE_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
    ```
 
 4. Start development server:
@@ -97,9 +96,11 @@ The admin module communicates with the Cloudflare Worker (services) for product 
 - `GET /orders/:id` — Get single order with line items
 - `PUT /orders/:id` — Update order metadata/delivery info (requires API key)
 - `POST /checkout` — Create Stripe checkout sessions (public)
+- `POST /prices` — Create a Stripe price for a product (requires API key)
 - `GET /settings/:type` — Get content settings (site/process/testimonials/categories)
 - `PUT /settings/:type` — Save content settings (requires API key)
 - `GET /notifications/stream` — SSE stream for real-time order notifications
+- `POST /contact` — Submit contact form (public)
 
 ## Testing
 
