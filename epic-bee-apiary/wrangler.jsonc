@@ -1,0 +1,43 @@
+{
+	"name": "epic-bee-apiary",
+	"main": "src/index.js",
+	"workers_dev": true,
+	"preview_urls": true,
+	"compatibility_date": "2026-03-10",
+	"compatibility_flags": ["nodejs_compat"],
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1,
+		"logs": {
+			"enabled": true,
+			"head_sampling_rate": 1,
+			"persist": true,
+			"invocation_logs": true,
+		},
+		"traces": {
+			"enabled": false,
+			"persist": true,
+			"head_sampling_rate": 1,
+		},
+	},
+	"vars": {
+		"ADMIN_BASE_URL": "",
+		"RATE_LIMIT_MAX": "100",
+		"RATE_LIMIT_WINDOW": "60",
+	},
+	"kv_namespaces": [
+		{
+			"id": "fdc9777103a94fd18fb9b1dab54bc730",
+			"binding": "CONTENT_KV",
+		},
+		{
+			"id": "b41a9fa19833481fb7cee6415cccb4f4",
+			"binding": "RATE_LIMIT_KV",
+		},
+	],
+	"send_email": [
+		{
+			"name": "EMAIL",
+		},
+	],
+}
