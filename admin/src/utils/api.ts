@@ -11,7 +11,7 @@ import {
   transformToStripeParams,
   transformToStripePriceParams,
 } from "./transform";
-import { DEFAULT_API_URL, SETTINGS_STORAGE_KEY } from "./constants";
+import { DEFAULT_API_URL } from "./constants";
 
 const API_BASE_URL = DEFAULT_API_URL;
 
@@ -23,21 +23,12 @@ const apiClient = axios.create({
 });
 
 /**
- * Retrieve the API secret key from localStorage or VITE_ env fallback.
+ * Retrieve the API secret key from VITE_ env var.
  *
  * ⚠️ VITE_API_SECRET_KEY gets baked into the JS bundle at build time.
- * Prefer setting the key via the Admin Config page (→ localStorage).
+ * Set it in your .env file or Cloudflare Pages build variables.
  */
 function getApiKey(): string | null {
-  try {
-    const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      if (parsed.apiSecretKey) return parsed.apiSecretKey;
-    }
-  } catch {
-    /* ignore */
-  }
   return import.meta.env.VITE_API_SECRET_KEY || null;
 }
 
@@ -68,11 +59,6 @@ async function createStripePrice(
   );
   const priceResponse = await apiClient.post("/prices", priceParams);
   return priceResponse.data;
-}
-
-/** Update the base URL used by the API client (called when settings are saved) */
-export function updateApiBaseUrl(url: string) {
-  apiClient.defaults.baseURL = url;
 }
 
 /** API methods for interacting with the Cloudflare Worker */
@@ -122,13 +108,11 @@ export const api = {
 
   /** Create a product (Stripe product + price). Rolls back on failure. */
   createProduct: async (product: IProductInput) => {
-    // Step 1: Create the product in Stripe (without price in metadata)
     const productParams = transformToStripeParams(product);
     const productResponse = await apiClient.post("/products", productParams);
     const createdProduct = productResponse.data;
 
     try {
-      // Step 2: Create a price for the product in Stripe
       const isSubscription =
         product.category === EProductCategory.SUBSCRIPTIONS;
       const priceData = await createStripePrice(
@@ -139,15 +123,12 @@ export const api = {
         isSubscription ? product.recurringIntervalCount : undefined,
       );
 
-      // Step 3: Update the product to set the default_price
       await apiClient.put(`/products/${createdProduct.id}`, {
         default_price: priceData.id,
       });
 
-      // Return the full product with price info
       return api.getProductById(createdProduct.id);
     } catch (err) {
-      // Rollback: delete the orphaned product if price creation fails
       try {
         await apiClient.delete(`/products/${createdProduct.id}`);
       } catch {
@@ -159,11 +140,9 @@ export const api = {
 
   /** Update an existing product (and create a new Stripe Price if price changed) */
   updateProduct: async (id: string, product: Partial<IProductInput>) => {
-    // Step 1: Update product fields in Stripe
     const productParams = transformToStripeParams(product);
     await apiClient.put(`/products/${id}`, productParams);
 
-    // Step 2: If price changed, create a new price and update default_price
     if (product.price !== undefined) {
       const isSubscription =
         product.category === EProductCategory.SUBSCRIPTIONS;
@@ -180,14 +159,13 @@ export const api = {
       });
     }
 
-    // Return the full updated product
     return api.getProductById(id);
   },
 
   /** Delete (archive) a product by its Stripe ID */
   deleteProduct: async (id: string) => {
     await apiClient.delete(`/products/${id}`);
-    return id; // The productsSlice expects the ID to be returned
+    return id;
   },
 
   /** Fetch content settings (site, process, testimonials, categories) from the worker KV store */

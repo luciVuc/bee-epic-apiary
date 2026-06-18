@@ -1,100 +1,84 @@
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AdminConfigTab } from "../AdminConfigTab";
-import type { IAdminSettings } from "../../../types";
+import type { ISiteContent } from "../../../types/settings";
+import { DEFAULT_SITE } from "../../../utils/constants";
 
-const defaultSettings: IAdminSettings = {
-  apiUrl: "",
-  stripePublishableKey: "",
-  apiSecretKey: "",
-  formspreeFormId: "",
-};
+const defaultSite: ISiteContent = { ...DEFAULT_SITE };
 
 function renderTab(
   props: Partial<React.ComponentProps<typeof AdminConfigTab>> = {},
 ) {
   return render(
     <AdminConfigTab
-      adminSettings={defaultSettings}
-      adminSaved={false}
-      adminError=""
-      onAdminChange={vi.fn()}
-      onAdminSave={vi.fn()}
+      siteContent={defaultSite}
+      onSiteChange={vi.fn()}
       {...props}
     />,
   );
 }
 
 describe("AdminConfigTab", () => {
+  beforeEach(() => {
+    vi.stubEnv("VITE_API_SECRET_KEY", "");
+  });
+
   it("renders all sections", () => {
     renderTab();
     expect(screen.getByText("API Configuration")).toBeInTheDocument();
-    expect(screen.getAllByText("API Secret Key").length).toBeGreaterThanOrEqual(
-      1,
-    );
+    expect(screen.getByText("API Secret Key")).toBeInTheDocument();
     expect(screen.getByText("Stripe Configuration")).toBeInTheDocument();
     expect(screen.getByText("Formspree Configuration")).toBeInTheDocument();
   });
 
-  it("renders admin error message", () => {
-    renderTab({ adminError: "Something went wrong" });
-    expect(screen.getByText("Something went wrong")).toBeInTheDocument();
+  it("shows API URL as read-only", () => {
+    renderTab();
+    const urlInput = screen.getByLabelText("API URL (Cloudflare Worker)");
+    expect(urlInput).toBeDisabled();
   });
 
-  it("renders saved success message", () => {
-    renderTab({ adminSaved: true });
+  it("shows secret key status indicator", () => {
+    renderTab();
     expect(
-      screen.getByText("Admin settings saved successfully!"),
+      screen.getByText("No API secret key configured"),
     ).toBeInTheDocument();
   });
 
-  it("calls onAdminSave when save button is clicked", async () => {
+  it("calls onSiteChange for stripe publishable key", async () => {
     const user = userEvent.setup();
-    const onAdminSave = vi.fn();
-    renderTab({ onAdminSave });
-    await user.click(screen.getByText("Save Admin Settings"));
-    expect(onAdminSave).toHaveBeenCalledTimes(1);
-  });
-
-  it("calls onAdminChange when API URL changes", async () => {
-    const user = userEvent.setup();
-    const onAdminChange = vi.fn();
-    renderTab({ onAdminChange });
+    const onSiteChange = vi.fn();
+    renderTab({ onSiteChange });
 
     const inputs = screen.getAllByRole("textbox");
-    await user.type(inputs[0], "x");
-    expect(onAdminChange).toHaveBeenCalledWith("apiUrl", "x");
+    const stripeInput = inputs.find(
+      (input) => input.getAttribute("placeholder") === "pk_test_...",
+    );
+    expect(stripeInput).toBeTruthy();
+    if (stripeInput) {
+      await user.type(stripeInput, "x");
+      expect(onSiteChange).toHaveBeenCalledWith("stripePublishableKey", "x");
+    }
   });
 
-  it("calls onAdminChange for secret key", async () => {
+  it("calls onSiteChange for formspree form ID", async () => {
     const user = userEvent.setup();
-    const onAdminChange = vi.fn();
-    const { container } = renderTab({ onAdminChange });
-
-    const secretInput = container.querySelector('input[type="password"]');
-    expect(secretInput).not.toBeNull();
-    await user.type(secretInput!, "x");
-    expect(onAdminChange).toHaveBeenCalledWith("apiSecretKey", "x");
-  });
-
-  it("calls onAdminChange for stripe key", async () => {
-    const user = userEvent.setup();
-    const onAdminChange = vi.fn();
-    renderTab({ onAdminChange });
+    const onSiteChange = vi.fn();
+    renderTab({ onSiteChange });
 
     const inputs = screen.getAllByRole("textbox");
-    await user.type(inputs[1], "x");
-    expect(onAdminChange).toHaveBeenCalledWith("stripePublishableKey", "x");
+    const formspreeInput = inputs.find(
+      (input) => input.getAttribute("placeholder") === "xoqblgva",
+    );
+    expect(formspreeInput).toBeTruthy();
+    if (formspreeInput) {
+      await user.type(formspreeInput, "x");
+      expect(onSiteChange).toHaveBeenCalledWith("formspreeFormId", "x");
+    }
   });
 
-  it("calls onAdminChange for formspree form ID", async () => {
-    const user = userEvent.setup();
-    const onAdminChange = vi.fn();
-    renderTab({ onAdminChange });
-
-    const inputs = screen.getAllByRole("textbox");
-    await user.type(inputs[2], "x");
-    expect(onAdminChange).toHaveBeenCalledWith("formspreeFormId", "x");
+  it("does not render save button", () => {
+    renderTab();
+    expect(screen.queryByText("Save Admin Settings")).not.toBeInTheDocument();
   });
 });

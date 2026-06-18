@@ -62,11 +62,3 @@ export interface IDashboardStats {
   giftProducts: number;
   subscriptionProducts: number;
 }
-
-/** Admin panel connection settings (stored in localStorage) */
-export interface IAdminSettings {
-  apiUrl: string;
-  stripePublishableKey: string;
-  apiSecretKey?: string;
-  formspreeFormId: string;
-}

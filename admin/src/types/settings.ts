@@ -66,6 +66,7 @@ export interface ISiteContent {
   categories: ICategory[];
   socialLinks: ISocialLinks;
   formspreeFormId: string;
+  stripePublishableKey: string;
 }
 
 /** A single step in the "From Hive to Table" process */

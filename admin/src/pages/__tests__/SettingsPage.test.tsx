@@ -13,7 +13,6 @@ vi.mock("../../utils/api", () => ({
     getSettings: mockGetSettings,
     saveSettings: vi.fn().mockResolvedValue(undefined),
   },
-  updateApiBaseUrl: vi.fn(),
 }));
 
 function renderWithRouter() {
@@ -48,7 +47,7 @@ describe("SettingsPage", () => {
   it("shows admin tab by default", async () => {
     renderWithRouter();
     expect(await screen.findByText("API Configuration")).toBeInTheDocument();
-    expect(screen.getByText("Save Admin Settings")).toBeInTheDocument();
+    expect(screen.getByText("Save Content")).toBeInTheDocument();
   });
 
   it("switches to site content tab", async () => {
@@ -86,50 +85,6 @@ describe("SettingsPage", () => {
     await user.click(screen.getByText("Categories"));
     expect(screen.getByText("Add Category")).toBeInTheDocument();
     expect(screen.getByText("Save Content")).toBeInTheDocument();
-  });
-
-  it("shows error when saving admin settings without API URL", async () => {
-    const user = userEvent.setup();
-    renderWithRouter();
-
-    await screen.findByPlaceholderText("https://your-worker.workers.dev");
-    const apiUrlInput = screen.getByPlaceholderText(
-      "https://your-worker.workers.dev",
-    );
-    await user.clear(apiUrlInput);
-    await user.click(screen.getByText("Save Admin Settings"));
-    expect(await screen.findByText("API URL is required")).toBeInTheDocument();
-  });
-
-  it("shows validation error for invalid API URL", async () => {
-    const user = userEvent.setup();
-    renderWithRouter();
-
-    await screen.findByPlaceholderText("https://your-worker.workers.dev");
-    const apiUrlInput = screen.getByPlaceholderText(
-      "https://your-worker.workers.dev",
-    );
-    await user.type(apiUrlInput, "not-a-url");
-
-    await user.click(screen.getByText("Save Admin Settings"));
-    expect(screen.getByText("API URL must be a valid URL")).toBeInTheDocument();
-  });
-
-  it("saves admin settings with valid data", async () => {
-    const user = userEvent.setup();
-    renderWithRouter();
-
-    await screen.findByPlaceholderText("https://your-worker.workers.dev");
-    const apiUrlInput = screen.getByPlaceholderText(
-      "https://your-worker.workers.dev",
-    );
-    await user.clear(apiUrlInput);
-    await user.type(apiUrlInput, "https://api.example.com");
-
-    await user.click(screen.getByText("Save Admin Settings"));
-    expect(
-      screen.getByText("Admin settings saved successfully!"),
-    ).toBeInTheDocument();
   });
 
   it("shows loading state when content is loading", async () => {

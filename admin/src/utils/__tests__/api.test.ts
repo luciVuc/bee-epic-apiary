@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import axios from "axios";
-import { api, updateApiBaseUrl } from "../api";
+import { api } from "../api";
 import { EProductCategory } from "../../types";
 
 vi.mock("axios", () => {
@@ -21,7 +21,6 @@ vi.mock("axios", () => {
 });
 
 vi.mock("../constants", () => ({
-  SETTINGS_STORAGE_KEY: "beeEpicAdminSettings",
   DEFAULT_PRODUCT_IMAGE: "/default-product.png",
   DEFAULT_PRODUCT_THUMBNAIL: "/default-thumbnail.png",
   DEFAULT_API_URL: "/api",
@@ -354,13 +353,6 @@ describe("api", () => {
       expect(mockedAxios.put).toHaveBeenCalledWith("/settings/site", {
         key: "value",
       });
-    });
-  });
-
-  describe("updateApiBaseUrl", () => {
-    it("updates axios baseURL", () => {
-      updateApiBaseUrl("https://new-url.com");
-      expect(axios.defaults.baseURL).toBe("https://new-url.com");
     });
   });
 });

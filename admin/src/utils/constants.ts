@@ -15,9 +15,6 @@ export const DEFAULT_PRODUCT_THUMBNAIL = `data:image/svg+xml;utf8,<svg xmlns="ht
 
 export const DEFAULT_API_URL = import.meta.env.VITE_API_URL || "/api";
 
-/** localStorage key for persisting admin settings */
-export const SETTINGS_STORAGE_KEY = "beeEpicAdminSettings";
-
 /** Custom event dispatched when an order's internal status (new/pending/fulfilled) is updated */
 export const ORDER_STATUS_CHANGED_EVENT = "order-status-changed";
 
@@ -97,6 +94,7 @@ export const DEFAULT_SITE: ISiteContent = {
     etsy: "https://etsy.com/shop/beeepicapiary",
   },
   formspreeFormId: "",
+  stripePublishableKey: "",
 };
 
 export const DEFAULT_PROCESS: IProcessStep[] = [

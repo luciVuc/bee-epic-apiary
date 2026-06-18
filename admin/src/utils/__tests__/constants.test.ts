@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import {
   DEFAULT_PRODUCT_IMAGE,
   DEFAULT_PRODUCT_THUMBNAIL,
-  SETTINGS_STORAGE_KEY,
   CATEGORIES,
   DEFAULT_SITE,
   DEFAULT_PROCESS,
@@ -19,10 +18,6 @@ describe("constants", () => {
   it("DEFAULT_PRODUCT_THUMBNAIL is a data URI SVG", () => {
     expect(DEFAULT_PRODUCT_THUMBNAIL).toContain("data:image/svg+xml");
     expect(DEFAULT_PRODUCT_THUMBNAIL).toContain("<svg");
-  });
-
-  it("SETTINGS_STORAGE_KEY is correct", () => {
-    expect(SETTINGS_STORAGE_KEY).toBe("beeEpicAdminSettings");
   });
 
   it("CATEGORIES has 4 entries with correct ids", () => {
@@ -50,6 +45,8 @@ describe("constants", () => {
       "https://etsy.com/shop/beeepicapiary",
     );
     expect(DEFAULT_SITE.aboutText).toHaveLength(3);
+    expect(DEFAULT_SITE.stripePublishableKey).toBe("");
+    expect(DEFAULT_SITE.formspreeFormId).toBe("");
   });
 
   it("DEFAULT_PROCESS has 5 steps", () => {

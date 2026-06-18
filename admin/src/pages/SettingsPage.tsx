@@ -2,14 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { Save, AlertCircle, CheckCircle } from "lucide-react";
 import {
-  SETTINGS_STORAGE_KEY,
   DEFAULT_SITE,
   DEFAULT_PROCESS,
   DEFAULT_TESTIMONIALS,
   DEFAULT_CATEGORIES,
 } from "../utils/constants";
-import { DEFAULT_API_URL } from "../utils/constants";
-import type { IAdminSettings } from "../types";
 import type {
   ISiteContent,
   IProcessStep,
@@ -59,43 +56,12 @@ export function SettingsPage() {
   const [contentStatus, setContentStatus] = useState<ContentStatus>("idle");
   const [contentError, setContentError] = useState("");
 
-  const [adminSettings, setAdminSettings] = useState<IAdminSettings>({
-    apiUrl: "",
-    stripePublishableKey: "",
-    apiSecretKey: "",
-    formspreeFormId: "",
-  });
-  const [adminSaved, setAdminSaved] = useState(false);
-
-  const initialAdminRef = useRef<IAdminSettings>({
-    apiUrl: "",
-    stripePublishableKey: "",
-    apiSecretKey: "",
-    formspreeFormId: "",
-  });
-
   const initialContentRef = useRef({
     site: DEFAULT_SITE,
     process: DEFAULT_PROCESS,
     testimonials: DEFAULT_TESTIMONIALS,
     categories: DEFAULT_CATEGORIES,
   });
-
-  useEffect(() => {
-    const saved = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      setAdminSettings((prev) => ({ ...prev, ...parsed }));
-      initialAdminRef.current = { ...initialAdminRef.current, ...parsed };
-    } else {
-      const defaultUrl = DEFAULT_API_URL;
-      setAdminSettings((prev) => ({ ...prev, apiUrl: defaultUrl }));
-      initialAdminRef.current = {
-        ...initialAdminRef.current,
-        apiUrl: defaultUrl,
-      };
-    }
-  }, []);
 
   useEffect(() => {
     loadContent();
@@ -114,14 +80,6 @@ export function SettingsPage() {
       if (site) {
         const merged = { ...DEFAULT_SITE, ...site };
         setSiteContent(merged);
-        setAdminSettings((prev) => ({
-          ...prev,
-          formspreeFormId: prev.formspreeFormId || merged.formspreeFormId || "",
-        }));
-        initialAdminRef.current = {
-          ...initialAdminRef.current,
-          formspreeFormId: merged.formspreeFormId || "",
-        };
         initialContentRef.current = {
           ...initialContentRef.current,
           site: merged,
@@ -149,39 +107,6 @@ export function SettingsPage() {
     } catch {
       setContentStatus("idle");
     }
-  };
-
-  const handleAdminChange = (field: keyof IAdminSettings, value: string) => {
-    setAdminSettings((prev) => ({ ...prev, [field]: value }));
-    setAdminSaved(false);
-  };
-
-  const adminUrlError = !adminSettings.apiUrl
-    ? "API URL is required"
-    : (() => {
-        try {
-          new URL(adminSettings.apiUrl);
-          return "";
-        } catch {
-          return "API URL must be a valid URL";
-        }
-      })();
-
-  const isAdminValid = !adminUrlError;
-  const isAdminDirty = !deepEqual(adminSettings, initialAdminRef.current);
-  const adminSaveDisabled = !isAdminDirty || !isAdminValid;
-
-  const handleAdminSave = () => {
-    if (!isAdminValid) return;
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(adminSettings));
-    api.updateApiBaseUrl(adminSettings.apiUrl);
-    setSiteContent((prev) => ({
-      ...prev,
-      formspreeFormId: adminSettings.formspreeFormId || "",
-    }));
-    setAdminSaved(true);
-    initialAdminRef.current = { ...adminSettings };
-    setTimeout(() => setAdminSaved(false), 3000);
   };
 
   const handleSaveContent = async () => {
@@ -498,12 +423,8 @@ export function SettingsPage() {
 
               {activeTab === "admin" && (
                 <AdminConfigTab
-                  adminSettings={adminSettings}
-                  adminSaved={adminSaved}
-                  adminError={adminUrlError}
-                  onAdminChange={handleAdminChange}
-                  onAdminSave={handleAdminSave}
-                  saveDisabled={adminSaveDisabled}
+                  siteContent={siteContent}
+                  onSiteChange={updateSite}
                 />
               )}
 
@@ -525,20 +446,18 @@ export function SettingsPage() {
                 />
               )}
 
-              {/* Save Content Button */}
-              {activeTab !== "admin" && (
-                <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <button
-                    onClick={handleSaveContent}
-                    disabled={contentSaveDisabled}
-                    data-testid="settings-page_save-content-btn"
-                    className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Save className="w-4 h-4" />
-                    {isSaving ? "Saving..." : "Save Content"}
-                  </button>
-                </div>
-              )}
+              {/* Save Content Button (shown on all tabs) */}
+              <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                <button
+                  onClick={handleSaveContent}
+                  disabled={contentSaveDisabled}
+                  data-testid="settings-page_save-content-btn"
+                  className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Save className="w-4 h-4" />
+                  {isSaving ? "Saving..." : "Save Content"}
+                </button>
+              </div>
             </>
           )}
         </div>
