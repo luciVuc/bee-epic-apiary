@@ -1,4 +1,4 @@
-# Golden Hive Apiary — Web Storefront
+# Bee Epic Apiary — Web Storefront
 
 React + TypeScript e-commerce storefront. Fetches all data (products, site content, testimonials, process steps) from the `services/` Cloudflare Worker backend. Part of the `bee-epic-apiary` monorepo.
 
@@ -124,7 +124,7 @@ The web app has `vitest` in devDependencies but no test files or vitest configur
 The web app is a Progressive Web App using `vite-plugin-pwa` with:
 
 - Auto-update service worker (registers, installs, activates in background)
-- Manifest for "Golden Hive Apiary" with app icons
+- Manifest for "Bee Epic Apiary" with app icons
 - Offline capability via service worker caching
 
 ## Deployment

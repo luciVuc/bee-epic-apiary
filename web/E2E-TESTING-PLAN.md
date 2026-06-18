@@ -52,7 +52,7 @@ until curl -s -o /dev/null -w "%{http_code}" http://localhost:5173 | grep -q 200
 **Clean state** (run before each test session):
 
 ```js
-localStorage.removeItem("goldenHiveCart");
+localStorage.removeItem("beeEpicCart");
 ```
 
 ---
@@ -156,7 +156,7 @@ localStorage.removeItem("goldenHiveCart");
 
 ## Test 8: Checkout Button — Empty Cart
 
-1. Clear cart: `localStorage.removeItem("goldenHiveCart")`
+1. Clear cart: `localStorage.removeItem("beeEpicCart")`
 2. Reload page
 3. Open cart drawer
 
@@ -274,7 +274,7 @@ Navigate to `http://localhost:5173/contact`
 
 - Cart badge shows "1"
 - Open cart → "Buckwheat Dark Honey" still present
-- `localStorage.getItem("goldenHiveCart")` contains valid JSON
+- `localStorage.getItem("beeEpicCart")` contains valid JSON
 
 ---
 

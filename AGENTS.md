@@ -105,10 +105,10 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - Data fetched from services API at mount: `GET /settings/site`, `/settings/process`, `/settings/testimonials`, `/products?expand[]=data.default_price`
 - Checkout: `POST /checkout` on services worker (not client-side Stripe redirect)
 - Contact form: `POST /contact` on services worker (via Cloudflare Email Service — no Formspree dependency)
-- Cart persisted to localStorage under key `goldenHiveCart`
+- Cart persisted to localStorage under key `beeEpicCart`
 - Legacy JSON in `src/data/` no longer imported
 - Has `vitest` in devDependencies but **no vitest config or test files** — treat as untested
-- PWA via `vite-plugin-pwa` (auto-update service worker, manifest for "Golden Hive Apiary")
+- PWA via `vite-plugin-pwa` (auto-update service worker, manifest for "Bee Epic Apiary")
 - Cloudflare Pages deploy via `npm run web:deploy` (`wrangler pages deploy`) or Git integration
 
 ## Gotchas

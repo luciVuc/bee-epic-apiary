@@ -155,7 +155,7 @@ export const DEFAULT_TESTIMONIALS: ITestimonial[] = [
     name: "Jennifer Walker",
     location: "Burlington, VT",
     rating: 5,
-    text: "I've been buying Golden Hive honey for years, and it never disappoints. The wildflower honey is absolutely divine.",
+    text: "I've been buying Bee Epic honey for years, and it never disappoints. The wildflower honey is absolutely divine.",
     date: "2024-12-15",
   },
   {
@@ -171,7 +171,7 @@ export const DEFAULT_TESTIMONIALS: ITestimonial[] = [
     name: "Emily Hartwell",
     location: "Montpelier, VT",
     rating: 5,
-    text: "As a fellow beekeeper, I really appreciate the care Golden Hive takes with their bees. The buckwheat honey is incredible.",
+    text: "As a fellow beekeeper, I really appreciate the care Bee Epic takes with their bees. The buckwheat honey is incredible.",
     date: "2024-10-10",
   },
   {
@@ -187,7 +187,7 @@ export const DEFAULT_TESTIMONIALS: ITestimonial[] = [
     name: "Sarah & David Miller",
     location: "Portland, OR",
     rating: 5,
-    text: "We discovered Golden Hive at a farmers market and were immediately hooked. The lip balms are now a staple in our household.",
+    text: "We discovered Bee Epic at a farmers market and were immediately hooked. The lip balms are now a staple in our household.",
     date: "2024-08-05",
   },
 ];

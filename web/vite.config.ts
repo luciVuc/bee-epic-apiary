@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "images/**/*.png"],
       manifest: {
-        name: "Golden Hive Apiary",
-        short_name: "Golden Hive",
+        name: "Bee Epic Apiary",
+        short_name: "Bee Epic",
         description: "Raw Honey & Bee Products",
         id: "bee-epic-apiary",
         start_url: ".",

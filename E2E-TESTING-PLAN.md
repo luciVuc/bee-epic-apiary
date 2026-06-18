@@ -157,6 +157,6 @@ npm run admin:deploy      # Admin panel (Pages)
 
 ```js
 // Browser console / Playwright evaluate:
-localStorage.removeItem("goldenHiveCart");
+localStorage.removeItem("beeEpicCart");
 localStorage.removeItem("beeEpicAdminSettings");
 ```

@@ -3,14 +3,14 @@ import type { ICartItem, IProduct } from "../types";
 
 const loadCartFromStorage = (): ICartItem[] => {
   try {
-    const stored = localStorage.getItem("goldenHiveCart");
+    const stored = localStorage.getItem("beeEpicCart");
     return stored ? JSON.parse(stored) : [];
   } catch {
     return [];
   }
 };
 
-const CART_STORAGE_KEY = "goldenHiveCart";
+const CART_STORAGE_KEY = "beeEpicCart";
 
 interface ICartState {
   items: ICartItem[];

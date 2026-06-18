@@ -18,7 +18,7 @@ export function SeoHead({
   keywords,
   jsonLd,
 }: ISeoHeadProps) {
-  const fullTitle = `${title} | Golden Hive Apiary`;
+  const fullTitle = `${title} | Bee Epic Apiary`;
   const url = canonicalPath ? `${SITE_URL}${canonicalPath}` : SITE_URL;
 
   return (
@@ -32,7 +32,7 @@ export function SeoHead({
       <meta property="og:description" content={description} />
       <meta property="og:url" content={url} />
       <meta property="og:type" content="website" />
-      <meta property="og:site_name" content="Golden Hive Apiary" />
+      <meta property="og:site_name" content="Bee Epic Apiary" />
       {ogImage && <meta property="og:image" content={ogImage} />}
 
       <meta name="twitter:card" content="summary_large_image" />
