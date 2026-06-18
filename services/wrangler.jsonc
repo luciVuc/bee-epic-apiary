@@ -72,6 +72,10 @@
 		},
 	],
 	"send_email": [{ "name": "EMAIL", "remote": true }],
+	"durable_objects": {
+		"bindings": [{ "name": "NOTIFICATION_HUB", "class_name": "NotificationHub" }],
+	},
+	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["NotificationHub"] }],
 	"env": {
 		"development": {
 			"kv_namespaces": [
@@ -80,6 +84,10 @@
 			],
 			"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "" },
 			"send_email": [{ "name": "EMAIL", "remote": false }],
+			"durable_objects": {
+				"bindings": [{ "name": "NOTIFICATION_HUB", "class_name": "NotificationHub" }],
+			},
+			"migrations": [{ "tag": "v1", "new_sqlite_classes": ["NotificationHub"] }],
 		},
 	},
 }

@@ -8,6 +8,9 @@
  */
 
 import router from './router';
+import { NotificationHub } from './notifications/notification-hub';
+
+export { NotificationHub };
 
 /**
  * Default export for Cloudflare Worker

@@ -59,12 +59,8 @@ export async function handleConfirmOrder(stripe: Stripe, request: Request, env: 
 			metadata: { order_status: 'new' },
 		});
 
-		const notification = {
-			sessionId: body.sessionId,
-			timestamp: Date.now(),
-		};
-
-		await env.CONTENT_KV.put(`notifications:${body.sessionId}`, JSON.stringify(notification), { expirationTtl: 86400 });
+		const stub = env.NOTIFICATION_HUB.getByName('default');
+		await stub.notify(body.sessionId);
 
 		await sendOrderNotificationEmail(body.sessionId, session, env);
 
