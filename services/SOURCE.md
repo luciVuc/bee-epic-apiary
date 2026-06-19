@@ -428,6 +428,39 @@ Handles `PUT /orders/:id` to update a Stripe Checkout Session's metadata and col
 
 ---
 
+#### src/stripe/order/order-template.ts
+
+Shared HTML and plain-text email template for order notifications.
+
+**Exported Interfaces**:
+
+```typescript
+export interface IOrderTemplateData {
+	sessionId: string;
+	customerName: string;
+	customerEmail: string;
+	amountTotal: string;
+	orderLink: string;
+	businessName: string;
+}
+```
+
+**Exported Functions**:
+
+##### `buildOrderNotificationHtml(data: IOrderTemplateData): string`
+
+Returns a full HTML email document with a branded header ("New Order Placed"), order ID (clickable link if `orderLink` is provided), customer info, total, and a "View Order in Admin" CTA button.
+
+##### `buildOrderNotificationText(data: IOrderTemplateData): string`
+
+Returns a plain-text version of the notification suitable for the `text` field of `env.EMAIL.send()`.
+
+##### `buildOrderNotificationMarkdown(data: IOrderTemplateData): string`
+
+Returns a Markdown version of the notification with linked order ID and "View Order in Admin Dashboard" link.
+
+---
+
 #### src/stripe/order/confirm-order.ts
 
 Handles `POST /orders/confirm` to confirm a paid Stripe Checkout Session and trigger notifications.
@@ -436,12 +469,13 @@ Handles `POST /orders/confirm` to confirm a paid Stripe Checkout Session and tri
 
 - `withStripeHandler` from `../../utils`
 - `jsonResponse` from `../../utils`
+- `buildOrderNotificationHtml`, `buildOrderNotificationText` from `./order-template`
 
 **Internal Functions**:
 
 ##### `sendOrderNotificationEmail(sessionId: string, session: Stripe.Checkout.Session, env: Env): Promise<void>`
 
-Sends an email notification to the admin (from `site` content KV) via the Cloudflare Email Service binding (`env.EMAIL.send()`). Includes session ID, customer details, total amount, and a link to the admin dashboard (if `ADMIN_BASE_URL` is configured). Errors are logged but do not fail the response.
+Sends an email notification to the admin. If `formspreeFormId` is set in the `site` content KV, the notification is POSTed to Formspree with the rendered HTML template as the `html` field. Otherwise, it is sent via the Cloudflare Email Service binding (`env.EMAIL.send()`) using both the HTML and text templates. Errors are logged but do not fail the response.
 
 **Handler Logic**:
 
@@ -449,7 +483,7 @@ Sends an email notification to the admin (from `site` content KV) via the Cloudf
 2. Retrieves the Stripe Checkout Session and verifies `payment_status === 'paid'`
 3. Updates Stripe session metadata with `order_status: 'new'`
 4. Writes a notification to `CONTENT_KV` under `notifications:{sessionId}` with 24h TTL (consumed by `notifications-stream.ts` SSE endpoint)
-5. Sends admin notification email via `sendOrderNotificationEmail`
+5. Sends admin notification email via `sendOrderNotificationEmail` (routes through Formspree if `formspreeFormId` is set in site content, otherwise through Cloudflare Email Service)
 6. Returns `{ success: true }`
 
 ---
@@ -519,7 +553,7 @@ Handles `GET /notifications/stream` to provide a Server-Sent Events (SSE) stream
 
 ### src/contact/contact-handler.ts
 
-Handles `POST /contact` to receive contact form submissions and send them as emails via Cloudflare Email Service.
+Handles `POST /contact` to receive contact form submissions and deliver them as emails. Supports two delivery backends selected by site content configuration.
 
 **Dependencies**:
 
@@ -534,14 +568,17 @@ Handles `POST /contact` to receive contact form submissions and send them as ema
 3. Parses JSON body with fields: `name`, `email`, `subject`, `message`, `_gotcha`
 4. Checks the `_gotcha` honeypot — silently succeeds if filled (bot detected)
 5. Validates all required fields are present
-6. Reads the admin email from `CONTENT_KV` (`site` key)
-7. Sends an email via `env.EMAIL.send()` with the form data:
-   - **To**: Admin email from site settings
-   - **From**: `contact@<admin-domain>` with business name
-   - **Reply-To**: The submitter's email
-   - **Subject**: `Contact Form: <subject>`
-   - **Body**: Name, email, subject, and message (HTML + plain text)
-8. Returns `{ success: true }` on success, or appropriate error
+6. Reads site content from `CONTENT_KV` (`site` key)
+7. **If `formspreeFormId` is set** (and not `"REPLACE_ME"`): POSTs the form data to `https://formspree.io/f/{formId}` and returns the result
+8. **Otherwise** (Cloudflare Email Service path):
+   - Reads the admin email from site content
+   - Sends an email via `env.EMAIL.send()` with the form data:
+     - **To**: Admin email from site settings
+     - **From**: `contact@<admin-domain>` with business name
+     - **Reply-To**: The submitter's email
+     - **Subject**: `Contact Form: <subject>`
+     - **Body**: Name, email, subject, and message (HTML + plain text)
+9. Returns `{ success: true }` on success, or appropriate error
 
 ---
 
@@ -560,7 +597,7 @@ Zod validation schemas for settings data.
 Handles `GET` and `PUT` requests for content settings stored in Cloudflare KV (`CONTENT_KV`).
 
 **Supported Types**: `site`, `process`, `testimonials`, `categories`
-(Note: `site` content includes contact info fields; contact form emails are sent via Cloudflare Email Service)
+(Note: `site` content includes contact info fields; contact form and order notification emails are sent via Formspree if `formspreeFormId` is configured, otherwise via Cloudflare Email Service)
 
 **Handler Logic**:
 

@@ -82,7 +82,7 @@
 				{ "binding": "CONTENT_KV", "id": "fdc9777103a94fd18fb9b1dab54bc730", "preview_id": "fdc9777103a94fd18fb9b1dab54bc730" },
 				{ "binding": "RATE_LIMIT_KV", "id": "b41a9fa19833481fb7cee6415cccb4f4", "preview_id": "b41a9fa19833481fb7cee6415cccb4f4" },
 			],
-			"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "" },
+			"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "http://localhost:5174" },
 			"send_email": [{ "name": "EMAIL", "remote": false }],
 			"durable_objects": {
 				"bindings": [{ "name": "NOTIFICATION_HUB", "class_name": "NotificationHub" }],

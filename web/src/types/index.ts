@@ -106,5 +106,4 @@ export interface ISiteContent {
   lat?: number;
   lng?: number;
   socialLinks: ISocialLinks;
-  formspreeFormId?: string;
 }

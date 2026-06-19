@@ -57,6 +57,27 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 	}
 
 	const adminEmail = siteContent.email;
+
+	const formspreeFormId = (siteContent as Record<string, unknown>).formspreeFormId as string | undefined;
+	if (formspreeFormId && formspreeFormId !== 'REPLACE_ME') {
+		try {
+			const formspreeRes = await fetch(`https://formspree.io/f/${formspreeFormId}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({ name, email, subject, message }),
+			});
+			if (!formspreeRes.ok) {
+				console.error('Formspree returned:', formspreeRes.status);
+				return jsonResponse({ error: 'Failed to send message' }, 500, origin, env);
+			}
+		} catch (error) {
+			console.error('Failed to send via Formspree:', error);
+			return jsonResponse({ error: 'Failed to send message' }, 500, origin, env);
+		}
+
+		return jsonResponse({ success: true }, 200, origin, env);
+	}
+
 	if (!adminEmail) {
 		return jsonResponse({ error: 'Contact email not configured' }, 500, origin, env);
 	}

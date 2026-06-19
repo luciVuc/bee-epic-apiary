@@ -89,9 +89,9 @@ export function AdminConfigTab({
           placeholder="xoqblgva"
         />
         <p className="mt-2 text-xs text-dark-400">
-          When set, the public contact form submits directly to Formspree. Leave
-          blank to use Cloudflare Email Service (the worker&apos;s POST /contact
-          endpoint).
+          When set, all email communications (contact form &amp; order
+          notifications) route through Formspree instead of the Cloudflare Email
+          Service. Leave blank to use the worker&apos;s built-in email service.
         </p>
       </Section>
     </div>

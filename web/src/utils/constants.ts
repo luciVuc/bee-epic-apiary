@@ -72,7 +72,6 @@ export const DEFAULT_SITE: ISiteContent = {
     { id: "GIFTS", label: "Gift Sets" },
     { id: "SUBSCRIPTIONS", label: "Subscriptions" },
   ],
-  formspreeFormId: "",
 };
 
 export const CATEGORIES = [

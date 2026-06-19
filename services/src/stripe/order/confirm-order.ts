@@ -1,5 +1,11 @@
 import { withStripeHandler, jsonResponse } from '../../utils';
 import Stripe from 'stripe';
+import {
+	buildOrderNotificationHtml,
+	buildOrderNotificationText,
+	buildOrderNotificationMarkdown,
+	type IOrderTemplateData,
+} from './order-template';
 
 interface IConfirmOrderBody {
 	sessionId: string;
@@ -10,32 +16,51 @@ async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Che
 		const siteContentStr = await env.CONTENT_KV.get('site');
 		if (!siteContentStr) return;
 
-		const siteContent = JSON.parse(siteContentStr) as { email?: string; businessName?: string };
-		const adminEmail = siteContent.email;
+		const siteContent = JSON.parse(siteContentStr) as { email?: string; businessName?: string; formspreeFormId?: string };
 		const businessName = siteContent.businessName || 'Bee Epic Apiary';
-		if (!adminEmail) return;
-
-		const domain = adminEmail.split('@')[1];
-		if (!domain) return;
-
 		const customerEmail = session.customer_details?.email || 'N/A';
 		const customerName = session.customer_details?.name || 'N/A';
 		const amountTotal = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : 'N/A';
 		const adminBaseUrl = env.ADMIN_BASE_URL || '';
 		const orderLink = adminBaseUrl ? `${adminBaseUrl}/orders/${sessionId}` : '';
 
+		const templateData: IOrderTemplateData = {
+			sessionId,
+			customerName,
+			customerEmail,
+			amountTotal,
+			orderLink,
+			businessName,
+		};
+
+		const formspreeFormId = siteContent.formspreeFormId;
+		if (formspreeFormId && formspreeFormId !== 'REPLACE_ME') {
+			const formspreeBody = {
+				subject: `New Order: ${sessionId.slice(-8)}`,
+				message: buildOrderNotificationMarkdown(templateData),
+				html: '', // buildOrderNotificationHtml(templateData),
+				_gotcha: '',
+			};
+			await fetch(`https://formspree.io/f/${formspreeFormId}`, {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(formspreeBody),
+			});
+			return;
+		}
+
+		const adminEmail = siteContent.email;
+		if (!adminEmail) return;
+
+		const domain = adminEmail.split('@')[1];
+		if (!domain) return;
+
 		await env.EMAIL.send({
 			to: adminEmail,
 			from: { email: `noreply@${domain}`, name: businessName },
 			subject: `New Order: ${sessionId.slice(-8)}`,
-			text: `A new order has been placed.\n\nSession ID: ${sessionId}\nCustomer: ${customerName} (${customerEmail})\nTotal: ${amountTotal}${orderLink ? `\n\nView in admin: ${orderLink}` : ''}`,
-			html: `<p>A new order has been placed.</p>
-<table>
-<tr><td><strong>Session ID:</strong></td><td>${sessionId}</td></tr>
-<tr><td><strong>Customer:</strong></td><td>${customerName} (${customerEmail})</td></tr>
-<tr><td><strong>Total:</strong></td><td>${amountTotal}</td></tr>
-</table>
-${orderLink ? `<p><a href="${orderLink}">View in Admin Dashboard</a></p>` : ''}`,
+			text: buildOrderNotificationText(templateData),
+			html: buildOrderNotificationHtml(templateData),
 		});
 	} catch (error) {
 		console.error('Failed to send order notification email:', error);

@@ -97,14 +97,14 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - After changing `wrangler.jsonc` bindings: `npm run services:cf-typegen`
 - KV namespaces: `CONTENT_KV` (settings storage), `RATE_LIMIT_KV`
 - Env vars: `STRIPE_SECRET_KEY`, `ALLOWED_ORIGINS`, `API_SECRET_KEY` (Wrangler secrets); `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`, `ADMIN_BASE_URL` (wrangler.jsonc vars)
-- **Cloudflare Email Service**: Uses `send_email` binding (`EMAIL`) for transactional emails — contact form submissions and order notifications. `from` domain must be onboarded via `npx wrangler email sending enable yourdomain.com`.
+- **Email Routing**: All transactional emails (contact form + order notifications) route through Formspree if `formspreeFormId` is configured in site content, otherwise through Cloudflare Email Service (`env.EMAIL.send()`). The `send_email` binding `from` domain must be onboarded via `npx wrangler email sending enable yourdomain.com`.
 
 ### Web Specifics
 
 - Uses **BrowserRouter** (not HashRouter despite outdated README)
 - Data fetched from services API at mount: `GET /settings/site`, `/settings/process`, `/settings/testimonials`, `/products?expand[]=data.default_price`
 - Checkout: `POST /checkout` on services worker (not client-side Stripe redirect)
-- Contact form: `POST /contact` on services worker (via Cloudflare Email Service — no Formspree dependency)
+- Contact form & order notifications: `POST /contact` on services worker; routes through Formspree if `formspreeFormId` is set in site content, otherwise through Cloudflare Email Service (`env.EMAIL.send()`)
 - Cart persisted to localStorage under key `beeEpicCart`
 - Legacy JSON in `src/data/` no longer imported
 - Has `vitest` in devDependencies but **no vitest config or test files** — treat as untested
