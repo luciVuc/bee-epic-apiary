@@ -65,8 +65,9 @@ export interface ISiteContent {
   lng?: number;
   categories: ICategory[];
   socialLinks: ISocialLinks;
-  formspreeFormId: string;
+  formsparkFormId: string;
   stripePublishableKey: string;
+  emailFormat: "text" | "markdown" | "html";
 }
 
 /** A single step in the "From Hive to Table" process */

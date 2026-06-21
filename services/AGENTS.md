@@ -39,14 +39,14 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 
 ### Contact
 
-- **`src/contact/contact-handler.ts`**: Handles `POST /contact` — receives contact form submissions and delivers them as emails. If `formspreeFormId` is set in site content KV, forwards to Formspree; otherwise sends via Cloudflare Email Service (`env.EMAIL.send()`). Includes rate limiting, `_gotcha` honeypot spam protection, and reads site content from `CONTENT_KV`.
+- **`src/contact/contact-handler.ts`**: Handles `POST /contact` — receives contact form submissions and delivers them as emails. If `formsparkFormId` is set in site content KV, forwards to Formspark; otherwise sends via Cloudflare Email Service (`env.EMAIL.send()`). Includes rate limiting, `_gotcha` honeypot spam protection, and reads site content from `CONTENT_KV`.
 
 ### Stripe Integration
 
 - **`src/stripe/`**: Contains all Stripe-related handlers:
   - `checkout/`: Stripe Checkout session creation (handles one-time and subscription items)
   - `product/`: Product CRUD operations (create, read, update, delete)
-  - `order/`: Order listing, detail, update, and confirmation (including admin email notification via Formspree or Cloudflare Email Service)
+  - `order/`: Order listing, detail, update, and confirmation (including admin email notification via Formspark or Cloudflare Email Service)
 
 ### Utilities
 
@@ -65,9 +65,9 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
   ```bash
   npm run cf-typegen
   ```
-- **Email Routing**: All transactional emails route through Formspree if `formspreeFormId` is set in site content KV, otherwise through Cloudflare Email Service (`env.EMAIL.send()`).
+- **Email Routing**: All transactional emails route through Formspark if `formsparkFormId` is set in site content KV, otherwise through Cloudflare Email Service (`env.EMAIL.send()`).
   - When using Cloudflare Email Service, the `from` domain must be onboarded: `npx wrangler email sending enable yourdomain.com`
-  - `formspreeFormId` is configured in the admin panel and stored in `CONTENT_KV` as part of site content
+  - `formsparkFormId` is configured in the admin panel and stored in `CONTENT_KV` as part of site content
 
 ## Testing
 

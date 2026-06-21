@@ -475,7 +475,7 @@ Handles `POST /orders/confirm` to confirm a paid Stripe Checkout Session and tri
 
 ##### `sendOrderNotificationEmail(sessionId: string, session: Stripe.Checkout.Session, env: Env): Promise<void>`
 
-Sends an email notification to the admin. If `formspreeFormId` is set in the `site` content KV, the notification is POSTed to Formspree with the rendered HTML template as the `html` field. Otherwise, it is sent via the Cloudflare Email Service binding (`env.EMAIL.send()`) using both the HTML and text templates. Errors are logged but do not fail the response.
+Sends an email notification to the admin. If `formsparkFormId` is set in the `site` content KV, the notification is POSTed to Formspark with the rendered HTML template as the `html` field. Otherwise, it is sent via the Cloudflare Email Service binding (`env.EMAIL.send()`) using both the HTML and text templates. Errors are logged but do not fail the response.
 
 **Handler Logic**:
 
@@ -483,7 +483,7 @@ Sends an email notification to the admin. If `formspreeFormId` is set in the `si
 2. Retrieves the Stripe Checkout Session and verifies `payment_status === 'paid'`
 3. Updates Stripe session metadata with `order_status: 'new'`
 4. Writes a notification to `CONTENT_KV` under `notifications:{sessionId}` with 24h TTL (consumed by `notifications-stream.ts` SSE endpoint)
-5. Sends admin notification email via `sendOrderNotificationEmail` (routes through Formspree if `formspreeFormId` is set in site content, otherwise through Cloudflare Email Service)
+5. Sends admin notification email via `sendOrderNotificationEmail` (routes through Formspark if `formsparkFormId` is set in site content, otherwise through Cloudflare Email Service)
 6. Returns `{ success: true }`
 
 ---
@@ -569,7 +569,7 @@ Handles `POST /contact` to receive contact form submissions and deliver them as 
 4. Checks the `_gotcha` honeypot — silently succeeds if filled (bot detected)
 5. Validates all required fields are present
 6. Reads site content from `CONTENT_KV` (`site` key)
-7. **If `formspreeFormId` is set** (and not `"REPLACE_ME"`): POSTs the form data to `https://formspree.io/f/{formId}` and returns the result
+7. **If `formsparkFormId` is set** (and not `"REPLACE_ME"`): POSTs the form data to `https://submit-form.com/{formId}` with `Accept: application/json` header and `_email.subject` for the email subject, then returns the result
 8. **Otherwise** (Cloudflare Email Service path):
    - Reads the admin email from site content
    - Sends an email via `env.EMAIL.send()` with the form data:
@@ -597,7 +597,7 @@ Zod validation schemas for settings data.
 Handles `GET` and `PUT` requests for content settings stored in Cloudflare KV (`CONTENT_KV`).
 
 **Supported Types**: `site`, `process`, `testimonials`, `categories`
-(Note: `site` content includes contact info fields; contact form and order notification emails are sent via Formspree if `formspreeFormId` is configured, otherwise via Cloudflare Email Service)
+(Note: `site` content includes contact info fields; contact form and order notification emails are sent via Formspark if `formsparkFormId` is configured, otherwise via Cloudflare Email Service)
 
 **Handler Logic**:
 

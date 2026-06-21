@@ -12165,6 +12165,7 @@ interface EmailAddress {
 	name: string;
 	email: string;
 }
+
 /**
  * A binding that allows a Worker to send email messages.
  */
@@ -12178,8 +12179,7 @@ interface SendEmail {
 		cc?: string | EmailAddress | (string | EmailAddress)[];
 		bcc?: string | EmailAddress | (string | EmailAddress)[];
 		headers?: Record<string, string>;
-		text?: string;
-		html?: string;
+		body?: string | { type: 'text' | 'html'; content: string };
 		attachments?: EmailAttachment[];
 	}): Promise<EmailSendResult>;
 }

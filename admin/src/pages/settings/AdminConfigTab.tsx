@@ -1,6 +1,6 @@
 /** Tab for viewing build-time configuration and editing KV-backed settings */
-import { Globe, Key, Store, Send } from "lucide-react";
-import { TextField, Section } from "../../components/forms";
+import { Globe, Key, Store, Send, Mail } from "lucide-react";
+import { TextField, SelectField, Section } from "../../components/forms";
 import { DEFAULT_API_URL } from "../../utils/constants";
 import type { ISiteContent } from "../../types/settings";
 
@@ -79,19 +79,39 @@ export function AdminConfigTab({
       </Section>
 
       <Section
-        title="Formspree Configuration"
+        title="Formspark Configuration"
         icon={<Send className="w-4 h-4" />}
       >
         <TextField
-          label="Formspree Form ID"
-          value={siteContent.formspreeFormId}
-          onChange={(v) => onSiteChange("formspreeFormId", v)}
-          placeholder="xoqblgva"
+          label="Formspark Form ID"
+          value={siteContent.formsparkFormId}
+          onChange={(v) => onSiteChange("formsparkFormId", v)}
+          placeholder="your-form-id"
         />
         <p className="mt-2 text-xs text-dark-400">
           When set, all email communications (contact form &amp; order
-          notifications) route through Formspree instead of the Cloudflare Email
+          notifications) route through Formspark instead of the Cloudflare Email
           Service. Leave blank to use the worker&apos;s built-in email service.
+        </p>
+      </Section>
+
+      <Section title="Email Notifications" icon={<Mail className="w-4 h-4" />}>
+        <SelectField
+          label="Notification Email Format"
+          value={siteContent.emailFormat}
+          onChange={(v) =>
+            onSiteChange("emailFormat", v as "text" | "markdown" | "html")
+          }
+          options={[
+            { value: "text", label: "Plain Text" },
+            { value: "markdown", label: "Markdown" },
+            { value: "html", label: "HTML" },
+          ]}
+        />
+        <p className="mt-2 text-xs text-dark-400">
+          Choose the format for order notification emails. HTML provides a rich
+          email layout; Markdown sends lightweight formatted text; Plain Text
+          sends a simple unformatted message.
         </p>
       </Section>
     </div>

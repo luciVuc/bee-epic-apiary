@@ -1,23 +1,15 @@
-import { withStripeHandler, jsonResponse } from '../../utils';
 import Stripe from 'stripe';
-import {
-	buildOrderNotificationHtml,
-	buildOrderNotificationText,
-	buildOrderNotificationMarkdown,
-	type IOrderTemplateData,
-} from './order-template';
-
-interface IConfirmOrderBody {
-	sessionId: string;
-}
+import { IConfirmOrderBody, IOrderTemplateData, ISiteContent, IEmailMessageBuilder } from '../../types';
+import { withStripeHandler, jsonResponse, buildEmailBody } from '../../utils';
 
 async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Checkout.Session, env: Env): Promise<void> {
 	try {
 		const siteContentStr = await env.CONTENT_KV.get('site');
 		if (!siteContentStr) return;
 
-		const siteContent = JSON.parse(siteContentStr) as { email?: string; businessName?: string; formspreeFormId?: string };
+		const siteContent = JSON.parse(siteContentStr) as ISiteContent;
 		const businessName = siteContent.businessName || 'Bee Epic Apiary';
+		const emailFormat = siteContent.emailFormat || 'html';
 		const customerEmail = session.customer_details?.email || 'N/A';
 		const customerName = session.customer_details?.name || 'N/A';
 		const amountTotal = session.amount_total ? `$${(session.amount_total / 100).toFixed(2)}` : 'N/A';
@@ -33,19 +25,24 @@ async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Che
 			businessName,
 		};
 
-		const formspreeFormId = siteContent.formspreeFormId;
-		if (formspreeFormId && formspreeFormId !== 'REPLACE_ME') {
-			const formspreeBody = {
-				subject: `New Order: ${sessionId.slice(-8)}`,
-				message: buildOrderNotificationMarkdown(templateData),
-				html: '', // buildOrderNotificationHtml(templateData),
-				_gotcha: '',
+		const formsparkFormId = siteContent.formsparkFormId;
+		if (formsparkFormId && formsparkFormId !== 'REPLACE_ME') {
+			const formsparkBody = {
+				body: await buildEmailBody(emailFormat, templateData),
+				_email: { subject: `New Order: ${sessionId.slice(-8)}` },
 			};
-			await fetch(`https://formspree.io/f/${formspreeFormId}`, {
+			const formsparkRes = await fetch(`https://submit-form.com/${formsparkFormId}`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(formspreeBody),
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+				},
+				body: JSON.stringify(formsparkBody),
 			});
+			if (!formsparkRes.ok) {
+				const body = await formsparkRes.text().catch(() => '');
+				console.error('Formspark returned:', formsparkRes.status, body);
+			}
 			return;
 		}
 
@@ -55,13 +52,17 @@ async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Che
 		const domain = adminEmail.split('@')[1];
 		if (!domain) return;
 
-		await env.EMAIL.send({
+		const emailPayload: IEmailMessageBuilder = {
 			to: adminEmail,
 			from: { email: `noreply@${domain}`, name: businessName },
 			subject: `New Order: ${sessionId.slice(-8)}`,
-			text: buildOrderNotificationText(templateData),
-			html: buildOrderNotificationHtml(templateData),
-		});
+			body: {
+				type: emailFormat === 'html' || emailFormat === 'markdown' ? 'html' : 'text',
+				content: await buildEmailBody(emailFormat, templateData),
+			},
+		};
+
+		await env.EMAIL.send(emailPayload);
 	} catch (error) {
 		console.error('Failed to send order notification email:', error);
 	}

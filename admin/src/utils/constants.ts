@@ -93,8 +93,9 @@ export const DEFAULT_SITE: ISiteContent = {
     facebook: "https://facebook.com/beeepicapiary",
     etsy: "https://etsy.com/shop/beeepicapiary",
   },
-  formspreeFormId: "",
+  formsparkFormId: "",
   stripePublishableKey: "",
+  emailFormat: "html",
 };
 
 export const DEFAULT_PROCESS: IProcessStep[] = [

@@ -29,7 +29,8 @@ describe("AdminConfigTab", () => {
     expect(screen.getByText("API Configuration")).toBeInTheDocument();
     expect(screen.getByText("API Secret Key")).toBeInTheDocument();
     expect(screen.getByText("Stripe Configuration")).toBeInTheDocument();
-    expect(screen.getByText("Formspree Configuration")).toBeInTheDocument();
+    expect(screen.getByText("Formspark Configuration")).toBeInTheDocument();
+    expect(screen.getByText("Email Notifications")).toBeInTheDocument();
   });
 
   it("shows API URL as read-only", () => {
@@ -61,20 +62,37 @@ describe("AdminConfigTab", () => {
     }
   });
 
-  it("calls onSiteChange for formspree form ID", async () => {
+  it("calls onSiteChange for formspark form ID", async () => {
     const user = userEvent.setup();
     const onSiteChange = vi.fn();
     renderTab({ onSiteChange });
 
     const inputs = screen.getAllByRole("textbox");
-    const formspreeInput = inputs.find(
-      (input) => input.getAttribute("placeholder") === "xoqblgva",
+    const formsparkInput = inputs.find(
+      (input) => input.getAttribute("placeholder") === "your-form-id",
     );
-    expect(formspreeInput).toBeTruthy();
-    if (formspreeInput) {
-      await user.type(formspreeInput, "x");
-      expect(onSiteChange).toHaveBeenCalledWith("formspreeFormId", "x");
+    expect(formsparkInput).toBeTruthy();
+    if (formsparkInput) {
+      await user.type(formsparkInput, "x");
+      expect(onSiteChange).toHaveBeenCalledWith("formsparkFormId", "x");
     }
+  });
+
+  it("renders email format select with default HTML value", () => {
+    renderTab();
+    const select = screen.getByLabelText("Notification Email Format");
+    expect(select).toBeInTheDocument();
+    expect(select).toHaveValue("html");
+  });
+
+  it("calls onSiteChange for email format", async () => {
+    const user = userEvent.setup();
+    const onSiteChange = vi.fn();
+    renderTab({ onSiteChange });
+
+    const select = screen.getByLabelText("Notification Email Format");
+    await user.selectOptions(select, "markdown");
+    expect(onSiteChange).toHaveBeenCalledWith("emailFormat", "markdown");
   });
 
   it("does not render save button", () => {

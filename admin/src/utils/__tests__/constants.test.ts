@@ -46,7 +46,7 @@ describe("constants", () => {
     );
     expect(DEFAULT_SITE.aboutText).toHaveLength(3);
     expect(DEFAULT_SITE.stripePublishableKey).toBe("");
-    expect(DEFAULT_SITE.formspreeFormId).toBe("");
+    expect(DEFAULT_SITE.formsparkFormId).toBe("");
   });
 
   it("DEFAULT_PROCESS has 5 steps", () => {

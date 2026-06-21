@@ -1,8 +1,5 @@
-import { jsonResponse, handleCORS, RateLimiter } from '../utils';
-
-function escapeHtml(str: string): string {
-	return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
+import { ICommTemplateData, ISiteContent } from '../types';
+import { jsonResponse, handleCORS, RateLimiter, buildEmailBody } from '../utils';
 
 export async function handleContact(request: Request, env: Env): Promise<Response> {
 	if (request.method === 'OPTIONS') {
@@ -49,7 +46,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 		return jsonResponse({ error: 'Site content not configured' }, 500, origin, env);
 	}
 
-	let siteContent: { email?: string; businessName?: string };
+	let siteContent: ISiteContent;
 	try {
 		siteContent = JSON.parse(siteContentStr);
 	} catch {
@@ -57,21 +54,40 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 	}
 
 	const adminEmail = siteContent.email;
+	const businessName = siteContent.businessName || 'Bee Epic Apiary';
+	const emailFormat = siteContent.emailFormat || 'html';
+	const formsparkFormId = siteContent.formsparkFormId;
 
-	const formspreeFormId = (siteContent as Record<string, unknown>).formspreeFormId as string | undefined;
-	if (formspreeFormId && formspreeFormId !== 'REPLACE_ME') {
+	const templateData: ICommTemplateData = {
+		name,
+		email,
+		subject,
+		message,
+	};
+
+	if (formsparkFormId && formsparkFormId !== 'REPLACE_ME') {
 		try {
-			const formspreeRes = await fetch(`https://formspree.io/f/${formspreeFormId}`, {
+			const formsparkBody = {
+				_email: { subject: `Message: ${subject}` },
+				body: await buildEmailBody(emailFormat, templateData),
+			};
+
+			console.log('Sending to Formspark with payload:', formsparkBody);
+			const formsparkRes = await fetch(`https://submit-form.com/${formsparkFormId}`, {
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({ name, email, subject, message }),
+				headers: {
+					'Content-Type': 'application/json',
+					Accept: 'application/json',
+				},
+				body: JSON.stringify(formsparkBody),
 			});
-			if (!formspreeRes.ok) {
-				console.error('Formspree returned:', formspreeRes.status);
+			if (!formsparkRes.ok) {
+				const body = await formsparkRes.text().catch(() => '');
+				console.error('Formspark returned:', formsparkRes.status, body);
 				return jsonResponse({ error: 'Failed to send message' }, 500, origin, env);
 			}
 		} catch (error) {
-			console.error('Failed to send via Formspree:', error);
+			console.error('Failed to send via Formspark:', error);
 			return jsonResponse({ error: 'Failed to send message' }, 500, origin, env);
 		}
 
@@ -90,15 +106,13 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 	try {
 		await env.EMAIL.send({
 			to: adminEmail,
-			from: { email: `contact@${domain}`, name: siteContent.businessName || 'Contact Form' },
+			from: { email: `contact@${domain}`, name: businessName },
 			replyTo: email,
 			subject: `Contact Form: ${subject}`,
-			text: `Name: ${name}\nEmail: ${email}\nSubject: ${subject}\n\n${message}`,
-			html: `<p><strong>Name:</strong> ${escapeHtml(name)}</p>
-<p><strong>Email:</strong> ${escapeHtml(email)}</p>
-<p><strong>Subject:</strong> ${escapeHtml(subject)}</p>
-<hr>
-<p>${escapeHtml(message).replace(/\n/g, '<br>')}</p>`,
+			body: {
+				type: emailFormat === 'html' || emailFormat === 'markdown' ? 'html' : 'text',
+				content: await buildEmailBody(emailFormat, templateData),
+			},
 		});
 	} catch (error) {
 		console.error('Failed to send contact email:', error);

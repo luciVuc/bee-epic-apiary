@@ -349,7 +349,7 @@ Confirms a paid Stripe Checkout Session, triggers a real-time notification via S
 1. Retrieves the Stripe Checkout Session and verifies `payment_status === 'paid'`
 2. Updates Stripe session metadata with `order_status: 'new'`
 3. Writes a notification to `CONTENT_KV` with 24h TTL (consumed by SSE stream)
-4. Sends admin notification email (via Formspree if `formspreeFormId` is configured in site content, otherwise via Cloudflare Email Service)
+4. Sends admin notification email (via Formspark if `formsparkFormId` is configured in site content, otherwise via Cloudflare Email Service)
 
 **Response**:
 
@@ -376,7 +376,7 @@ Confirms a paid Stripe Checkout Session, triggers a real-time notification via S
 
 `POST /contact`
 
-Sends a contact form submission as an email to the site admin. The email delivery method depends on site configuration: if `formspreeFormId` is set in the site content (KV), the submission is forwarded to Formspree; otherwise, it is sent via Cloudflare Email Service (`env.EMAIL.send()`).
+Sends a contact form submission as an email to the site admin. The email delivery method depends on site configuration: if `formsparkFormId` is set in the site content (KV), the submission is forwarded to Formspark; otherwise, it is sent via Cloudflare Email Service (`env.EMAIL.send()`).
 
 **Authentication**: Not required (public endpoint).
 
@@ -413,7 +413,7 @@ Sends a contact form submission as an email to the site admin. The email deliver
 | 500         | `Site content not configured`  |
 | 500         | `Contact email not configured` |
 | 500         | `Failed to send message`       |
-| 500         | `Failed to send via Formspree` |
+| 500         | `Failed to send via Formspark` |
 
 ---
 
