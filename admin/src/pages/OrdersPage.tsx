@@ -312,6 +312,7 @@ export function OrdersPage() {
           <button
             onClick={() => setShowFilters(!showFilters)}
             data-testid="orders-page_filter-toggle"
+            aria-label="Toggle filters"
             className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-200"
           >
             <Filter className="w-4 h-4 text-dark-600" />
@@ -764,6 +765,7 @@ export function OrdersPage() {
                 onClick={handleLoadMore}
                 disabled={loading}
                 data-testid="orders-page_load-more-btn"
+                aria-label="Load more orders"
                 className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? "Loading..." : "Load More Orders"}

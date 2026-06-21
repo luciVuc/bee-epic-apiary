@@ -139,14 +139,22 @@ function extractShippingAddress(session: Record<string, unknown>): {
     unknown
   > | null;
   const address = shippingDetails?.address as Record<string, string> | null;
-  if (!shippingDetails && !address) return null;
+  if (!shippingDetails || !address) return null;
+  const hasAnyField =
+    address.line1 ||
+    address.line2 ||
+    address.city ||
+    address.state ||
+    address.postal_code ||
+    address.country;
+  if (!hasAnyField) return null;
   return {
-    line1: address?.line1 || null,
-    line2: address?.line2 || null,
-    city: address?.city || null,
-    state: address?.state || null,
-    postalCode: address?.postal_code || null,
-    country: address?.country || null,
+    line1: address.line1 || null,
+    line2: address.line2 || null,
+    city: address.city || null,
+    state: address.state || null,
+    postalCode: address.postal_code || null,
+    country: address.country || null,
   };
 }
 
