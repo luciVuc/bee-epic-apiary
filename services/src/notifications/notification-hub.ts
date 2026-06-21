@@ -10,9 +10,33 @@ interface IConnection {
 }
 
 export class NotificationHub extends DurableObject {
+	private state: DurableObjectState;
 	private connections: IConnection[] = [];
 	private pendingNotifications: INotification[] = [];
 	private encoder = new TextEncoder();
+	private static readonly HEARTBEAT_INTERVAL = 30_000;
+
+	constructor(state: DurableObjectState, env: Env) {
+		super(state, env);
+		this.state = state;
+		this.state.waitUntil(this.scheduleAlarm());
+	}
+
+	private async scheduleAlarm(): Promise<void> {
+		await this.state.storage.setAlarm(Date.now() + NotificationHub.HEARTBEAT_INTERVAL);
+	}
+
+	async alarm(): Promise<void> {
+		this.connections = this.connections.filter((conn) => {
+			try {
+				conn.writer.write(this.encoder.encode(': heartbeat\n\n'));
+				return true;
+			} catch {
+				return false;
+			}
+		});
+		await this.scheduleAlarm();
+	}
 
 	async notify(sessionId: string): Promise<void> {
 		const timestamp = Date.now();

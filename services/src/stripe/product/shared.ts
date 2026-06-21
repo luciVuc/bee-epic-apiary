@@ -1,4 +1,7 @@
 import Stripe from 'stripe';
+import { paginateArray } from '../../utils';
+
+export { paginateArray };
 
 export async function fetchAllActiveProducts(stripe: Stripe, expand?: string[]): Promise<Stripe.Product[]> {
 	const allProducts: Stripe.Product[] = [];
@@ -47,28 +50,4 @@ export function matchesTag(product: Stripe.Product, tag: string): boolean {
 		.map((t) => t.trim())
 		.filter(Boolean);
 	return tags.includes(trimmedTag);
-}
-
-export function paginateArray<T extends { id: string }>(
-	items: T[],
-	limit: number,
-	startingAfter?: string,
-): { data: T[]; hasMore: boolean; lastId: string | null } {
-	if (startingAfter) {
-		const startIndex = items.findIndex((item) => item.id === startingAfter);
-		if (startIndex !== -1) {
-			const sliced = items.slice(startIndex + 1, startIndex + 1 + limit);
-			return {
-				data: sliced,
-				hasMore: startIndex + 1 + limit < items.length,
-				lastId: sliced[sliced.length - 1]?.id || null,
-			};
-		}
-	}
-	const sliced = items.slice(0, limit);
-	return {
-		data: sliced,
-		hasMore: limit < items.length,
-		lastId: sliced[sliced.length - 1]?.id || null,
-	};
 }

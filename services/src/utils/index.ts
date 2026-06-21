@@ -7,3 +7,4 @@ export * from './handleCORS';
 export * from './jsonResponse';
 export * from './withStripeHandler';
 export * from './rateLimiter';
+export * from './paginate';
