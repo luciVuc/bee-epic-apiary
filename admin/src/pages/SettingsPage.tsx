@@ -316,7 +316,10 @@ export function SettingsPage() {
 
   return (
     <div data-testid="settings-page">
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 dark:bg-dark-950 dark:border-gray-700">
+      <div
+        data-testid="settings-page_header"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 dark:bg-dark-950 dark:border-gray-700"
+      >
         <h2
           className="font-heading text-3xl font-bold text-dark-900"
           data-testid="settings-page_title"
@@ -348,9 +351,18 @@ export function SettingsPage() {
       )}
 
       {/* Content Tabs */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 dark:bg-dark-950 dark:border-gray-700">
-        <div className="border-b border-gray-200 dark:border-gray-700">
-          <nav className="flex -mb-px">
+      <div
+        data-testid="settings-page_tabs"
+        className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 dark:bg-dark-950 dark:border-gray-700"
+      >
+        <div
+          data-testid="settings-page_tab-content"
+          className="border-b border-gray-200 dark:border-gray-700"
+        >
+          <nav
+            data-testid="settings-page_tab-nav"
+            className="flex -mb-px overflow-x-auto scrollbar-hide"
+          >
             {(
               [
                 "admin",
@@ -364,7 +376,7 @@ export function SettingsPage() {
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 data-testid={`settings-page_tab-${tab}`}
-                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors ${
+                className={`px-6 py-3 text-sm font-medium border-b-2 transition-colors flex-shrink-0 whitespace-nowrap ${
                   activeTab === tab
                     ? "border-primary-500 text-primary-600 dark:text-primary-400"
                     : "border-transparent text-dark-500 hover:text-dark-700 hover:border-dark-300 dark:text-dark-400 dark:hover:text-dark-200 dark:hover:border-dark-600"
