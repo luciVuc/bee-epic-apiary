@@ -152,6 +152,7 @@ export function ProductsPage() {
   }, []);
 
   const handleLoadMore = () => {
+    if (products.length === 0) return;
     const newLimit = products.length + 10;
     const params: Record<string, string> = {};
     if (searchTerm) params.search = searchTerm;

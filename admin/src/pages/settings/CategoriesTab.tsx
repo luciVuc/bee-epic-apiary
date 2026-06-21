@@ -27,7 +27,7 @@ export function CategoriesTab({
       </p>
       {categoriesContent.map((cat, i) => (
         <div
-          key={i}
+          key={cat.id || `new-${i}`}
           className="p-4 border border-gray-200 rounded-lg dark:border-gray-700"
         >
           <div className="flex items-center justify-between mb-3">

@@ -63,10 +63,6 @@ export function SettingsPage() {
     categories: DEFAULT_CATEGORIES,
   });
 
-  useEffect(() => {
-    loadContent();
-  }, []);
-
   const loadContent = async () => {
     setContentStatus("loading");
     setContentError("");
@@ -108,6 +104,10 @@ export function SettingsPage() {
       setContentStatus("idle");
     }
   };
+
+  useEffect(() => {
+    void loadContent().catch(console.error);
+  }, []);
 
   const handleSaveContent = async () => {
     setContentStatus("saving");
