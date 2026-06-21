@@ -47,7 +47,6 @@ describe("SettingsPage", () => {
   it("shows admin tab by default", async () => {
     renderWithRouter();
     expect(await screen.findByText("API Configuration")).toBeInTheDocument();
-    expect(screen.getByText("Save Content")).toBeInTheDocument();
   });
 
   it("switches to site content tab", async () => {
@@ -57,7 +56,7 @@ describe("SettingsPage", () => {
     await user.click(screen.getByText("Site Content"));
     expect(screen.getByText("Business Info")).toBeInTheDocument();
     expect(screen.getByText("Hero Section")).toBeInTheDocument();
-    expect(screen.getByText("Save Content")).toBeInTheDocument();
+    expect(screen.getByText("Save Site Content")).toBeInTheDocument();
   });
 
   it("switches to process tab", async () => {
@@ -66,7 +65,7 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByText("Process"));
     expect(screen.getByText("Add Step")).toBeInTheDocument();
-    expect(screen.getByText("Save Content")).toBeInTheDocument();
+    expect(screen.getByText("Save Process Steps")).toBeInTheDocument();
   });
 
   it("switches to testimonials tab", async () => {
@@ -75,7 +74,7 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByText("Testimonials"));
     expect(screen.getByText("Add Testimonial")).toBeInTheDocument();
-    expect(screen.getByText("Save Content")).toBeInTheDocument();
+    expect(screen.getByText("Save Testimonials")).toBeInTheDocument();
   });
 
   it("switches to categories tab", async () => {
@@ -84,7 +83,7 @@ describe("SettingsPage", () => {
 
     await user.click(screen.getByText("Categories"));
     expect(screen.getByText("Add Category")).toBeInTheDocument();
-    expect(screen.getByText("Save Content")).toBeInTheDocument();
+    expect(screen.getByText("Save Categories")).toBeInTheDocument();
   });
 
   it("shows loading state when content is loading", async () => {

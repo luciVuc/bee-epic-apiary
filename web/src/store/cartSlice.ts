@@ -10,8 +10,6 @@ const loadCartFromStorage = (): ICartItem[] => {
   }
 };
 
-const CART_STORAGE_KEY = "beeEpicCart";
-
 interface ICartState {
   items: ICartItem[];
 }
@@ -38,14 +36,10 @@ const cartSlice = createSlice({
       } else {
         state.items.push({ product, quantity });
       }
-
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state.items));
     },
     removeFromCart: (state, action: PayloadAction<string>) => {
       const productId = action.payload;
       state.items = state.items.filter((item) => item.product.id !== productId);
-
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state.items));
     },
     updateQuantity: (
       state,
@@ -61,13 +55,9 @@ const cartSlice = createSlice({
           item.quantity = quantity;
         }
       }
-
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state.items));
     },
     clearCart: (state) => {
       state.items = [];
-
-      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(state.items));
     },
   },
 });

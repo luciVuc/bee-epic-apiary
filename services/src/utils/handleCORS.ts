@@ -37,7 +37,12 @@ export function handleCORS(request: Request, env: Env, allowedMethod: HttpMethod
 	}
 
 	if (!isAllowedOrigin(origin, env)) {
-		return new Response(null, { status: 403 });
+		const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+		if (origin) headers['Access-Control-Allow-Origin'] = origin;
+		return new Response(JSON.stringify({ error: 'Origin not allowed' }), {
+			status: 403,
+			headers,
+		});
 	}
 
 	return new Response(null, {

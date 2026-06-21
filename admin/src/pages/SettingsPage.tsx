@@ -109,23 +109,43 @@ export function SettingsPage() {
     void loadContent().catch(console.error);
   }, []);
 
-  const handleSaveContent = async () => {
+  const handleSaveSetting = async (type: string) => {
     setContentStatus("saving");
     setContentError("");
     try {
-      await api.api.saveSettings("site", siteContent);
-      await api.api.saveSettings("process", processContent);
-      await api.api.saveSettings("testimonials", testimonialsContent);
-      if (categoriesContent.length > 0) {
-        await api.api.saveSettings("categories", categoriesContent);
+      switch (type) {
+        case "site":
+          await api.api.saveSettings("site", siteContent);
+          initialContentRef.current = {
+            ...initialContentRef.current,
+            site: JSON.parse(JSON.stringify(siteContent)),
+          };
+          break;
+        case "process":
+          await api.api.saveSettings("process", processContent);
+          initialContentRef.current = {
+            ...initialContentRef.current,
+            process: JSON.parse(JSON.stringify(processContent)),
+          };
+          break;
+        case "testimonials":
+          await api.api.saveSettings("testimonials", testimonialsContent);
+          initialContentRef.current = {
+            ...initialContentRef.current,
+            testimonials: JSON.parse(JSON.stringify(testimonialsContent)),
+          };
+          break;
+        case "categories":
+          if (categoriesContent.length > 0) {
+            await api.api.saveSettings("categories", categoriesContent);
+            initialContentRef.current = {
+              ...initialContentRef.current,
+              categories: JSON.parse(JSON.stringify(categoriesContent)),
+            };
+          }
+          break;
       }
       setContentStatus("success");
-      initialContentRef.current = {
-        site: JSON.parse(JSON.stringify(siteContent)),
-        process: JSON.parse(JSON.stringify(processContent)),
-        testimonials: JSON.parse(JSON.stringify(testimonialsContent)),
-        categories: JSON.parse(JSON.stringify(categoriesContent)),
-      };
       setTimeout(() => setContentStatus("idle"), 3000);
     } catch (err: unknown) {
       const axiosErr = err as {
@@ -306,14 +326,6 @@ export function SettingsPage() {
 
   const isSaving = contentStatus === "saving";
 
-  const isContentDirty =
-    !deepEqual(siteContent, initialContentRef.current.site) ||
-    !deepEqual(processContent, initialContentRef.current.process) ||
-    !deepEqual(testimonialsContent, initialContentRef.current.testimonials) ||
-    !deepEqual(categoriesContent, initialContentRef.current.categories);
-
-  const contentSaveDisabled = !isContentDirty || isSaving;
-
   return (
     <div data-testid="settings-page">
       <div
@@ -409,28 +421,63 @@ export function SettingsPage() {
           ) : (
             <>
               {activeTab === "site" && (
-                <SiteContentTab
-                  siteContent={siteContent}
-                  updateSite={updateSite}
-                  addAboutParagraph={addAboutParagraph}
-                  updateAboutParagraph={updateAboutParagraph}
-                  removeAboutParagraph={removeAboutParagraph}
-                  addAboutImage={addAboutImage}
-                  updateAboutImage={updateAboutImage}
-                  removeAboutImage={removeAboutImage}
-                  addNavLink={addNavLink}
-                  updateNavLink={updateNavLink}
-                  removeNavLink={removeNavLink}
-                />
+                <>
+                  <SiteContentTab
+                    siteContent={siteContent}
+                    updateSite={updateSite}
+                    addAboutParagraph={addAboutParagraph}
+                    updateAboutParagraph={updateAboutParagraph}
+                    removeAboutParagraph={removeAboutParagraph}
+                    addAboutImage={addAboutImage}
+                    updateAboutImage={updateAboutImage}
+                    removeAboutImage={removeAboutImage}
+                    addNavLink={addNavLink}
+                    updateNavLink={updateNavLink}
+                    removeNavLink={removeNavLink}
+                  />
+                  <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => handleSaveSetting("site")}
+                      disabled={
+                        isSaving ||
+                        deepEqual(siteContent, initialContentRef.current.site)
+                      }
+                      data-testid="settings-page_save-site-btn"
+                      className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSaving ? "Saving..." : "Save Site Content"}
+                    </button>
+                  </div>
+                </>
               )}
 
               {activeTab === "process" && (
-                <ProcessTab
-                  processContent={processContent}
-                  addProcessStep={addProcessStep}
-                  updateProcessStep={updateProcessStep}
-                  removeProcessStep={removeProcessStep}
-                />
+                <>
+                  <ProcessTab
+                    processContent={processContent}
+                    addProcessStep={addProcessStep}
+                    updateProcessStep={updateProcessStep}
+                    removeProcessStep={removeProcessStep}
+                  />
+                  <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => handleSaveSetting("process")}
+                      disabled={
+                        isSaving ||
+                        deepEqual(
+                          processContent,
+                          initialContentRef.current.process,
+                        )
+                      }
+                      data-testid="settings-page_save-process-btn"
+                      className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSaving ? "Saving..." : "Save Process Steps"}
+                    </button>
+                  </div>
+                </>
               )}
 
               {activeTab === "admin" && (
@@ -441,35 +488,60 @@ export function SettingsPage() {
               )}
 
               {activeTab === "categories" && (
-                <CategoriesTab
-                  categoriesContent={categoriesContent}
-                  addCategoryItem={addCategoryItem}
-                  updateCategoryItem={updateCategoryItem}
-                  removeCategoryItem={removeCategoryItem}
-                />
+                <>
+                  <CategoriesTab
+                    categoriesContent={categoriesContent}
+                    addCategoryItem={addCategoryItem}
+                    updateCategoryItem={updateCategoryItem}
+                    removeCategoryItem={removeCategoryItem}
+                  />
+                  <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => handleSaveSetting("categories")}
+                      disabled={
+                        isSaving ||
+                        deepEqual(
+                          categoriesContent,
+                          initialContentRef.current.categories,
+                        )
+                      }
+                      data-testid="settings-page_save-categories-btn"
+                      className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSaving ? "Saving..." : "Save Categories"}
+                    </button>
+                  </div>
+                </>
               )}
 
               {activeTab === "testimonials" && (
-                <TestimonialsTab
-                  testimonialsContent={testimonialsContent}
-                  addTestimonial={addTestimonial}
-                  updateTestimonial={updateTestimonial}
-                  removeTestimonial={removeTestimonial}
-                />
+                <>
+                  <TestimonialsTab
+                    testimonialsContent={testimonialsContent}
+                    addTestimonial={addTestimonial}
+                    updateTestimonial={updateTestimonial}
+                    removeTestimonial={removeTestimonial}
+                  />
+                  <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => handleSaveSetting("testimonials")}
+                      disabled={
+                        isSaving ||
+                        deepEqual(
+                          testimonialsContent,
+                          initialContentRef.current.testimonials,
+                        )
+                      }
+                      data-testid="settings-page_save-testimonials-btn"
+                      className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSaving ? "Saving..." : "Save Testimonials"}
+                    </button>
+                  </div>
+                </>
               )}
-
-              {/* Save Content Button (shown on all tabs) */}
-              <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
-                <button
-                  onClick={handleSaveContent}
-                  disabled={contentSaveDisabled}
-                  data-testid="settings-page_save-content-btn"
-                  className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <Save className="w-4 h-4" />
-                  {isSaving ? "Saving..." : "Save Content"}
-                </button>
-              </div>
             </>
           )}
         </div>

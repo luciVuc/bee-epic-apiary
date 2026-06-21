@@ -1,7 +1,7 @@
 import { withStripeHandler } from '../../utils';
 import Stripe from 'stripe';
 import { jsonResponse } from '../../utils';
-import { fetchAllActiveProducts, matchesSearch, matchesCategory, matchesTag, paginateArray } from './shared';
+import { fetchAllActiveProducts, matchesTag, paginateArray } from './shared';
 
 export async function handleGetProducts(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
@@ -52,10 +52,35 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		let resultData: Record<string, unknown>;
 
 		if (search || (category && category !== 'ALL') || tag) {
-			const allProducts = await fetchAllActiveProducts(stripe, expand);
-			const filtered = allProducts.filter((p) => {
-				return matchesSearch(p, search) && matchesCategory(p, category) && matchesTag(p, tag);
-			});
+			const conditions: string[] = ["active:'true'"];
+
+			if (search) {
+				const escaped = search.replace(/'/g, "''");
+				conditions.push(
+					`(name~'${escaped}' OR description~'${escaped}' OR metadata['longDescription']~'${escaped}' OR metadata['tags']~'${escaped}')`,
+				);
+			}
+
+			if (category && category !== 'ALL') {
+				const escaped = category.replace(/'/g, "''");
+				conditions.push(`metadata['category']:'${escaped}'`);
+			}
+
+			const query = conditions.join(' AND ');
+
+			const allResults: Stripe.Product[] = [];
+			let hasMore = true;
+			let page: string | undefined;
+
+			while (hasMore) {
+				const searchParams: Stripe.ProductSearchParams = { query, limit: 100, expand, page };
+				const result = (await stripe.products.search(searchParams)) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+				allResults.push(...result.data);
+				hasMore = result.has_more;
+				page = result.next_page;
+			}
+
+			const filtered = tag ? allResults.filter((p) => matchesTag(p, tag)) : allResults;
 			const paginated = paginateArray(filtered, limit, startingAfter);
 			resultData = {
 				data: paginated.data,

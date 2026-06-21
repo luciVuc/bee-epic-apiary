@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { DEFAULT_API_URL } from "../utils/constants";
-import type { IProduct, ICartItem } from "../types";
+import type { ICartItem } from "../types";
 
 interface IUseStripeCheckoutReturn {
   isProcessing: boolean;
@@ -10,10 +10,6 @@ interface IUseStripeCheckoutReturn {
 }
 
 const API_BASE_URL = DEFAULT_API_URL;
-
-const isSubscriptionProduct = (product: IProduct): boolean => {
-  return product.category?.toUpperCase() === "SUBSCRIPTIONS";
-};
 
 export const useStripeCheckout = (): IUseStripeCheckoutReturn => {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -33,41 +29,6 @@ export const useStripeCheckout = (): IUseStripeCheckoutReturn => {
     setError(null);
 
     try {
-      const hasSubscriptions = items.some((item) =>
-        isSubscriptionProduct(item.product),
-      );
-      const hasRegularProducts = items.some(
-        (item) => !isSubscriptionProduct(item.product),
-      );
-
-      if (hasSubscriptions && hasRegularProducts) {
-        setError(
-          "Cannot mix subscription and regular products. Please checkout separately.",
-        );
-        setIsProcessing(false);
-        return;
-      }
-
-      if (hasSubscriptions) {
-        const paymentLinkIds = items
-          .filter((item) => isSubscriptionProduct(item.product))
-          .map((item) => item.product.stripePaymentLinkId)
-          .filter((id): id is string => !!id && !id.includes("REPLACE"));
-
-        if (paymentLinkIds.length === 0) {
-          setError(
-            "No valid subscription for checkout. Please contact support.",
-          );
-          setIsProcessing(false);
-          return;
-        }
-
-        const paymentLinkId = paymentLinkIds[0];
-        const url = `https://buy.stripe.com/${paymentLinkId}?prefilled_email=`;
-        window.location.href = url;
-        return;
-      }
-
       const validItems = items.filter((item) => {
         const priceId = item.product.stripePriceId;
         return (

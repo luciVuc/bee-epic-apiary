@@ -72,7 +72,6 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 				body: await buildEmailBody(emailFormat, templateData),
 			};
 
-			console.log('Sending to Formspark with payload:', formsparkBody);
 			const formsparkRes = await fetch(`https://submit-form.com/${formsparkFormId}`, {
 				method: 'POST',
 				headers: {

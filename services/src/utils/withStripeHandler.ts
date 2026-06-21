@@ -6,8 +6,18 @@ import { IAPIResponseError } from '../types';
 let stripeInstance: Stripe | null = null;
 
 /**
+ * Override the Stripe instance for testing purposes.
+ * Calling this with a mock Stripe instance will cause all subsequent
+ * getStripeInstance calls to return the provided instance instead.
+ */
+export function setStripeInstance(mock: Stripe | null): void {
+	stripeInstance = mock;
+}
+
+/**
  * Gets or initializes a lazy singleton Stripe client instance.
  * Uses `STRIPE_SECRET_KEY` from env and a fixed API version.
+ * Can be overridden for testing via setStripeInstance().
  */
 function getStripeInstance(env: Env): Stripe {
 	if (!stripeInstance) {
