@@ -13,6 +13,7 @@ interface __BaseEnv_Env {
 	ALLOWED_ORIGINS: string;
 	API_SECRET_KEY: string;
 	NOTIFICATION_HUB: DurableObjectNamespace<import('./src/index').NotificationHub>;
+	RATE_LIMITER: DurableObjectNamespace<import('./src/index').RateLimiterDO>;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -30,6 +31,7 @@ declare namespace Cloudflare {
 		ALLOWED_ORIGINS: string;
 		API_SECRET_KEY: string;
 		NOTIFICATION_HUB: DurableObjectNamespace<import('./src/index').NotificationHub>;
+		RATE_LIMITER: DurableObjectNamespace<import('./src/index').RateLimiterDO>;
 	}
 	interface Env extends __BaseEnv_Env {}
 }

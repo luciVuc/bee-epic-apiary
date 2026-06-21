@@ -73,9 +73,15 @@
 	],
 	"send_email": [{ "name": "EMAIL", "remote": true }],
 	"durable_objects": {
-		"bindings": [{ "name": "NOTIFICATION_HUB", "class_name": "NotificationHub" }],
+		"bindings": [
+			{ "name": "NOTIFICATION_HUB", "class_name": "NotificationHub" },
+			{ "name": "RATE_LIMITER", "class_name": "RateLimiterDO" },
+		],
 	},
-	"migrations": [{ "tag": "v1", "new_sqlite_classes": ["NotificationHub"] }],
+	"migrations": [
+		{ "tag": "v1", "new_sqlite_classes": ["NotificationHub"] },
+		{ "tag": "v2", "new_sqlite_classes": ["RateLimiterDO"] },
+	],
 	"env": {
 		"development": {
 			"kv_namespaces": [
@@ -85,9 +91,15 @@
 			"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "http://localhost:5174" },
 			"send_email": [{ "name": "EMAIL", "remote": false }],
 			"durable_objects": {
-				"bindings": [{ "name": "NOTIFICATION_HUB", "class_name": "NotificationHub" }],
+				"bindings": [
+					{ "name": "NOTIFICATION_HUB", "class_name": "NotificationHub" },
+					{ "name": "RATE_LIMITER", "class_name": "RateLimiterDO" },
+				],
 			},
-			"migrations": [{ "tag": "v1", "new_sqlite_classes": ["NotificationHub"] }],
+			"migrations": [
+				{ "tag": "v1", "new_sqlite_classes": ["NotificationHub"] },
+				{ "tag": "v2", "new_sqlite_classes": ["RateLimiterDO"] },
+			],
 		},
 	},
 }

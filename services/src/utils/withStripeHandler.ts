@@ -57,11 +57,11 @@ export function withStripeHandler(method: HttpMethod, handler: StripeHandler, op
 			if (!auth.authenticated) return auth.error!;
 		}
 
-		if (env.RATE_LIMIT_KV) {
+		if (env.RATE_LIMITER) {
 			const url = new URL(request.url);
 			const clientIP =
 				(request as Request<unknown, IncomingRequestCfProperties>).cf?.connectingIp || request.headers.get('CF-Connecting-IP') || 'unknown';
-			const rateLimiter = new RateLimiter(env.RATE_LIMIT_KV, {
+			const rateLimiter = new RateLimiter(env.RATE_LIMITER, {
 				maxRequests: parseInt(env.RATE_LIMIT_MAX, 10),
 				windowSeconds: parseInt(env.RATE_LIMIT_WINDOW, 10),
 			});

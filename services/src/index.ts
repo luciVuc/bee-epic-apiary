@@ -9,8 +9,9 @@
 
 import router from './router';
 import { NotificationHub } from './notifications/notification-hub';
+import { RateLimiterDO } from './utils/rate-limiter-do';
 
-export { NotificationHub };
+export { NotificationHub, RateLimiterDO };
 
 /**
  * Default export for Cloudflare Worker
