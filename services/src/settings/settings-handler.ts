@@ -1,6 +1,6 @@
 import { ESettingsType, SettingsType } from '../types';
 import { jsonResponse, checkAuth, isAllowedOrigin } from '../utils';
-import { categorySchema } from './schemas';
+import { siteContentSchema, processStepsSchema, testimonialsSchema, categorySchema } from './schemas';
 
 async function settingsHandler(request: Request, env: Env): Promise<Response> {
 	const url = new URL(request.url);
@@ -39,11 +39,23 @@ async function settingsHandler(request: Request, env: Env): Promise<Response> {
 			return jsonResponse({ error: 'Invalid JSON body' }, 400, origin, env);
 		}
 
-		if (type === ESettingsType.CATEGORIES) {
-			const result = categorySchema.safeParse(body);
-			if (!result.success) {
-				return jsonResponse({ error: 'Invalid categories data', details: result.error }, 400, origin, env);
-			}
+		let parseResult;
+		switch (type) {
+			case ESettingsType.SITE:
+				parseResult = siteContentSchema.safeParse(body);
+				break;
+			case ESettingsType.PROCESS:
+				parseResult = processStepsSchema.safeParse(body);
+				break;
+			case ESettingsType.TESTIMONIALS:
+				parseResult = testimonialsSchema.safeParse(body);
+				break;
+			case ESettingsType.CATEGORIES:
+				parseResult = categorySchema.safeParse(body);
+				break;
+		}
+		if (parseResult && !parseResult.success) {
+			return jsonResponse({ error: `Invalid ${type} data`, details: parseResult.error }, 400, origin, env);
 		}
 
 		await env.CONTENT_KV.put(type, JSON.stringify(body));
