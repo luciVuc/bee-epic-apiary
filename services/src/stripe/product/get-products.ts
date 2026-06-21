@@ -17,11 +17,27 @@ export async function handleGetProducts(stripe: Stripe, request: Request, env: E
 		const tag = url.searchParams.get('tag') || '';
 
 		if (productId) {
-			const retrieveParams: Stripe.ProductRetrieveParams = {};
-			if (expand) {
-				retrieveParams.expand = expand;
+			let product: Stripe.Product;
+
+			if (productId.startsWith('prod_')) {
+				const retrieveParams: Stripe.ProductRetrieveParams = {};
+				if (expand) {
+					retrieveParams.expand = expand;
+				}
+				product = (await stripe.products.retrieve(productId, retrieveParams)) as Stripe.Response<Stripe.Product>;
+			} else {
+				const searchQuery = `metadata['slug']:'${productId.replace(/'/g, "''")}'`;
+				const searchParams: Stripe.ProductSearchParams = {
+					query: searchQuery,
+					limit: 1,
+					expand,
+				};
+				const result = (await stripe.products.search(searchParams)) as Stripe.Response<Stripe.ApiList<Stripe.Product>>;
+				if (result.data.length === 0) {
+					return jsonResponse({ error: 'Product not found' }, 404, origin, env);
+				}
+				product = result.data[0];
 			}
-			const product = (await stripe.products.retrieve(productId, retrieveParams)) as Stripe.Response<Stripe.Product>;
 
 			if (!product.active) {
 				return jsonResponse({ error: 'Product not found' }, 404, origin, env);

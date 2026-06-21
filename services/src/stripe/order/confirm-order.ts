@@ -1,6 +1,6 @@
 import Stripe from 'stripe';
-import { IConfirmOrderBody, IOrderTemplateData, ISiteContent, IEmailMessageBuilder } from '../../types';
-import { withStripeHandler, jsonResponse, buildEmailBody } from '../../utils';
+import { IOrderTemplateData, ISiteContent, IEmailMessageBuilder } from '../../types';
+import { buildEmailBody } from '../../utils';
 
 async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Checkout.Session, env: Env): Promise<void> {
 	try {
@@ -81,27 +81,3 @@ export async function confirmOrder(sessionId: string, stripe: Stripe, env: Env):
 
 	await sendOrderNotificationEmail(sessionId, session, env);
 }
-
-export async function handleConfirmOrder(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
-	try {
-		const body = (await request.json()) as IConfirmOrderBody;
-
-		if (!body.sessionId || typeof body.sessionId !== 'string') {
-			return jsonResponse({ error: 'sessionId is required' }, 400, origin, env);
-		}
-
-		await confirmOrder(body.sessionId, stripe, env);
-
-		return jsonResponse({ success: true }, 200, origin, env);
-	} catch (error: unknown) {
-		const err = error as { statusCode?: number; message?: string };
-		console.error('Confirm order error:', err);
-		const statusCode = err.statusCode || 500;
-		const message = statusCode < 500 ? err.message || 'An error occurred' : 'An error occurred';
-		return jsonResponse({ error: message }, statusCode, origin, env);
-	}
-}
-
-export default {
-	fetch: withStripeHandler('POST', handleConfirmOrder),
-} satisfies ExportedHandler<Env>;

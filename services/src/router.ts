@@ -8,7 +8,6 @@ import createPriceHandler from './stripe/price/create-price';
 import getOrdersHandler from './stripe/order/get-orders';
 import updateOrderHandler from './stripe/order/update-order';
 import settingsHandler from './settings/settings-handler';
-import confirmOrderHandler from './stripe/order/confirm-order';
 import notificationsStreamHandler from './stripe/notifications/notifications-stream';
 import contactHandler from './contact/contact-handler';
 import webhookHandler from './stripe/webhook/webhook-handler';
@@ -82,13 +81,6 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 			response.headers.set('Access-Control-Allow-Methods', 'PUT, DELETE, GET, OPTIONS');
 			return response;
 		}
-		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
-	}
-
-	// Route: /orders/confirm (public — must precede /orders/:id regex)
-	if (pathname === '/orders/confirm' || pathname === '/orders/confirm/') {
-		if (request.method === 'POST') return confirmOrderHandler.fetch(request, env);
-		if (request.method === 'OPTIONS') return handleCORS(request, env, 'POST');
 		return jsonResponse({ error: 'Method not allowed' }, 405, origin, env);
 	}
 

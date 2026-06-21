@@ -7,7 +7,10 @@ import type {
   ICategory,
 } from "../types";
 import { DEFAULT_API_URL, DEFAULT_SITE } from "./constants";
-import { transformStripeProductsList } from "./transform";
+import {
+  transformStripeProduct,
+  transformStripeProductsList,
+} from "./transform";
 
 /** Base URL for the services API, configured via VITE_API_URL env var */
 const API_BASE_URL = DEFAULT_API_URL;
@@ -64,6 +67,21 @@ export async function fetchProducts(): Promise<IProduct[]> {
   }
   const data = await response.json();
   return transformStripeProductsList(data);
+}
+
+/** Fetch a single product by slug from GET /products/:slug (uses Stripe search API) */
+export async function fetchProductBySlug(
+  slug: string,
+): Promise<IProduct | null> {
+  const response = await fetch(
+    `${API_BASE_URL}/products/${encodeURIComponent(slug)}?expand[]=data.default_price`,
+  );
+  if (response.status === 404) return null;
+  if (!response.ok) {
+    throw new Error(`Failed to fetch product: ${response.statusText}`);
+  }
+  const data = await response.json();
+  return transformStripeProduct(data);
 }
 
 /** Fetch paginated products with search, category filter, tag filter, and cursor-based pagination */

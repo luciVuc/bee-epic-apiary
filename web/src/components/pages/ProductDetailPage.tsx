@@ -15,7 +15,7 @@ import { LoadingSpinner } from "../ui/LoadingSpinner";
 import { SeoHead } from "../seo/SeoHead";
 import { useCart } from "../../hooks/useCart";
 import { formatPrice } from "../../utils/formatters";
-import { fetchProducts } from "../../utils/api";
+import { fetchProductBySlug } from "../../utils/api";
 import { productSchema, breadcrumbSchema } from "../../utils/structuredData";
 import type { IProduct } from "../../types";
 
@@ -30,10 +30,13 @@ export function ProductDetailPage() {
   const [fetchError, setFetchError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetchProducts()
-      .then((products) => {
-        const found = products.find((p) => p.slug === slug);
-        setProduct(found || null);
+    if (!slug) {
+      setLoading(false);
+      return;
+    }
+    fetchProductBySlug(slug)
+      .then((product) => {
+        setProduct(product);
       })
       .catch((err) => {
         setFetchError(
