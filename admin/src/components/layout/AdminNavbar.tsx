@@ -127,14 +127,14 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               aria-hidden="true"
             >
               <img
-                data-testid="admin-navbar_logo"
+                data-testid="admin-navbar_logo-mobile"
                 src={logo || DEFAULT_LOGO}
                 alt={`${businessName} logo`}
                 className="h-7 w-auto"
               />
               <h1
                 className="font-heading text-xl font-bold text-dark-900 hidden sm:block"
-                data-testid="admin-navbar_title"
+                data-testid="admin-navbar_title-mobile"
               >
                 {title}
               </h1>
@@ -145,14 +145,14 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               className="hidden md:flex items-center gap-3"
             >
               <img
-                data-testid="admin-navbar_logo"
+                data-testid="admin-navbar_logo-desktop"
                 src={logo || DEFAULT_LOGO}
                 alt={`${businessName} logo`}
                 className="h-8 w-auto"
               />
               <h1
                 className="font-heading text-2xl font-bold text-dark-900"
-                data-testid="admin-navbar_title"
+                data-testid="admin-navbar_title-desktop"
               >
                 {title}
               </h1>

@@ -100,10 +100,9 @@ Detailed documentation for all source code is available in [SOURCE.md](./SOURCE.
 
 ## Deployment
 
-1. **Create KV namespaces**:
+1. **Create KV namespace for content storage**:
 
    ```bash
-   npx wrangler kv namespace create "RATE_LIMIT_KV"
    npx wrangler kv namespace create "CONTENT_KV"
    ```
 

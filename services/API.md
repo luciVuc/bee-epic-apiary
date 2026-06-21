@@ -502,10 +502,11 @@ Updates content settings for the specified type.
 
 ## Rate Limiting
 
-- Configured via `RATE_LIMIT_KV` KV namespace binding
+- Configured via `RATE_LIMITER` Durable Object namespace binding
 - Default: 100 requests per minute per IP (configurable via `RATE_LIMIT_MAX` and `RATE_LIMIT_WINDOW` vars in `wrangler.jsonc`)
 - Uses Cloudflare's trusted `cf.connectingIp` field to prevent IP spoofing
-- Rate limiting is disabled if `RATE_LIMIT_KV` binding is not configured
+- Rate limiting is disabled if `RATE_LIMITER` binding is not configured
+- Uses a Durable Object for atomic counting (no race conditions under concurrent requests)
 
 **Rate Limit Exceeded Response**:
 
@@ -551,12 +552,11 @@ See [AGENTS.md](./AGENTS.md#environment-variables) for full details.
 ## Setup
 
 1. Install dependencies: `npm install`
-2. Create KV namespaces:
+2. Create KV namespace for content:
    ```bash
-   npx wrangler kv namespace create "RATE_LIMIT_KV"
    npx wrangler kv namespace create "CONTENT_KV"
    ```
-3. Update `wrangler.jsonc` with the KV namespace IDs
+3. Update `wrangler.jsonc` with the KV namespace ID
 4. Set secrets: `npx wrangler secret put STRIPE_SECRET_KEY` and `npx wrangler secret put ALLOWED_ORIGINS`
 5. (Optional) Set API key: `npx wrangler secret put API_SECRET_KEY`
 6. Deploy: `npm run deploy`

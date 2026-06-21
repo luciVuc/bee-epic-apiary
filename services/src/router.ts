@@ -19,9 +19,9 @@ import { jsonResponse, handleCORS } from './utils';
  * Handles CORS preflight, method validation, and authentication for protected routes.
  *
  * Routes:
- *   POST /checkout, POST /contact, POST /prices,
+ *   POST /stripe/webhook, POST /checkout, POST /contact, POST /prices,
  *   GET|POST /products, GET /products/count, GET|PUT|DELETE /products/:id,
- *   GET|POST /orders/confirm, GET|PUT /orders/:id, GET /orders,
+ *   GET|PUT /orders/:id, GET /orders,
  *   GET /notifications/stream, GET|PUT /settings/:type
  *
  * @param request - Incoming HTTP request

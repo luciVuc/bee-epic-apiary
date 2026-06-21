@@ -44,9 +44,8 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 
 ### Services Specifics (Cloudflare Worker)
 
-- **Must** create KV namespaces before deploy:
+- **Must** create KV namespace before deploy:
   ```bash
-  npx wrangler kv namespace create "RATE_LIMIT_KV"
   npx wrangler kv namespace create "CONTENT_KV"
   ```
 - After changing `wrangler.jsonc` bindings: `npm run cf-typegen`
@@ -91,11 +90,11 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - **`src/router.ts`**: Manual route matching (no framework)
 - All handlers follow `{ fetch(request, env): Promise<Response> }` interface via `withStripeHandler` wrapper
 - Stripe API version: `2026-05-27.dahlia` (in `withStripeHandler.ts`)
-- Rate limiting: KV-based, 100 req/min per IP
+- Rate limiting: Durable Object-based, 100 req/min per IP (atomic counting)
 - API key auth for mutating product endpoints if `API_SECRET_KEY` set
-- **Routes**: `POST /checkout`, `POST /contact`, `POST /prices`, `GET|POST /products`, `GET /products/count`, `GET|PUT|DELETE /products/:id`, `GET|POST /orders/confirm`, `GET|PUT /orders/:id`, `GET /orders`, `GET /notifications/stream`, `GET|PUT /settings/:type` (site\|process\|testimonials\|categories)
+- **Routes**: `POST /stripe/webhook`, `POST /checkout`, `POST /contact`, `POST /prices`, `GET|POST /products`, `GET /products/count`, `GET|PUT|DELETE /products/:id`, `GET|PUT /orders/:id`, `GET /orders`, `GET /notifications/stream`, `GET|PUT /settings/:type` (site\|process\|testimonials\|categories)
 - After changing `wrangler.jsonc` bindings: `npm run services:cf-typegen`
-- KV namespaces: `CONTENT_KV` (settings storage), `RATE_LIMIT_KV`
+- KV namespaces: `CONTENT_KV` (settings storage)
 - Env vars: `STRIPE_SECRET_KEY`, `ALLOWED_ORIGINS`, `API_SECRET_KEY` (Wrangler secrets); `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`, `ADMIN_BASE_URL` (wrangler.jsonc vars)
 - **Email Routing**: All transactional emails (contact form + order notifications) route through Formspark if `formsparkFormId` is configured in site content, otherwise through Cloudflare Email Service (`env.EMAIL.send()`). The `send_email` binding `from` domain must be onboarded via `npx wrangler email sending enable yourdomain.com`.
 
@@ -116,7 +115,7 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - root `package.json` delegates to sub-packages via `npm run <script> --prefix <dir>`
 - Stripe touches all 3 packages (admin CRUD, services backend, web checkout)
 - `admin/src/utils/api.ts` uses axios; `web/src/utils/api.ts` uses native fetch
-- Local dev requires KV namespaces created (`npx wrangler kv namespace create "RATE_LIMIT_KV"` etc.)
+- Local dev requires KV namespace created (`npx wrangler kv namespace create "CONTENT_KV"`)
 - services has observability + source maps enabled in wrangler config
 - `npm run build` includes `services:deploy` (= actual Cloudflare Worker deploy, not just build)
 - `npm run deploy` deploys all 3: Worker via Wrangler, web + admin via Cloudflare Pages

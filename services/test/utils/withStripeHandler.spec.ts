@@ -80,14 +80,15 @@ describe('withStripeHandler', () => {
 			method: 'POST',
 			headers: { Origin: 'https://example.com', 'CF-Connecting-IP': '127.0.0.1' },
 		});
-		const mockKV = {
-			get: vi.fn().mockResolvedValue('100'),
-			put: vi.fn().mockResolvedValue(undefined),
+		const mockDO = {
+			getByName: vi.fn().mockReturnValue({
+				check: vi.fn().mockResolvedValue({ allowed: false, remaining: 0, resetTime: Math.floor(Date.now() / 1000) + 60 }),
+			}),
 		};
 		const env = {
 			ALLOWED_ORIGINS: 'https://example.com',
 			STRIPE_SECRET_KEY: 'sk_test_123',
-			RATE_LIMIT_KV: mockKV,
+			RATE_LIMITER: mockDO,
 			RATE_LIMIT_MAX: '100',
 			RATE_LIMIT_WINDOW: '60',
 		} as unknown as Env;

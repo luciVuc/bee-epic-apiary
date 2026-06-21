@@ -56,7 +56,8 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
   - `isAllowedOrigin.ts`: Validates request origins against `ALLOWED_ORIGINS` env var
   - `isValidUrl.ts`: URL validation utility
   - `jsonResponse.ts`: Standardized JSON response helper with CORS headers
-  - `rateLimiter.ts`: KV-based rate limiting class
+  - `rateLimiter.ts`: Durable Object-based rate limiting class
+  - `rate-limiter-do.ts`: Atomic rate limiting Durable Object
   - `withStripeHandler.ts`: Wrapper for Stripe handlers (centralizes CORS, rate limiting, origin validation, Stripe initialization)
 
 ### Bindings
@@ -120,9 +121,8 @@ API_SECRET_KEY=dev-api-key-change-me
 ## Gotchas
 
 - **No `dotenv` runtime loading**: This worker uses Cloudflare Workers' native env bindings, not `dotenv`. Env vars are set via Wrangler secrets or `.env` for local development.
-- **KV Namespaces**: You must create two KV namespaces before deploying:
+- **KV Namespaces**: You must create one KV namespace before deploying:
   ```bash
-  npx wrangler kv namespace create "RATE_LIMIT_KV"
   npx wrangler kv namespace create "CONTENT_KV"
   ```
   Copy the namespace IDs and replace the placeholders in `wrangler.jsonc` (both production and development environments).

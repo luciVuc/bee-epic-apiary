@@ -42,11 +42,6 @@ export interface ICommTemplateData {
 	message: string;
 }
 
-/** Request body for POST /orders/confirm */
-export interface IConfirmOrderBody {
-	sessionId: string;
-}
-
 /** Supported email body formats */
 export type EmailFormat = 'text' | 'markdown' | 'html';
 
