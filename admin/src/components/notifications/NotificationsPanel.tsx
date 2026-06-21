@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import type { IOrder } from "../../types/order";
+import { formatPrice } from "../../utils/badgeClasses";
 
 interface INotificationsPanelProps {
   isOpen: boolean;
@@ -74,7 +75,7 @@ export function NotificationsPanel({
                         "Unknown customer"}
                     </p>
                     <p className="text-sm text-dark-400">
-                      New order &middot; ${(order.amountTotal / 100).toFixed(2)}{" "}
+                      New order &middot; {formatPrice(order.amountTotal)}{" "}
                       {order.currency.toUpperCase()}
                     </p>
                     <p className="text-xs text-dark-500">

@@ -21,6 +21,7 @@ import {
   DEFAULT_CATEGORIES,
   NEW_ORDER_EVENT,
 } from "../utils/constants";
+import { formatPrice } from "../utils/badgeClasses";
 import { Spinner } from "../components/shared/Spinner";
 import type { ICategory } from "../types/settings";
 import * as api from "../utils/api";
@@ -306,7 +307,7 @@ export function DashboardPage() {
               <div className="flex-1">
                 <h4 className="font-medium text-dark-800">{product.name}</h4>
                 <p className="text-sm text-dark-500">
-                  ${(product.price / 100).toFixed(2)} • {product.category}
+                  {formatPrice(product.price)} • {product.category}
                 </p>
                 {product.recurringInterval && (
                   <p className="text-xs text-blue-600">
