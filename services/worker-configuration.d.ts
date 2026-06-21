@@ -9,6 +9,7 @@ interface __BaseEnv_Env {
 	RATE_LIMIT_WINDOW: '60';
 	ADMIN_BASE_URL: 'http://localhost:5174' | '';
 	STRIPE_SECRET_KEY: string;
+	STRIPE_WEBHOOK_SECRET: string;
 	ALLOWED_ORIGINS: string;
 	API_SECRET_KEY: string;
 	NOTIFICATION_HUB: DurableObjectNamespace<import('./src/index').NotificationHub>;
@@ -40,7 +41,13 @@ declare namespace NodeJS {
 	interface ProcessEnv extends StringifyValues<
 		Pick<
 			Cloudflare.Env,
-			'RATE_LIMIT_MAX' | 'RATE_LIMIT_WINDOW' | 'ADMIN_BASE_URL' | 'STRIPE_SECRET_KEY' | 'ALLOWED_ORIGINS' | 'API_SECRET_KEY'
+			| 'RATE_LIMIT_MAX'
+			| 'RATE_LIMIT_WINDOW'
+			| 'ADMIN_BASE_URL'
+			| 'STRIPE_SECRET_KEY'
+			| 'STRIPE_WEBHOOK_SECRET'
+			| 'ALLOWED_ORIGINS'
+			| 'API_SECRET_KEY'
 		>
 	> {}
 }

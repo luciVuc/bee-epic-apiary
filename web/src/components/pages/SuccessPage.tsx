@@ -10,7 +10,6 @@ import {
   Clipboard,
   Check,
 } from "lucide-react";
-import { DEFAULT_API_URL } from "../../utils/constants";
 import { clearCart } from "../../store/cartSlice";
 import { Button } from "../ui/Button";
 import { SeoHead } from "../seo/SeoHead";
@@ -43,20 +42,10 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
     }
   }, [dispatch]);
 
-  const hasConfirmed = useRef(false);
   const sessionId = searchParams.get("session_id");
 
   useEffect(() => {
-    if (sessionId && !hasConfirmed.current) {
-      hasConfirmed.current = true;
-      const apiBaseUrl = DEFAULT_API_URL;
-      fetch(`${apiBaseUrl}/orders/confirm`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId }),
-      }).catch(() => {
-        // fire-and-forget — non-critical
-      });
+    if (sessionId) {
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, [sessionId]);

@@ -11,6 +11,7 @@ import settingsHandler from './settings/settings-handler';
 import confirmOrderHandler from './stripe/order/confirm-order';
 import notificationsStreamHandler from './stripe/notifications/notifications-stream';
 import contactHandler from './contact/contact-handler';
+import webhookHandler from './stripe/webhook/webhook-handler';
 import { jsonResponse, handleCORS } from './utils';
 
 /**
@@ -32,6 +33,11 @@ export const router = async (request: Request, env: Env): Promise<Response> => {
 	const url = new URL(request.url);
 	const pathname = url.pathname;
 	const origin = request.headers.get('Origin');
+
+	// Route: /stripe/webhook (public — Stripe server-to-server, no CORS)
+	if (pathname === '/stripe/webhook' || pathname === '/stripe/webhook/') {
+		return webhookHandler.fetch(request, env);
+	}
 
 	// Route: /checkout
 	if (pathname === '/checkout' || pathname === '/checkout/') {

@@ -68,6 +68,20 @@ async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Che
 	}
 }
 
+export async function confirmOrder(sessionId: string, stripe: Stripe, env: Env): Promise<void> {
+	const session = await stripe.checkout.sessions.retrieve(sessionId);
+	if (session.payment_status !== 'paid') return;
+
+	await stripe.checkout.sessions.update(sessionId, {
+		metadata: { order_status: 'new' },
+	});
+
+	const stub = env.NOTIFICATION_HUB.getByName('default');
+	await stub.notify(sessionId);
+
+	await sendOrderNotificationEmail(sessionId, session, env);
+}
+
 export async function handleConfirmOrder(stripe: Stripe, request: Request, env: Env, origin: string | null): Promise<Response> {
 	try {
 		const body = (await request.json()) as IConfirmOrderBody;
@@ -76,19 +90,7 @@ export async function handleConfirmOrder(stripe: Stripe, request: Request, env: 
 			return jsonResponse({ error: 'sessionId is required' }, 400, origin, env);
 		}
 
-		const session = await stripe.checkout.sessions.retrieve(body.sessionId);
-		if (session.payment_status !== 'paid') {
-			return jsonResponse({ error: 'Session not paid' }, 400, origin, env);
-		}
-
-		await stripe.checkout.sessions.update(body.sessionId, {
-			metadata: { order_status: 'new' },
-		});
-
-		const stub = env.NOTIFICATION_HUB.getByName('default');
-		await stub.notify(body.sessionId);
-
-		await sendOrderNotificationEmail(body.sessionId, session, env);
+		await confirmOrder(body.sessionId, stripe, env);
 
 		return jsonResponse({ success: true }, 200, origin, env);
 	} catch (error: unknown) {
