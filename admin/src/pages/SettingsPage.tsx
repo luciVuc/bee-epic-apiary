@@ -481,10 +481,26 @@ export function SettingsPage() {
               )}
 
               {activeTab === "admin" && (
-                <AdminConfigTab
-                  siteContent={siteContent}
-                  onSiteChange={updateSite}
-                />
+                <>
+                  <AdminConfigTab
+                    siteContent={siteContent}
+                    onSiteChange={updateSite}
+                  />
+                  <div className="mt-6 flex justify-end pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <button
+                      onClick={() => handleSaveSetting("site")}
+                      disabled={
+                        isSaving ||
+                        deepEqual(siteContent, initialContentRef.current.site)
+                      }
+                      data-testid="settings-page_save-admin-config-btn"
+                      className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <Save className="w-4 h-4" />
+                      {isSaving ? "Saving..." : "Save Admin Config"}
+                    </button>
+                  </div>
+                </>
               )}
 
               {activeTab === "categories" && (
