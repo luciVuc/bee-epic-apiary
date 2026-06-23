@@ -3,14 +3,17 @@ import cartReducer from "./cartSlice";
 import uiReducer from "./uiSlice";
 import { persistenceMiddleware } from "./persistenceMiddleware";
 
+const rootReducer = { cart: cartReducer, ui: uiReducer };
+
+export type RootState = {
+  cart: ReturnType<typeof cartReducer>;
+  ui: ReturnType<typeof uiReducer>;
+};
+
 export const store = configureStore({
-  reducer: {
-    cart: cartReducer,
-    ui: uiReducer,
-  },
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(persistenceMiddleware),
 });
 
-export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
