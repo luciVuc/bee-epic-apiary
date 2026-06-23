@@ -76,8 +76,12 @@ export async function confirmOrder(sessionId: string, stripe: Stripe, env: Env):
 		metadata: { order_status: 'new' },
 	});
 
-	const stub = env.NOTIFICATION_HUB.getByName('default');
-	await stub.notify(sessionId);
+	try {
+		const stub = env.NOTIFICATION_HUB.getByName('default');
+		await stub.notify(sessionId);
+	} catch (error) {
+		console.error('Failed to send admin notification:', error);
+	}
 
 	await sendOrderNotificationEmail(sessionId, session, env);
 }

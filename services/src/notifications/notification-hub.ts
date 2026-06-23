@@ -27,15 +27,22 @@ export class NotificationHub extends DurableObject {
 	}
 
 	async alarm(): Promise<void> {
-		this.connections = this.connections.filter((conn) => {
-			try {
-				conn.writer.write(this.encoder.encode(': heartbeat\n\n'));
-				return true;
-			} catch {
-				return false;
-			}
-		});
+		this.connections = await this.cleanupConnections();
 		await this.scheduleAlarm();
+	}
+
+	private async cleanupConnections(): Promise<IConnection[]> {
+		const alive: IConnection[] = [];
+		for (const conn of this.connections) {
+			try {
+				const writer = conn.writer;
+				await writer.write(this.encoder.encode(': heartbeat\n\n'));
+				alive.push(conn);
+			} catch {
+				// connection closed, skip
+			}
+		}
+		return alive;
 	}
 
 	async notify(sessionId: string): Promise<void> {
@@ -47,20 +54,22 @@ export class NotificationHub extends DurableObject {
 			this.pendingNotifications.shift();
 		}
 
-		this.broadcast(notification);
+		await this.broadcast(notification);
 	}
 
-	private broadcast(notification: INotification): void {
+	private async broadcast(notification: INotification): Promise<void> {
 		const message = this.encoder.encode(`event: new-order\ndata: ${JSON.stringify({ sessionId: notification.sessionId })}\n\n`);
 
-		this.connections = this.connections.filter((conn) => {
+		const alive: IConnection[] = [];
+		for (const conn of this.connections) {
 			try {
-				conn.writer.write(message);
-				return true;
+				await conn.writer.write(message);
+				alive.push(conn);
 			} catch {
-				return false;
+				// connection closed, skip
 			}
-		});
+		}
+		this.connections = alive;
 	}
 
 	async fetch(request: Request): Promise<Response> {
@@ -68,10 +77,9 @@ export class NotificationHub extends DurableObject {
 		const { readable, writable } = new TransformStream();
 		const writer = writable.getWriter();
 
-		writer.write(this.encoder.encode('event: connected\ndata: {}\n\n'));
-
+		writer.write(this.encoder.encode('event: connected\ndata: {}\n\n')).catch(() => {});
 		for (const n of this.pendingNotifications) {
-			writer.write(this.encoder.encode(`event: new-order\ndata: ${JSON.stringify({ sessionId: n.sessionId })}\n\n`));
+			writer.write(this.encoder.encode(`event: new-order\ndata: ${JSON.stringify({ sessionId: n.sessionId })}\n\n`)).catch(() => {});
 		}
 
 		const conn: IConnection = { writer };

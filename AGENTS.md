@@ -55,10 +55,11 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 ### Admin App Specifics
 
 - Dev server proxies `/api` → `http://localhost:8787` (strips `/api` prefix)
-- API Auth: Bearer token from localStorage settings or `VITE_API_SECRET_KEY` fallback
+- API Auth: Bearer token from `VITE_API_SECRET_KEY` env var (build-time). No localStorage fallback.
 - Settings storage:
-  - Admin config (API URL, keys) → localStorage
-  - Site content (business info, etc.) → worker KV
+  - Admin config (API URL, secret key) → Vite build-time env vars (`VITE_API_URL`, `VITE_API_SECRET_KEY`). **Not stored in localStorage.**
+  - Site content (business info, settings) → worker KV via `GET|PUT /settings/:type`
+  - Dark/light theme preference → localStorage (`"theme"` key) — the only localStorage usage
 - **Dynamic navbar title**: `AdminNavbar` fetches `businessName` from `GET /settings/site`
   - Displays `"{businessName} Admin"` (falls back to `"Admin"`)
   - **Never** hardcode site-specific display values from `ISiteContent`
