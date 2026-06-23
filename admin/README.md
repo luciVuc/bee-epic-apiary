@@ -157,7 +157,7 @@ Connect your GitHub repo to Cloudflare Pages in the dashboard:
 
 Environment variables: `VITE_API_URL`, `VITE_STRIPE_PUBLISHABLE_KEY`, `VITE_API_SECRET_KEY`.
 
-**Important**: The admin panel has no login page — it relies on the bearer token from `VITE_API_SECRET_KEY`. Consider putting **Cloudflare Access** in front of the Pages site for an authentication layer.
+**Important**: The admin panel has no login page — it relies on the bearer token from `VITE_API_SECRET_KEY` (build-time env var, not stored in localStorage). In production, put **Cloudflare Access** in front of the Pages site to require real user login.
 
 ### CLI Deploy
 
@@ -175,5 +175,5 @@ Pushes to `main` or `release` run the `.github/workflows/deploy.yml` workflow, w
 
 - Runs on port 5174 by default
 - API requests are proxied to the Cloudflare Worker during development (Vite proxy rewrites `/api` -> `/`)
-- Settings storage: Admin config saved to localStorage; site content saved to worker KV
+- Settings storage: Admin config comes from Vite build-time env vars (`VITE_API_URL`, `VITE_API_SECRET_KEY`); site content saved to worker KV via API
 - Product CRUD creates both a Stripe product and a Stripe price, with rollback on failure
