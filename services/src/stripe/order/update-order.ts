@@ -27,6 +27,16 @@ export async function handleUpdateOrder(stripe: Stripe, request: Request, env: E
 		}
 
 		const session = await stripe.checkout.sessions.update(orderId, updateParams);
+
+		if (body.metadata?.order_status === 'new') {
+			try {
+				const stub = env.NOTIFICATION_HUB.getByName('default');
+				await stub.notify(orderId);
+			} catch (error) {
+				console.error('Failed to send admin notification on status update:', error);
+			}
+		}
+
 		return jsonResponse(session, 200, origin, env);
 	} catch (error: unknown) {
 		const err = error as { statusCode?: number; message?: string };

@@ -16,7 +16,7 @@
 		"test:coverage": "vitest run --coverage"
 	},
 	"devDependencies": {
-		"@cloudflare/vitest-pool-workers": "^0.16.10",
+		"@cloudflare/vitest-pool-workers": "^0.16.19",
 		"@eslint/js": "^10.0.1",
 		"@eslint/json": "^1.2.0",
 		"@eslint/markdown": "^8.0.2",
