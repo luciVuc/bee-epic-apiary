@@ -1,4 +1,6 @@
 /** Transform functions for converting between Stripe API shapes and admin UI shapes */
+import { z } from "zod";
+import { OrderSchema } from "@bee-epic/shared";
 import type { IProduct, IProductInput, IOrder, IOrderLineItem } from "../types";
 import { EProductCategory } from "../types";
 import { DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL } from "./constants";
@@ -9,6 +11,66 @@ import type {
 } from "../types/stripe";
 
 const DEFAULT_IMAGES = [DEFAULT_PRODUCT_IMAGE, DEFAULT_PRODUCT_THUMBNAIL];
+
+/**
+ * Lenient Zod schema describing the subset of Stripe Checkout Session fields
+ * we read in transformStripeSession. `.loose()` (Zod 4's replacement for
+ * `.passthrough()`) keeps everything else Stripe sends so unknown fields
+ * don't drop on the floor — important because Stripe extends the schema
+ * over time and we don't want a new field to fail validation.
+ *
+ * Replaces the chain of `as Record<string, unknown>` casts that used to do
+ * the same job at the type-system level only, with no runtime check
+ * (review M4). Now a misshapen response produces a clear error at the
+ * transform boundary instead of silently coercing to "" / 0 / "open" /
+ * "unpaid" / "payment".
+ */
+const StripeAddressSchema = z
+  .object({
+    line1: z.string().nullish(),
+    line2: z.string().nullish(),
+    city: z.string().nullish(),
+    state: z.string().nullish(),
+    postal_code: z.string().nullish(),
+    country: z.string().nullish(),
+  })
+  .loose();
+
+const StripeCustomerDetailsSchema = z
+  .object({
+    email: z.string().nullish(),
+    name: z.string().nullish(),
+    phone: z.string().nullish(),
+  })
+  .loose();
+
+const StripeShippingDetailsSchema = z
+  .object({
+    address: StripeAddressSchema.nullish(),
+  })
+  .loose();
+
+const StripeSessionSchema = z
+  .object({
+    id: z.string().optional(),
+    created: z.number().optional(),
+    customer_details: StripeCustomerDetailsSchema.nullish(),
+    customer_email: z.string().nullish(),
+    customer_name: z.string().nullish(),
+    customer_phone: z.string().nullish(),
+    amount_total: z.number().nullish(),
+    amount_subtotal: z.number().nullish(),
+    currency: z.string().nullish(),
+    status: z.string().nullish(),
+    payment_status: z.string().nullish(),
+    mode: z.string().nullish(),
+    metadata: z.record(z.string(), z.string()).nullish(),
+    url: z.string().nullish(),
+    shipping_details: StripeShippingDetailsSchema.nullish(),
+  })
+  .loose();
+
+type IStripeSession = z.infer<typeof StripeSessionSchema>;
 
 /**
  * Transform Stripe product to admin product format
@@ -44,6 +106,23 @@ export function transformStripeProduct(
     stripePriceId = defaultPrice;
   }
 
+  // Validate metadata.category against the known enum. Stripe metadata is a
+  // freeform string and the previous cast silently created phantom categories
+  // (typos, removed enum values) that the admin grid couldn't filter on
+  // (review I11). Default to HONEY and warn when normalization happens.
+  const validCategories = Object.values(EProductCategory) as string[];
+  const rawCategory = metadata.category;
+  const category: EProductCategory =
+    rawCategory && validCategories.includes(rawCategory)
+      ? (rawCategory as EProductCategory)
+      : EProductCategory.HONEY;
+  if (rawCategory && rawCategory !== category) {
+    console.warn(
+      `Unknown product category "${rawCategory}", defaulting to ${EProductCategory.HONEY}`,
+      { productId: stripeProduct.id },
+    );
+  }
+
   return {
     id: stripeProduct.id,
     name: stripeProduct.name,
@@ -53,7 +132,7 @@ export function transformStripeProduct(
     price: price,
     stripePriceId: stripePriceId,
     stripePaymentLinkId: metadata.stripePaymentLinkId || undefined,
-    category: (metadata.category as EProductCategory) || EProductCategory.HONEY,
+    category,
     imageUrls: imageUrls,
     thumbnailUrls: thumbnailUrls,
     inStock: metadata.inStock !== "false",
@@ -126,7 +205,7 @@ export function transformToStripePriceParams(
   return params;
 }
 
-function extractShippingAddress(session: Record<string, unknown>): {
+function extractShippingAddress(session: IStripeSession): {
   line1: string | null;
   line2: string | null;
   city: string | null;
@@ -134,12 +213,8 @@ function extractShippingAddress(session: Record<string, unknown>): {
   postalCode: string | null;
   country: string | null;
 } | null {
-  const shippingDetails = session.shipping_details as Record<
-    string,
-    unknown
-  > | null;
-  const address = shippingDetails?.address as Record<string, string> | null;
-  if (!shippingDetails || !address) return null;
+  const address = session.shipping_details?.address;
+  if (!session.shipping_details || !address) return null;
   const hasAnyField =
     address.line1 ||
     address.line2 ||
@@ -159,43 +234,41 @@ function extractShippingAddress(session: Record<string, unknown>): {
 }
 
 /**
- * Transform Stripe session to admin order format
+ * Transform Stripe session to admin order format. Validates the input
+ * with StripeSessionSchema (Zod) and the output with OrderSchema so a
+ * regression in either direction is caught at the boundary (review M4).
  */
 export function transformStripeSession(
   session: Record<string, unknown>,
 ): IOrder {
-  const metadata = (session.metadata as Record<string, string>) || {};
-  return {
-    id: (session.id as string) || "",
-    created: (session.created as number) || 0,
+  const parsed = StripeSessionSchema.parse(session);
+  const metadata = parsed.metadata ?? {};
+  const result: IOrder = {
+    id: parsed.id || "",
+    created: parsed.created || 0,
     customerEmail:
-      ((session.customer_details as Record<string, unknown> | null)
-        ?.email as string) ||
-      (session.customer_email as string) ||
-      null,
+      parsed.customer_details?.email || parsed.customer_email || null,
     customerName:
-      ((session.customer_details as Record<string, unknown> | null)
-        ?.name as string) ||
-      metadata.customer_name ||
-      null,
+      parsed.customer_details?.name || metadata.customer_name || null,
     customerPhone:
-      ((session.customer_details as Record<string, unknown> | null)
-        ?.phone as string) ||
-      metadata.customer_phone ||
-      null,
-    amountTotal: (session.amount_total as number) || 0,
-    amountSubtotal: (session.amount_subtotal as number) || 0,
-    currency: (session.currency as string) || "usd",
-    status: (session.status as IOrder["status"]) || "open",
+      parsed.customer_details?.phone || metadata.customer_phone || null,
+    amountTotal: parsed.amount_total || 0,
+    amountSubtotal: parsed.amount_subtotal || 0,
+    currency: parsed.currency || "usd",
+    status: (parsed.status as IOrder["status"]) || "open",
     paymentStatus:
-      (session.payment_status as IOrder["paymentStatus"]) || "unpaid",
-    mode: (session.mode as IOrder["mode"]) || "payment",
+      (parsed.payment_status as IOrder["paymentStatus"]) || "unpaid",
+    mode: (parsed.mode as IOrder["mode"]) || "payment",
     metadata,
-    url: (session.url as string) || null,
+    url: parsed.url || null,
     orderStatus: metadata.order_status || null,
     description: metadata.description || null,
-    shippingAddress: extractShippingAddress(session),
+    shippingAddress: extractShippingAddress(parsed),
   };
+  // Parse the output against the admin contract — catches transform-side
+  // bugs (renamed field, wrong default) before the result flows into
+  // the rest of the app.
+  return OrderSchema.parse(result);
 }
 
 export function transformStripeLineItem(

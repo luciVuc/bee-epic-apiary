@@ -13,6 +13,7 @@ interface IHomePageProps {
   testimonials: ITestimonial[];
 }
 
+/** `/` route: hero and testimonials sections, with organization/website/local-business JSON-LD in the head. */
 export function HomePage({ content, testimonials }: IHomePageProps) {
   return (
     <div data-testid="home-page">

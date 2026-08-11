@@ -52,4 +52,34 @@ describe("TextAreaField", () => {
     );
     expect(screen.getByRole("textbox")).toHaveValue("");
   });
+
+  it("keeps an accessible name via aria-label when hideLabel is true", () => {
+    render(
+      <TextAreaField
+        label="Hidden Label"
+        value=""
+        onChange={() => {}}
+        hideLabel
+      />,
+    );
+    // Not visible as text, but still reachable by accessible name.
+    expect(screen.getByLabelText("Hidden Label")).toBeInTheDocument();
+  });
+
+  it("renders an error node and links it via aria-describedby", () => {
+    render(
+      <TextAreaField
+        label="Desc"
+        value=""
+        onChange={() => {}}
+        name="desc"
+        error="Description is required"
+      />,
+    );
+    const textarea = screen.getByRole("textbox");
+    const error = screen.getByTestId("text-area-field_error");
+    expect(textarea).toHaveAttribute("aria-invalid", "true");
+    expect(error).toHaveTextContent("Description is required");
+    expect(textarea.getAttribute("aria-describedby")).toBe(error.id);
+  });
 });

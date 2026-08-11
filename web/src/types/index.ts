@@ -1,109 +1,30 @@
-export enum EProductCategory {
-  HONEY = "HONEY",
-  BEESWAX = "BEESWAX",
-  GIFTS = "GIFTS",
-  SUBSCRIPTIONS = "SUBSCRIPTIONS",
-}
+/**
+ * Web-side type barrel.
+ *
+ * As of Plan 2, the cross-project types come from `@bee-epic/shared`.
+ * Re-exported here so existing imports across `web/src/` keep working
+ * unchanged. New code should import from `@bee-epic/shared` directly.
+ *
+ * `ICartItem` is web-only (the admin doesn't have a cart) and stays defined
+ * locally.
+ */
 
-export type ProductCategory = keyof typeof EProductCategory;
+export {
+  EProductCategory,
+  type ProductCategory,
+  type IProduct,
+  type ITestimonial,
+  type IProcessStep,
+  type ICategory,
+  type ISocialLinks,
+  type INavLink,
+  type ISiteContent,
+} from "@bee-epic/shared";
 
-export interface IProduct {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  longDescription: string;
-  price: number;
-  stripePriceId?: string;
-  stripePaymentLinkId?: string;
-  category: EProductCategory | ProductCategory;
-  imageUrls: string[];
-  thumbnailUrls: string[];
-  inStock: boolean;
-  featured: boolean;
-  weight: string;
-  tags: string[];
-}
+import type { IProduct } from "@bee-epic/shared";
 
+/** Cart line item — web-only. */
 export interface ICartItem {
   product: IProduct;
   quantity: number;
-}
-
-export interface ITestimonial {
-  id: string;
-  name: string;
-  location: string;
-  rating: number;
-  text: string;
-  date: string;
-}
-
-export interface IProcessStep {
-  id: string;
-  step: number;
-  title: string;
-  description: string;
-  icon: string;
-}
-
-export interface ICategory {
-  id: string;
-  label: string;
-}
-
-export interface ISocialLinks {
-  instagram?: string;
-  facebook?: string;
-  etsy?: string;
-  twitter?: string;
-  youtube?: string;
-}
-
-export interface INavLink {
-  id: string;
-  label: string;
-}
-
-export interface ISiteContent {
-  businessName: string;
-  logo: string;
-  tagline: string;
-  heroHeadline: string;
-  heroSubheadline: string;
-  aboutTitle: string;
-  aboutText: string[];
-  aboutImages: string[];
-  processTitle: string;
-  processSubtitle: string;
-  productsTitle: string;
-  productsSubtitle: string;
-  testimonialsTitle: string;
-  testimonialsSubtitle: string;
-  contactTitle: string;
-  contactSubtitle: string;
-  noProductsFound: string;
-  footerTagline: string;
-  yearsExperience: string;
-  yearsExperienceLabel: string;
-  rawNatural: string;
-  rawNaturalLabel: string;
-  californiaProud: string;
-  californiaProudLabel: string;
-  sinceYear: string;
-  sinceYearLabel: string;
-  navLinks: INavLink[];
-  orderConfirmed: string;
-  orderConfirmationMessage: string;
-  questionsContact: string;
-  continueShopping: string;
-  categories: ICategory[];
-  checkoutCancelledTitle?: string;
-  checkoutCancelledMessage?: string;
-  email: string;
-  phone: string;
-  location: string;
-  lat?: number;
-  lng?: number;
-  socialLinks: ISocialLinks;
 }

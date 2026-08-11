@@ -16,6 +16,11 @@ interface IThemeContext {
 
 const ThemeContext = createContext<IThemeContext | undefined>(undefined);
 
+/**
+ * Provides light/dark theme state to descendants. Initializes from the
+ * persisted `theme` localStorage key (defaulting to light), toggles the `dark`
+ * class on `<html>`, and writes the choice back to localStorage on change.
+ */
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<TTheme>(() => {
     const stored = localStorage.getItem("theme");
@@ -45,6 +50,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   );
 }
 
+/** Access the current theme, `isDark` flag, and `toggleTheme`. Throws if used outside a {@link ThemeProvider}. */
 export function useTheme() {
   const context = useContext(ThemeContext);
   if (!context) throw new Error("useTheme must be used within a ThemeProvider");

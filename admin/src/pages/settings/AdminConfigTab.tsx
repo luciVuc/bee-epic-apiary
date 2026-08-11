@@ -1,22 +1,32 @@
 /** Tab for viewing build-time configuration and editing KV-backed settings */
-import { Globe, Key, Store, Send, Mail } from "lucide-react";
+import { Globe, Shield, Store, Send, Mail } from "lucide-react";
 import { TextField, SelectField, Section } from "../../components/forms";
 import { DEFAULT_API_URL } from "../../utils/constants";
 import type { ISiteContent } from "../../types/settings";
+import { useCaller } from "../../hooks/useCaller";
 
+/** Props for {@link AdminConfigTab}. */
 export interface IAdminConfigTabProps {
+  /** Current site-content settings (the KV-backed, editable fields). */
   siteContent: ISiteContent;
+  /** Updates a single site-content field on the parent's draft. */
   onSiteChange: <K extends keyof ISiteContent>(
     field: K,
     value: ISiteContent[K],
   ) => void;
 }
 
+/**
+ * Settings tab surfacing build-time config (read-only API URL, live auth
+ * status) alongside the KV-backed integration fields (Stripe key, Formspark
+ * form id, email format). Business content lives on the Site Content tab; this
+ * tab is deliberately the "plumbing" view.
+ */
 export function AdminConfigTab({
   siteContent,
   onSiteChange,
 }: IAdminConfigTabProps) {
-  const hasSecretKey = Boolean(import.meta.env.VITE_API_SECRET_KEY);
+  const { caller } = useCaller();
 
   return (
     <div className="space-y-6" data-testid="admin-config-tab">
@@ -26,7 +36,10 @@ export function AdminConfigTab({
         are managed on the Site Content tab.
       </p>
 
-      <Section title="API Configuration" icon={<Globe className="w-4 h-4" />}>
+      <Section
+        title="API Configuration"
+        icon={<Globe className="w-4 h-4" aria-hidden="true" />}
+      >
         <TextField
           label="API URL (Cloudflare Worker)"
           value={DEFAULT_API_URL}
@@ -42,29 +55,36 @@ export function AdminConfigTab({
         </p>
       </Section>
 
-      <Section title="API Secret Key" icon={<Key className="w-4 h-4" />}>
-        <div className="flex items-center gap-2 px-4 py-3 bg-gray-50 dark:bg-dark-200 rounded-lg">
+      <Section
+        title="Authentication"
+        icon={<Shield className="w-4 h-4" aria-hidden="true" />}
+      >
+        <div className="flex items-center gap-3 px-4 py-3 bg-gray-50 dark:bg-dark-200 rounded-lg">
           <div
-            className={`w-2 h-2 rounded-full ${hasSecretKey ? "bg-green-500" : "bg-red-400"}`}
+            className={`w-2 h-2 rounded-full shrink-0 ${caller ? "bg-green-500" : "bg-yellow-400"}`}
           />
-          <span className="text-sm text-dark-700 dark:text-dark-300">
-            {hasSecretKey
-              ? "API secret key is configured"
-              : "No API secret key configured"}
-          </span>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-dark-700 dark:text-dark-300 truncate">
+              {caller ? caller.email : "Not authenticated"}
+            </p>
+            {caller && (
+              <p className="text-xs text-dark-400 mt-0.5">
+                Role: <strong>{caller.role}</strong> · via {caller.via}
+              </p>
+            )}
+          </div>
         </div>
         <p className="mt-2 text-xs text-dark-400">
-          Set via{" "}
-          <code className="text-xs bg-gray-100 dark:bg-dark-200 px-1 rounded">
-            VITE_API_SECRET_KEY
-          </code>{" "}
-          at build time. Required for mutating operations in production.
+          Identity is verified via the bea_at cookie issued at login (HttpOnly,
+          SameSite=Lax). User accounts and roles are managed on the Users tab
+          (OWNER only). Password policy is managed on the Security tab (OWNER
+          only).
         </p>
       </Section>
 
       <Section
         title="Stripe Configuration"
-        icon={<Store className="w-4 h-4" />}
+        icon={<Store className="w-4 h-4" aria-hidden="true" />}
       >
         <TextField
           label="Publishable Key"
@@ -80,11 +100,11 @@ export function AdminConfigTab({
 
       <Section
         title="Formspark Configuration"
-        icon={<Send className="w-4 h-4" />}
+        icon={<Send className="w-4 h-4" aria-hidden="true" />}
       >
         <TextField
           label="Formspark Form ID"
-          value={siteContent.formsparkFormId}
+          value={siteContent.formsparkFormId ?? ""}
           onChange={(v) => onSiteChange("formsparkFormId", v)}
           placeholder="your-form-id"
         />
@@ -95,10 +115,13 @@ export function AdminConfigTab({
         </p>
       </Section>
 
-      <Section title="Email Notifications" icon={<Mail className="w-4 h-4" />}>
+      <Section
+        title="Email Notifications"
+        icon={<Mail className="w-4 h-4" aria-hidden="true" />}
+      >
         <SelectField
           label="Notification Email Format"
-          value={siteContent.emailFormat}
+          value={siteContent.emailFormat ?? "text"}
           onChange={(v) =>
             onSiteChange("emailFormat", v as "text" | "markdown" | "html")
           }

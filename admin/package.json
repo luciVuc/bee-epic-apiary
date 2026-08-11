@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
     "deploy": "npx wrangler pages deploy dist --project-name=bee-epic-apiary-admin",
     "lint": " npx -y eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
@@ -16,6 +17,7 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@bee-epic/shared": "file:../shared",
     "@reduxjs/toolkit": "^2.12.0",
     "@stripe/stripe-js": "^9.7.0",
     "axios": "^1.16.1",
@@ -23,7 +25,8 @@
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-redux": "^9.3.0",
-    "react-router-dom": "^7.15.1"
+    "react-router-dom": "^7.15.1",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/css": "^1.2.0",

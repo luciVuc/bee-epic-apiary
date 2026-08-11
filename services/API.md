@@ -9,23 +9,65 @@ https://your-worker.your-subdomain.workers.dev   (production)
 http://localhost:8787                             (local dev)
 ```
 
-## Authentication
+## Authentication & Authorization (Phase 9)
 
-For product creation, update, and deletion, if `API_SECRET_KEY` is set in the Cloudflare Worker environment, include the API key in the Authorization header:
+All mutating admin endpoints require a caller resolved through the `bea_at` cookie session trust chain — see `services/src/utils/resolveCaller.ts`:
 
-```text
-Authorization: Bearer <your-api-secret-key>
+1. **Cookie** — `bea_at` HttpOnly `SameSite=Lax` HS256 JWT signed with `JWT_SIGNING_SECRET` (1-hour TTL). On successful verification the subject (caller email) is resolved from user KV.
+2. **Bearer** — `Authorization: Bearer <API_SECRET_KEY>` (CI / scripts). Maps to OWNER role as `ci@service`.
+3. **Dev** — `X-Dev-Email: <email>` header, honored only when `ENVIRONMENT=development`. Resolves as OWNER if email is in `OWNER_EMAILS`, otherwise reads the user's role from user KV (must be ACTIVE).
+
+### Roles
+
+Rank: `OWNER > MANAGER > EMPLOYEE > VENDOR`. Higher rank satisfies lower.
+
+| Endpoint                                                      | Minimum role      |
+| ------------------------------------------------------------- | ----------------- |
+| `POST /products`, `PUT /products/:id`, `DELETE /products/:id` | `MANAGER`         |
+| `POST /prices`                                                | `MANAGER`         |
+| `GET /orders`, `GET /orders/:id`, `PUT /orders/:id`           | `EMPLOYEE`        |
+| `PUT /settings/{site,process,testimonials,categories}`        | `MANAGER`         |
+| `GET /users`, `POST /users/invite`                            | `OWNER`           |
+| `PUT /users/{email}`, `DELETE /users/{email}`                 | `OWNER`           |
+| `POST /users/{email}/reinvite`                                | `OWNER`           |
+| `PUT /settings/auth-policy`                                   | `OWNER`           |
+| `GET /settings/auth-policy`, `PUT /users/me`                  | any authenticated |
+
+All other endpoints (`GET /products`, `GET /products/count`, `POST /checkout`, `POST /contact`, `GET /notifications/stream`, `GET /whoami`, `GET /settings/*`, all `/auth/*` public routes) are public or have their own auth model described per-route below.
+
+### Error envelopes
+
+All errors follow `IApiResponse<T>` shape: `{ ok: false, error: IApiError }`. Auth-related codes:
+
+| Code                 | HTTP | Meaning                                                                                              |
+| -------------------- | ---- | ---------------------------------------------------------------------------------------------------- |
+| `UNAUTHORIZED`       | 401  | No caller could be resolved (or origin not in `ALLOWED_ORIGINS` for writes — returned as 403 there). |
+| `FORBIDDEN`          | 403  | Caller resolved but `caller.role` does not satisfy `requiredRole`. Body carries `{ requiredRole }`.  |
+| `METHOD_NOT_ALLOWED` | 405  | HTTP method not allowed for this route. Body carries `{ allowed: [...] }`.                           |
+| `RATE_LIMITED`       | 429  | Too many requests. Body carries `{ retryAfter }`.                                                    |
+
+### `GET /whoami`
+
+Returns the resolved caller (or `null` if unauthenticated). Used by the admin panel to bootstrap UI state and to gate the Staff settings tab.
+
+**Authentication**: Not required (always public).
+
+**Response (200)**:
+
+```json
+{
+	"ok": true,
+	"data": {
+		"caller": {
+			"email": "owner@example.com",
+			"role": "OWNER",
+			"via": "jwt"
+		}
+	}
+}
 ```
 
-If `API_SECRET_KEY` is not set, authentication is disabled (suitable for development).
-
-### Error Responses for Authentication
-
-| Status Code | Message                                                    | Description                                    |
-| ----------- | ---------------------------------------------------------- | ---------------------------------------------- |
-| 401         | `Missing authorization header`                             | No Authorization header provided               |
-| 401         | `Invalid authorization header format. Use: Bearer <token>` | Header is not in `Bearer <token>` format       |
-| 403         | `Invalid API key`                                          | Provided token does not match `API_SECRET_KEY` |
+`via` is one of `"cookie" | "bearer" | "dev"`. `caller` is `null` when no path produced an identity.
 
 ## Endpoints
 
@@ -116,7 +158,7 @@ Returns a single product by ID.
 
 `POST /products`
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `MANAGER`.
 
 Creates a new Stripe product.
 
@@ -144,7 +186,7 @@ Creates a new Stripe product.
 
 `PUT /products/:id`
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `MANAGER`.
 
 Updates an existing product.
 
@@ -188,7 +230,7 @@ Returns the total count of active products, optionally filtered by search, categ
 
 `DELETE /products/:id`
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `MANAGER`.
 
 Deletes a product.
 
@@ -202,7 +244,7 @@ Deletes a product.
 
 `POST /prices`
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `MANAGER`.
 
 Creates a new Stripe Price for an existing product.
 
@@ -236,7 +278,7 @@ Creates a new Stripe Price for an existing product.
 
 Returns a paginated list of Stripe Checkout Sessions with optional search and filter support.
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `EMPLOYEE`.
 
 **Query Parameters**:
 
@@ -269,7 +311,7 @@ When any filter is active, the API fetches all sessions (capped at 1000) and fil
 
 Returns a single Stripe Checkout Session with expanded line items.
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `EMPLOYEE`.
 
 **Response**:
 
@@ -288,7 +330,7 @@ Returns a single Stripe Checkout Session with expanded line items.
 
 Updates a Stripe Checkout Session's metadata and/or collected information (shipping details).
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `EMPLOYEE`.
 
 **Request Body**:
 
@@ -348,7 +390,7 @@ Confirms a paid Stripe Checkout Session, triggers a real-time notification via S
 
 1. Retrieves the Stripe Checkout Session and verifies `payment_status === 'paid'`
 2. Updates Stripe session metadata with `order_status: 'new'`
-3. Writes a notification to `CONTENT_KV` with 24h TTL (consumed by SSE stream)
+3. Calls `NotificationHub.notify({ type: 'new-order', orderId: sessionId })` on the single `default` instance — the hub persists the event in its SQLite storage and broadcasts it to every connected admin SSE client
 4. Sends admin notification email (via Formspark if `formsparkFormId` is configured in site content, otherwise via Cloudflare Email Service)
 
 **Response**:
@@ -419,29 +461,362 @@ Sends a contact form submission as an email to the site admin. The email deliver
 
 ### Notifications
 
-#### Order Notifications Stream (SSE)
+#### Admin Notifications Stream (SSE)
 
 `GET /notifications/stream`
 
-Provides a Server-Sent Events (SSE) stream for real-time order notifications consumed by the admin panel.
+Provides a Server-Sent Events (SSE) stream for real-time admin notifications consumed by the admin panel. Backed by a single Durable Object (`NotificationHub`, instance name `default`) that persists every broadcast event in SQLite storage and replays missed events on reconnect.
 
-**Authentication**: Not required.
+**Authentication**: Requires a resolved caller. The `bea_at` cookie is sent automatically when `{ withCredentials: true }` is used — the worker validates it directly via the cookie trust chain.
 
-**Response**: SSE text/event-stream with the following events:
+**Reconnect / replay**: The hub honors the standard SSE `Last-Event-ID` header (browsers send it automatically when a previous response emitted `id:` lines). On reconnect, the hub replays every persisted event with a greater id, bounded by the replay window (`ISiteContent.notificationReplayHours`, configurable 1–24, default 1). Without a `Last-Event-ID`, the full window is replayed — handles cold reconnects after redeploy or DO eviction. As a fallback for tooling that can't set headers, the query parameter `?lastEventId=...` is also accepted.
 
-| Event       | Data                 | Description                     |
-| ----------- | -------------------- | ------------------------------- |
-| `connected` | `{}`                 | Initial connection confirmation |
-| `new-order` | `{ sessionId, ... }` | New order notification from KV  |
-| `heartbeat` | `{}`                 | Keep-alive every 30 seconds     |
+**Eviction**: Events are evicted on every write by both age (the configured replay window) and count (the newest 500 are kept).
 
-The stream polls `CONTENT_KV` every 5 seconds for keys with prefix `notifications:`.
+**Response**: SSE `text/event-stream` with the following events:
+
+| Event                   | Data shape                                                                  | Description                                           |
+| ----------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------- |
+| `connected`             | `{}`                                                                        | Emitted once after the initial replay completes       |
+| `new-order`             | `{ id, ts, type: "new-order", orderId }`                                    | New paid order (from the Stripe webhook)              |
+| `order-status-changed`  | `{ id, ts, type: "order-status-changed", orderId, prevStatus, nextStatus }` | Admin or another staff member changed `order_status`  |
+| `product-updated`       | `{ id, ts, type: "product-updated", productId }`                            | Product was edited via the admin API                  |
+| `product-deleted`       | `{ id, ts, type: "product-deleted", productId }`                            | Product was archived (soft-deleted) via the admin API |
+| `: heartbeat` (comment) | n/a                                                                         | Keep-alive emitted every 30 seconds                   |
+
+Each data event also carries an SSE `id:` line whose value is `${ts}-${counter}` (zero-padded, lexicographically sortable).
+
+---
+
+## Auth
+
+All `/auth/*` endpoints use the standard `IApiResponse<T>` envelope. Rate-limit budget unless stated: standard rate-limit budget (100 req/min per IP).
+
+### Login
+
+`POST /auth/login`
+
+**Role**: Public.
+
+**Request Body**:
+
+```json
+{ "email": "owner@example.com", "password": "s3cr3t" }
+```
+
+**Success (200)**:
+
+```json
+{ "ok": true, "data": { "caller": { "email": "...", "role": "OWNER", "status": "ACTIVE" } } }
+```
+
+Sets `bea_at` HttpOnly `SameSite=Lax` cookie (1-hour TTL).
+
+**Error codes**: `INVALID_CREDENTIALS` (401), `ACCOUNT_DISABLED` (403), `RATE_LIMITED` (429), `VALIDATION_ERROR` (400).
+
+---
+
+### Logout
+
+`POST /auth/logout`
+
+**Role**: Authenticated (any).
+
+**Request Body**: none.
+
+**Success (204)**: Sets `Set-Cookie: bea_at=; Max-Age=0` to clear the session.
+
+**Error codes**: `UNAUTHORIZED` (401).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Refresh
+
+`POST /auth/refresh`
+
+**Role**: Authenticated (refresh-family cookie required).
+
+**Request Body**: none.
+
+**Success (200)**: Reissues `bea_at` cookie.
+
+```json
+{ "ok": true, "data": { "caller": { "email": "...", "role": "OWNER", "status": "ACTIVE" } } }
+```
+
+**Error codes**: `UNAUTHORIZED` (401), `REFRESH_FAMILY_INVALIDATED` (401).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Accept Invite
+
+`POST /auth/accept-invite`
+
+**Role**: Public (token-gated).
+
+**Request Body**:
+
+```json
+{ "token": "<url-safe-token>", "password": "NewStr0ng!" }
+```
+
+**Success (200)**:
+
+```json
+{ "ok": true, "data": { "caller": { "email": "...", "role": "EMPLOYEE", "status": "ACTIVE" } } }
+```
+
+Sets `bea_at` cookie. Activates the user account.
+
+**Error codes**: `INVALID_TOKEN` (400), `EXPIRED_TOKEN` (400), `WEAK_PASSWORD` (400, body includes `{ reasons: string[] }`), `VALIDATION_ERROR` (400).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Request Password Reset
+
+`POST /auth/request-reset`
+
+**Role**: Public.
+
+**Request Body**:
+
+```json
+{ "email": "user@example.com" }
+```
+
+**Success (200)**: Always `{ "ok": true }` — no user enumeration. A reset email is sent if the address is known.
+
+**Error codes**: None surfaced (always 200).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Complete Password Reset
+
+`POST /auth/complete-reset`
+
+**Role**: Public (token-gated).
+
+**Request Body**:
+
+```json
+{ "token": "<url-safe-token>", "password": "NewStr0ng!" }
+```
+
+**Success (200)**:
+
+```json
+{ "ok": true }
+```
+
+**Error codes**: `INVALID_TOKEN` (400), `EXPIRED_TOKEN` (400), `WEAK_PASSWORD` (400, body includes `{ reasons: string[] }`).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Change Password
+
+`POST /auth/change-password`
+
+**Role**: Authenticated (any).
+
+**Request Body**:
+
+```json
+{ "currentPassword": "OldPass1!", "newPassword": "NewStr0ng!" }
+```
+
+**Success (200)**:
+
+```json
+{ "ok": true }
+```
+
+All refresh-family tokens for the caller are invalidated. A `passwordChanged` email is sent.
+
+**Error codes**: `INVALID_CREDENTIALS` (401), `WEAK_PASSWORD` (400, body includes `{ reasons: string[] }`).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Bootstrap Owner
+
+`POST /auth/bootstrap-owner`
+
+**Role**: Gated server-side by `bootstrapAvailable` (disabled once any OWNER user exists).
+
+**Request Body**:
+
+```json
+{ "email": "owner@example.com" }
+```
+
+**Success (200)**:
+
+```json
+{ "ok": true, "data": { "caller": { "email": "...", "role": "OWNER", "status": "ACTIVE" } } }
+```
+
+**Error codes**: `BOOTSTRAP_DISABLED` (403).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+## Users
+
+All `/users/*` endpoints use the standard `IApiResponse<T>` envelope.
+
+### List Users
+
+`GET /users`
+
+**Role**: `OWNER`.
+
+**Request**: No body.
+
+**Success (200)**:
+
+```json
+{ "ok": true, "data": { "users": [{ "email": "...", "role": "MANAGER", "status": "ACTIVE" }] } }
+```
+
+**Error codes**: `UNAUTHORIZED` (401), `FORBIDDEN` (403).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Invite User
+
+`POST /users/invite`
+
+**Role**: `OWNER`.
+
+**Request Body**:
+
+```json
+{ "email": "new@example.com", "role": "EMPLOYEE" }
+```
+
+**Success (201)**:
+
+```json
+{ "ok": true, "data": { "user": { "email": "...", "role": "EMPLOYEE", "status": "INVITED" } } }
+```
+
+Sends an invite email with a time-limited token link.
+
+**Error codes**: `UNAUTHORIZED` (401), `FORBIDDEN` (403), `USER_ALREADY_EXISTS` (409), `VALIDATION_ERROR` (400).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Update User
+
+`PUT /users/{email}`
+
+**Role**: `OWNER`.
+
+**Request Body** (partial update):
+
+```json
+{ "role": "MANAGER" }
+```
+
+or `{ "status": "DISABLED" }`.
+
+**Success (200)**:
+
+```json
+{ "ok": true, "data": { "user": { "email": "...", "role": "MANAGER", "status": "ACTIVE" } } }
+```
+
+**Error codes**: `UNAUTHORIZED` (401), `FORBIDDEN` (403), `USER_NOT_FOUND` (404), `CANNOT_DEMOTE_LAST_OWNER` (409), `VALIDATION_ERROR` (400).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Delete User
+
+`DELETE /users/{email}`
+
+**Role**: `OWNER`.
+
+**Request**: No body.
+
+**Success (200)**:
+
+```json
+{ "ok": true }
+```
+
+**Error codes**: `UNAUTHORIZED` (401), `FORBIDDEN` (403), `USER_NOT_FOUND` (404), `CANNOT_DELETE_LAST_OWNER` (409).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Re-invite User
+
+`POST /users/{email}/reinvite`
+
+**Role**: `OWNER`.
+
+**Request**: No body.
+
+**Success (200)**:
+
+```json
+{ "ok": true }
+```
+
+Re-sends the invite email with a fresh token. Only valid for users with status `INVITED`.
+
+**Error codes**: `UNAUTHORIZED` (401), `FORBIDDEN` (403), `USER_NOT_FOUND` (404), `USER_NOT_INVITED` (409).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Update Current User
+
+`PUT /users/me`
+
+**Role**: Any authenticated caller.
+
+**Request Body** (partial update — only self-editable fields):
+
+```json
+{ "displayName": "Jane Doe" }
+```
+
+**Success (200)**:
+
+```json
+{ "ok": true, "data": { "user": { "email": "...", "role": "EMPLOYEE", "status": "ACTIVE", "displayName": "Jane Doe" } } }
+```
+
+**Error codes**: `UNAUTHORIZED` (401), `VALIDATION_ERROR` (400).
+
+**Rate-limit budget**: Standard rate-limit budget.
 
 ---
 
 ## Settings
 
-### Get Settings
+### Get Content Settings
 
 `GET /settings/:type`
 
@@ -462,11 +837,11 @@ Returns content settings for the specified type.
 
 ---
 
-### Update Settings
+### Update Content Settings
 
 `PUT /settings/:type`
 
-**Authentication**: Required (if `API_SECRET_KEY` is set).
+**Authentication**: Required — minimum role `MANAGER`.
 
 Updates content settings for the specified type.
 
@@ -489,6 +864,65 @@ Updates content settings for the specified type.
 | 500         | `Failed to save settings` |
 
 ---
+
+### Get Auth Policy
+
+`GET /settings/auth-policy`
+
+**Role**: Any authenticated caller.
+
+**Request**: No body.
+
+**Success (200)**:
+
+```json
+{
+	"ok": true,
+	"data": {
+		"policy": {
+			"minPasswordLength": 8,
+			"requireUppercase": true,
+			"requireNumber": true,
+			"requireSpecial": false,
+			"hibpCheck": true
+		}
+	}
+}
+```
+
+**Error codes**: `UNAUTHORIZED` (401).
+
+**Rate-limit budget**: Standard rate-limit budget.
+
+---
+
+### Update Auth Policy
+
+`PUT /settings/auth-policy`
+
+**Role**: `OWNER`.
+
+**Request Body**: Partial policy object — any combination of:
+
+```json
+{
+	"minPasswordLength": 10,
+	"requireUppercase": true,
+	"requireNumber": true,
+	"requireSpecial": true,
+	"hibpCheck": false
+}
+```
+
+**Success (200)**:
+
+```json
+{ "ok": true, "data": { "policy": { ... } } }
+```
+
+**Error codes**: `UNAUTHORIZED` (401), `FORBIDDEN` (403), `VALIDATION_ERROR` (400).
+
+**Rate-limit budget**: Standard rate-limit budget.
 
 ## CORS
 
@@ -531,15 +965,16 @@ All errors return JSON:
 ```
 
 **Status Codes**:
-| Status Code | Description |
-|-------------|-------------|
-| 400 | Bad Request (validation error) |
-| 401 | Unauthorized (missing/invalid auth) |
-| 403 | Forbidden (invalid origin or API key) |
-| 404 | Not Found |
-| 405 | Method Not Allowed |
-| 429 | Rate Limit Exceeded |
-| 500 | Internal Server Error |
+
+| Status Code | Description                           |
+| ----------- | ------------------------------------- |
+| 400         | Bad Request (validation error)        |
+| 401         | Unauthorized (missing/invalid auth)   |
+| 403         | Forbidden (invalid origin or API key) |
+| 404         | Not Found                             |
+| 405         | Method Not Allowed                    |
+| 429         | Rate Limit Exceeded                   |
+| 500         | Internal Server Error                 |
 
 ---
 

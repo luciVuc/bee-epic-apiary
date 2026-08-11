@@ -8,6 +8,7 @@ interface ILayoutProps {
   siteContent: ISiteContent;
 }
 
+/** Page shell wrapping route content with the Navbar, a skip-to-content link, a `<main>` region, and the Footer. */
 export const Layout = ({ children, siteContent }: ILayoutProps) => {
   return (
     <div data-testid="layout" className="min-h-screen flex flex-col">

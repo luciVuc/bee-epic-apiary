@@ -4,19 +4,20 @@ Monorepo for the Bee Epic Apiary e-commerce platform. Includes a React admin pan
 
 ## Project Structure
 
-| Directory   | Description                                                 |
-| ----------- | ----------------------------------------------------------- |
-| `admin/`    | React 19 + TypeScript admin panel (Vite)                    |
-| `services/` | Cloudflare Worker for Stripe checkout, product CRUD & email |
-| `web/`      | Public-facing React 19 PWA storefront (BrowserRouter)       |
+| Directory   | Description                                                       |
+| ----------- | ----------------------------------------------------------------- |
+| `shared/`   | Cross-project TypeScript types + Zod schemas (`@bee-epic/shared`) |
+| `admin/`    | React 19 + TypeScript admin panel (Vite)                          |
+| `services/` | Cloudflare Worker for Stripe checkout, product CRUD & email       |
+| `web/`      | Public-facing React 19 PWA storefront (BrowserRouter)             |
 
 ## Quick Start
 
 ```bash
 git clone <repo-url>
 npm install
-npx wrangler kv namespace create "RATE_LIMIT_KV"  # First-time setup
 npx wrangler kv namespace create "CONTENT_KV"     # First-time setup
+# Note: rate limiting uses a Durable Object (RATE_LIMITER binding) — no separate KV setup needed.
 npm run dev
 ```
 
@@ -49,14 +50,18 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs tests on pushes 
 
 ### Required GitHub Secrets
 
-| Secret                        | Used by     | Description                                    |
-| ----------------------------- | ----------- | ---------------------------------------------- |
-| `CF_API_TOKEN`                | All         | Cloudflare API token with Workers + Pages perm |
-| `STRIPE_SECRET_KEY`           | services    | Stripe secret key (live or test)               |
-| `ALLOWED_ORIGINS`             | services    | Comma-separated CORS origins                   |
-| `API_SECRET_KEY`              | services    | Bearer token for admin API mutations           |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | web + admin | Stripe publishable key                         |
-| `VITE_API_SECRET_KEY`         | admin       | Bearer token for admin API calls               |
+| Secret                        | Used by     | Description                                                                              |
+| ----------------------------- | ----------- | ---------------------------------------------------------------------------------------- |
+| `CF_API_TOKEN`                | All         | Cloudflare API token with Workers + Pages perm                                           |
+| `STRIPE_SECRET_KEY`           | services    | Stripe secret key (live or test)                                                         |
+| `STRIPE_WEBHOOK_SECRET`       | services    | Stripe webhook signing secret                                                            |
+| `ALLOWED_ORIGINS`             | services    | Comma-separated CORS origins                                                             |
+| `JWT_SIGNING_SECRET`          | services    | **Required.** HS256 key for cookie session signing. Generate: `openssl rand -base64 32`. |
+| `API_SECRET_KEY`              | services    | Optional CI bearer bypass — `Authorization: Bearer` maps to OWNER role at runtime.       |
+| `OWNER_EMAILS`                | services    | Comma-separated bootstrap owner emails (never-lockout safety net)                        |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | web + admin | Stripe publishable key                                                                   |
+
+> The admin panel uses a cookie-based login page (no credentials in the bundle). On first deploy, `GET /whoami` returns `bootstrapAvailable: true` and the SPA redirects to `/bootstrap` to create the first OWNER account. See `SETUP.md` Step 10 for the full bootstrap flow.
 
 ### Required GitHub Variables
 
@@ -80,6 +85,8 @@ A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs tests on pushes 
 - `services/SOURCE.md` — Source code documentation (functions, classes, types)
 - `services/AGENTS.md` — Architecture, environment variables, and contribution guidelines
 - `AGENTS.md` — Monorepo-wide conventions and gotchas
+- `docs/index.json` — Machine-readable project index: every source file with its exported symbols (kind, name, line). Generated for coding-assistant navigation.
+- `docs/knowledge-graph.json` — Machine-readable knowledge graph: nodes (packages, modules, routes, Durable Objects, data flows) + edges (dependencies, calls, data flow, role gating) + key invariants.
 
 ## Environment Variables
 

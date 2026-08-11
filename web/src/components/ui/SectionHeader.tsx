@@ -5,13 +5,19 @@ interface ISectionHeaderProps {
   subtitle?: string;
   align?: "left" | "center" | "right";
   className?: string;
+  /** Overrides the root data-testid so repeated headers can be uniquely
+   *  identified (e.g. "section-header_about"). Defaults to "section-header"
+   *  to preserve existing selectors. */
+  testId?: string;
 }
 
+/** Animated section heading with a title and optional subtitle; fades/slides in on scroll into view. */
 export const SectionHeader = ({
   title,
   subtitle,
   align = "center",
   className = "",
+  testId = "section-header",
 }: ISectionHeaderProps) => {
   const alignments = {
     left: "text-left",
@@ -21,14 +27,17 @@ export const SectionHeader = ({
 
   return (
     <motion.div
-      data-testid="section-header"
+      data-testid={testId}
       className={`mb-12 ${alignments[align]} ${className}`}
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 0.6 }}
     >
-      <h2 className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-dark-900 mb-4">
+      <h2
+        data-testid={`${testId}_title`}
+        className="font-heading text-3xl md:text-4xl lg:text-5xl font-bold text-dark-900 mb-4"
+      >
         {title}
       </h2>
       {subtitle && (

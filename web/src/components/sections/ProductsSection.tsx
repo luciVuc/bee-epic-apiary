@@ -23,6 +23,12 @@ interface IProductsSectionProps {
   categories: ICategory[];
 }
 
+/**
+ * Shop catalog section. Drives search, category/tag filters, sort, and
+ * cursor-based "load more" pagination — all reflected in URL search params so
+ * state is shareable and restorable. Debounces search input, aborts stale
+ * fetches, and restores scroll position on back-navigation from a product page.
+ */
 export const ProductsSection = ({
   content,
   categories,
@@ -49,6 +55,7 @@ export const ProductsSection = ({
   const searchTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
+  const abortRef = useRef<AbortController | null>(null);
   const isInitialMount = useRef(true);
   const sectionRef = useRef<HTMLElement>(null);
   const lastProdCardIdRef = useRef<string | null>(null);
@@ -101,35 +108,50 @@ export const ProductsSection = ({
 
   useEffect(() => {
     if (searchTimer.current) clearTimeout(searchTimer.current);
+    // Cancel any prior in-flight fetch so a slow first response can't
+    // overwrite the result of a newer query. AbortError is treated as a
+    // benign expected outcome — see catch block below.
+    abortRef.current?.abort();
+    const ac = new AbortController();
+    abortRef.current = ac;
 
     const delay = isInitialMount.current ? 0 : 300;
     isInitialMount.current = false;
 
     searchTimer.current = setTimeout(async () => {
+      if (ac.signal.aborted) return;
       setLoading(true);
       try {
-        const result = await fetchProductsPaginated({
-          search: searchTerm || undefined,
-          category: activeCategory || undefined,
-          tag: activeTag || undefined,
-          limit,
-        });
+        const result = await fetchProductsPaginated(
+          {
+            search: searchTerm || undefined,
+            category: activeCategory || undefined,
+            tag: activeTag || undefined,
+            limit,
+          },
+          ac.signal,
+        );
+        if (ac.signal.aborted) return;
         setProducts(result.products);
         setHasMore(result.hasMore);
         setLastId(result.products[result.products.length - 1]?.id || null);
         setTotalCount(result.totalCount);
       } catch (err) {
+        if ((err as Error).name === "AbortError") return;
         console.error("Failed to fetch products", err);
       } finally {
-        setLoading(false);
-        setInitialLoading(false);
+        if (!ac.signal.aborted) {
+          setLoading(false);
+          setInitialLoading(false);
+        }
       }
     }, delay);
 
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
+      ac.abort();
     };
-  }, [searchTerm, activeCategory, activeTag]);
+  }, [searchTerm, activeCategory, activeTag, limit]);
 
   useEffect(() => {
     return () => {
@@ -156,6 +178,11 @@ export const ProductsSection = ({
         window.scrollTo(0, Number(savedScroll));
       }
     }
+    // `loading` is intentionally read but not in deps: this effect is gated
+    // on `initialLoading` flipping to false (one-shot scroll restore) and on
+    // a programmatic Load-More setting `lastProdCardIdRef.current` directly
+    // before re-render — both already trigger this effect via React state.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialLoading]);
 
   const availableTags = useMemo(() => {
@@ -215,6 +242,7 @@ export const ProductsSection = ({
       id="products"
       data-testid="products-section"
       className="py-20 bg-white dark:bg-dark-950"
+      aria-busy={loading}
       ref={sectionRef}
     >
       <div
@@ -238,6 +266,7 @@ export const ProductsSection = ({
             <Search
               data-testid="products-section_search-icon"
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400 dark:text-dark-600"
+              aria-hidden="true"
             />
             <label
               data-testid="products-section_search-label"
@@ -274,6 +303,7 @@ export const ProductsSection = ({
             <ArrowUpDown
               data-testid="products-section_sort-icon"
               className="w-4 h-4 text-dark-400 dark:text-dark-600"
+              aria-hidden="true"
             />
             <select
               value={sortValue}
@@ -335,6 +365,7 @@ export const ProductsSection = ({
         {/* Results count */}
         {!initialLoading && (
           <div
+            data-testid="products-section_results-count"
             className="text-center text-sm text-dark-500 mb-6"
             role="status"
             aria-live="polite"

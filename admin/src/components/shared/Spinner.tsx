@@ -4,6 +4,11 @@ export interface ISpinnerProps {
   className?: string;
 }
 
+/**
+ * Centered loading spinner. Exposes `role="status"` + sr-only "Loading…" text
+ * so screen readers announce the pending state; `className` overrides the
+ * default container height for inline vs full-panel use.
+ */
 export function Spinner({ className = "h-64" }: ISpinnerProps) {
   return (
     <div

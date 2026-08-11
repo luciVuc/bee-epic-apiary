@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   transformStripeProduct,
   transformToStripeParams,
@@ -162,6 +162,59 @@ describe("transformStripeProduct", () => {
     });
     const result = transformStripeProduct(stripeProduct);
     expect(result.stripePaymentLinkId).toBe("plink_abc");
+  });
+
+  describe("category enum validation (review I11)", () => {
+    // metadata.category is a freeform string in Stripe. Before this fix the
+    // transform layer cast it to EProductCategory without checking — so a
+    // typo or removed enum value flowed all the way to the admin grid as a
+    // "phantom category" that the category filter couldn't even find. Now
+    // unknown values default to HONEY and log a warning so the typo is
+    // catchable from the console.
+
+    it("keeps a valid enum category as-is", () => {
+      const stripeProduct = makeStripeProduct({
+        metadata: { category: EProductCategory.BEESWAX } as Record<
+          string,
+          string
+        >,
+      });
+      expect(transformStripeProduct(stripeProduct).category).toBe(
+        EProductCategory.BEESWAX,
+      );
+    });
+
+    it("falls back to HONEY when category is unknown", () => {
+      const stripeProduct = makeStripeProduct({
+        metadata: { category: "DISCONTINUED_LINE" } as Record<string, string>,
+      });
+      expect(transformStripeProduct(stripeProduct).category).toBe(
+        EProductCategory.HONEY,
+      );
+    });
+
+    it("warns to console when an unknown category is normalized", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const stripeProduct = makeStripeProduct({
+        id: "prod_typo",
+        metadata: { category: "WAS_BEESAWX" } as Record<string, string>,
+      });
+      transformStripeProduct(stripeProduct);
+      expect(warn).toHaveBeenCalled();
+      const firstCall = warn.mock.calls[0]?.join(" ") ?? "";
+      expect(firstCall).toContain("WAS_BEESAWX");
+      warn.mockRestore();
+    });
+
+    it("does NOT warn when category is missing entirely (legitimate default)", () => {
+      const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+      const stripeProduct = makeStripeProduct({
+        metadata: {} as Record<string, string>,
+      });
+      transformStripeProduct(stripeProduct);
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
   });
 });
 

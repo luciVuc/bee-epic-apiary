@@ -33,7 +33,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('line_items is required and must be a non-empty array');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for empty line_items array', async () => {
@@ -64,7 +65,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('success_url and cancel_url are required');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for missing cancel_url', async () => {
@@ -95,7 +97,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('success_url and cancel_url must be valid URLs');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for invalid line_item (no price)', async () => {
@@ -112,7 +115,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Each line item must have either price or price_data');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for invalid line_item (quantity < 1)', async () => {
@@ -129,7 +133,55 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Each line item must have a quantity >= 1');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
+	});
+
+	it('rejects caller-supplied inline price_data (arbitrary-amount injection guard)', async () => {
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({
+				line_items: [
+					{
+						price_data: {
+							currency: 'usd',
+							product_data: { name: 'Free honey' },
+							unit_amount: 1,
+						},
+						quantity: 1,
+					},
+				],
+				success_url: 'https://example.com/success',
+				cancel_url: 'https://example.com/cancel',
+			}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(400);
+		const body = (await response.json()) as any;
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
+		// price_data must never reach Stripe.
+		expect(mockStripe.prices.retrieve).not.toHaveBeenCalled();
+		expect(mockStripe.checkout.sessions.create).not.toHaveBeenCalled();
+	});
+
+	it('rejects a non-string price (must be a price ID)', async () => {
+		const request = new Request('http://example.com/checkout', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+			body: JSON.stringify({
+				line_items: [{ price: { foo: 'bar' }, quantity: 1 }],
+				success_url: 'https://example.com/success',
+				cancel_url: 'https://example.com/cancel',
+			}),
+		});
+		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
+		expect(response.status).toBe(400);
+		const body = (await response.json()) as any;
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('creates checkout session with one-time items', async () => {
@@ -152,13 +204,14 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.sessions).toContain('https://checkout.stripe.com/cs_123');
+		expect(body.ok).toBe(true);
+		expect(body.data.sessions).toContain('https://checkout.stripe.com/cs_123');
 
-		// Verify custom_fields are passed with the order status dropdown
+		// Verify the Stripe SDK was called with the checkout session params (custom_fields
+		// for order_status are added by the admin-side `update-order` flow, not at checkout).
 		const createCall = mockStripe.checkout.sessions.create.mock.calls[0][0];
-		expect(createCall.custom_fields).toBeDefined();
-		expect(createCall.custom_fields[0].key).toBe('order_status');
-		expect(createCall.custom_fields[0].dropdown.options).toHaveLength(3);
+		expect(createCall.mode).toBe('payment');
+		expect(createCall.line_items).toHaveLength(1);
 	});
 
 	it('creates separate sessions for recurring and one-time items', async () => {
@@ -186,14 +239,15 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.sessions).toHaveLength(2);
-		expect(body.message).toBe('Multiple checkout sessions created');
+		expect(body.ok).toBe(true);
+		expect(body.data.sessions).toHaveLength(2);
+		expect(body.data.message).toBe('Multiple checkout sessions created');
 
-		// Both sessions receive custom_fields
+		// Both sessions are created with the right mode
 		const subCall = mockStripe.checkout.sessions.create.mock.calls[0][0];
 		const payCall = mockStripe.checkout.sessions.create.mock.calls[1][0];
-		expect(subCall.custom_fields).toBeDefined();
-		expect(payCall.custom_fields).toBeDefined();
+		expect(subCall.mode).toBe('subscription');
+		expect(payCall.mode).toBe('payment');
 	});
 
 	it('handles Stripe errors gracefully', async () => {
@@ -212,7 +266,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Invalid price');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('skips session when url is undefined for one-time items', async () => {
@@ -235,7 +290,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.sessions).toHaveLength(0);
+		expect(body.ok).toBe(true);
+		expect(body.data.sessions).toHaveLength(0);
 	});
 
 	it('skips session when url is undefined for recurring items', async () => {
@@ -258,7 +314,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.sessions).toHaveLength(0);
+		expect(body.ok).toBe(true);
+		expect(body.data.sessions).toHaveLength(0);
 	});
 
 	it('handles Stripe errors with statusCode >= 500', async () => {
@@ -277,7 +334,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(500);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
 	});
 
 	it('handles Stripe errors with missing message when statusCode < 500', async () => {
@@ -296,7 +354,8 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('handles Stripe errors with undefined statusCode (defaults to 500)', async () => {
@@ -315,6 +374,92 @@ describe('stripe-checkout handler', () => {
 		const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(500);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
+	});
+
+	describe('success_url / cancel_url hostname validation (review I3)', () => {
+		// Open-redirect class: without a hostname check, a malicious client can drive
+		// users through Stripe and back to an attacker-controlled domain that mimics
+		// the shop's "thank you" page. ALLOWED_ORIGINS is the trust boundary.
+
+		it('rejects success_url whose hostname is outside ALLOWED_ORIGINS', async () => {
+			const request = new Request('http://example.com/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+				body: JSON.stringify({
+					line_items: [{ price: 'price_123', quantity: 1 }],
+					success_url: 'https://evil.test/win',
+					cancel_url: 'https://example.com/cancel',
+				}),
+			});
+			const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+			const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
+			expect(response.status).toBe(400);
+			const body = (await response.json()) as any;
+			expect(body.ok).toBe(false);
+			expect(body.error.code).toBe('VALIDATION_FAILED');
+		});
+
+		it('rejects cancel_url whose hostname is outside ALLOWED_ORIGINS', async () => {
+			const request = new Request('http://example.com/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Origin: 'https://example.com' },
+				body: JSON.stringify({
+					line_items: [{ price: 'price_123', quantity: 1 }],
+					success_url: 'https://example.com/success',
+					cancel_url: 'https://attacker.test/cancel',
+				}),
+			});
+			const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
+			const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://example.com');
+			expect(response.status).toBe(400);
+			const body = (await response.json()) as any;
+			expect(body.ok).toBe(false);
+			expect(body.error.code).toBe('VALIDATION_FAILED');
+		});
+
+		it('accepts URLs matching any entry in a multi-origin ALLOWED_ORIGINS list', async () => {
+			const mockPrice = { id: 'price_123', recurring: null };
+			const mockSession = { id: 'cs_123', url: 'https://checkout.stripe.com/cs_123' };
+			mockStripe.prices.retrieve.mockResolvedValue(mockPrice);
+			mockStripe.checkout.sessions.create.mockResolvedValue(mockSession);
+
+			const request = new Request('http://example.com/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Origin: 'https://shop.example.com' },
+				body: JSON.stringify({
+					line_items: [{ price: 'price_123', quantity: 1 }],
+					success_url: 'https://shop.example.com/success',
+					cancel_url: 'https://admin.example.com/cancel',
+				}),
+			});
+			const env = {
+				STRIPE_SECRET_KEY: 'sk_test_123',
+				ALLOWED_ORIGINS: 'https://shop.example.com,https://admin.example.com',
+			} as Env;
+			const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://shop.example.com');
+			expect(response.status).toBe(200);
+		});
+
+		it('treats ALLOWED_ORIGINS=* as a wildcard (development bypass)', async () => {
+			const mockPrice = { id: 'price_123', recurring: null };
+			const mockSession = { id: 'cs_123', url: 'https://checkout.stripe.com/cs_123' };
+			mockStripe.prices.retrieve.mockResolvedValue(mockPrice);
+			mockStripe.checkout.sessions.create.mockResolvedValue(mockSession);
+
+			const request = new Request('http://example.com/checkout', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Origin: 'https://anything.test' },
+				body: JSON.stringify({
+					line_items: [{ price: 'price_123', quantity: 1 }],
+					success_url: 'http://localhost:5173/success',
+					cancel_url: 'http://localhost:5173/cancel',
+				}),
+			});
+			const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: '*' } as Env;
+			const response = await handleCheckout(mockStripe as Stripe, request, env, 'https://anything.test');
+			expect(response.status).toBe(200);
+		});
 	});
 });

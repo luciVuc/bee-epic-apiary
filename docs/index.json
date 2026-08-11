@@ -1,0 +1,3518 @@
+{
+  "schemaVersion": "1.0",
+  "generatedAt": "2026-08-10",
+  "project": {
+    "name": "bee-epic-apiary",
+    "description": "Monorepo e-commerce platform for an apiary (honey/beeswax) business: shared types, Cloudflare Worker backend, React admin panel, React PWA storefront.",
+    "repoType": "npm file: monorepo",
+    "packages": ["shared", "services", "admin", "web"]
+  },
+  "packages": {
+    "shared": {
+      "name": "@bee-epic/shared",
+      "role": "Canonical TypeScript types + Zod schemas shared across all packages.",
+      "stack": ["TypeScript", "Zod"],
+      "srcFileCount": 10,
+      "testFileCount": 6,
+      "exportedSymbolCount": 94,
+      "files": [
+        {
+          "path": "shared/src/api.ts",
+          "loc": 114,
+          "description": "API envelope IApiResponse<T>, discriminated IApiError, ApiResponseSchema(), upstream error type.",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ApiErrorSchema",
+              "line": 20
+            },
+            {
+              "kind": "type",
+              "name": "IApiError",
+              "line": 63
+            },
+            {
+              "kind": "type",
+              "name": "IApiResponse",
+              "line": 66
+            },
+            {
+              "kind": "const",
+              "name": "ApiResponseSchema",
+              "line": 80
+            },
+            {
+              "kind": "const",
+              "name": "LegacyApiErrorSchema",
+              "line": 91
+            },
+            {
+              "kind": "type",
+              "name": "ILegacyApiError",
+              "line": 92
+            },
+            {
+              "kind": "interface",
+              "name": "IApiUpstreamError",
+              "line": 104
+            },
+            {
+              "kind": "type",
+              "name": "IAPIResponseError",
+              "line": 114
+            }
+          ]
+        },
+        {
+          "path": "shared/src/auth.ts",
+          "loc": 122,
+          "description": "User/invite/reset/refresh-family/auth-policy schemas + TTL constants; toUserPublic().",
+          "exports": [
+            {
+              "kind": "enum",
+              "name": "EUserStatus",
+              "line": 5
+            },
+            {
+              "kind": "const",
+              "name": "UserStatusSchema",
+              "line": 11
+            },
+            {
+              "kind": "const",
+              "name": "UserSchema",
+              "line": 22
+            },
+            {
+              "kind": "type",
+              "name": "IUser",
+              "line": 34
+            },
+            {
+              "kind": "const",
+              "name": "UserPublicSchema",
+              "line": 37
+            },
+            {
+              "kind": "type",
+              "name": "IUserPublic",
+              "line": 38
+            },
+            {
+              "kind": "function",
+              "name": "toUserPublic",
+              "line": 41
+            },
+            {
+              "kind": "const",
+              "name": "InviteSchema",
+              "line": 47
+            },
+            {
+              "kind": "type",
+              "name": "IInvite",
+              "line": 57
+            },
+            {
+              "kind": "const",
+              "name": "INVITE_TTL_MS",
+              "line": 59
+            },
+            {
+              "kind": "const",
+              "name": "PasswordResetSchema",
+              "line": 62
+            },
+            {
+              "kind": "type",
+              "name": "IPasswordReset",
+              "line": 69
+            },
+            {
+              "kind": "const",
+              "name": "RESET_TTL_MS",
+              "line": 71
+            },
+            {
+              "kind": "const",
+              "name": "RefreshFamilySchema",
+              "line": 74
+            },
+            {
+              "kind": "type",
+              "name": "IRefreshFamily",
+              "line": 85
+            },
+            {
+              "kind": "const",
+              "name": "REFRESH_TTL_MS",
+              "line": 87
+            },
+            {
+              "kind": "const",
+              "name": "MAX_REFRESH_FAMILIES_PER_USER",
+              "line": 88
+            },
+            {
+              "kind": "const",
+              "name": "ACCESS_TTL_MS",
+              "line": 95
+            },
+            {
+              "kind": "const",
+              "name": "AUTH_POLICY_MIN_LENGTH_FLOOR",
+              "line": 98
+            },
+            {
+              "kind": "const",
+              "name": "AuthPolicySchema",
+              "line": 101
+            },
+            {
+              "kind": "type",
+              "name": "IAuthPolicy",
+              "line": 112
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_AUTH_POLICY",
+              "line": 114
+            }
+          ]
+        },
+        {
+          "path": "shared/src/email.ts",
+          "loc": 47,
+          "description": "Email body/format types and template data shapes (order, comm).",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "EmailFormatSchema",
+              "line": 21
+            },
+            {
+              "kind": "type",
+              "name": "EmailFormat",
+              "line": 22
+            },
+            {
+              "kind": "interface",
+              "name": "IEmailBodyType",
+              "line": 25
+            },
+            {
+              "kind": "interface",
+              "name": "IOrderTemplateData",
+              "line": 31
+            },
+            {
+              "kind": "interface",
+              "name": "ICommTemplateData",
+              "line": 41
+            }
+          ]
+        },
+        {
+          "path": "shared/src/index.ts",
+          "loc": 13,
+          "description": "Barrel re-exporting all shared type modules.",
+          "exports": []
+        },
+        {
+          "path": "shared/src/notifications.ts",
+          "loc": 103,
+          "description": "Notification event discriminated union (new-order/status-changed/product-updated/deleted).",
+          "exports": [
+            {
+              "kind": "enum",
+              "name": "ENotificationType",
+              "line": 27
+            },
+            {
+              "kind": "const",
+              "name": "NewOrderEventSchema",
+              "line": 34
+            },
+            {
+              "kind": "type",
+              "name": "INewOrderEvent",
+              "line": 40
+            },
+            {
+              "kind": "const",
+              "name": "OrderStatusChangedEventSchema",
+              "line": 42
+            },
+            {
+              "kind": "type",
+              "name": "IOrderStatusChangedEvent",
+              "line": 50
+            },
+            {
+              "kind": "const",
+              "name": "ProductUpdatedEventSchema",
+              "line": 54
+            },
+            {
+              "kind": "type",
+              "name": "IProductUpdatedEvent",
+              "line": 60
+            },
+            {
+              "kind": "const",
+              "name": "ProductDeletedEventSchema",
+              "line": 62
+            },
+            {
+              "kind": "type",
+              "name": "IProductDeletedEvent",
+              "line": 68
+            },
+            {
+              "kind": "const",
+              "name": "NotificationEventSchema",
+              "line": 71
+            },
+            {
+              "kind": "type",
+              "name": "INotificationEvent",
+              "line": 77
+            },
+            {
+              "kind": "type",
+              "name": "INotificationEventInput",
+              "line": 83
+            },
+            {
+              "kind": "const",
+              "name": "NotificationEventInputSchema",
+              "line": 97
+            }
+          ]
+        },
+        {
+          "path": "shared/src/order.ts",
+          "loc": 189,
+          "description": "Order schema/types incl. shipping, fulfillment status, line items, update payloads. Client OrderUpdateSchema.metadata now carries the same order_status enum refinement as server OrderUpdateRequestSchema (client/server parity).",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ShippingAddressSchema",
+              "line": 18
+            },
+            {
+              "kind": "type",
+              "name": "IShippingAddress",
+              "line": 27
+            },
+            {
+              "kind": "enum",
+              "name": "EOrderFulfillmentStatus",
+              "line": 37
+            },
+            {
+              "kind": "const",
+              "name": "OrderFulfillmentStatusSchema",
+              "line": 43
+            },
+            {
+              "kind": "const",
+              "name": "OrderSchema",
+              "line": 47
+            },
+            {
+              "kind": "type",
+              "name": "IOrder",
+              "line": 66
+            },
+            {
+              "kind": "const",
+              "name": "OrderUpdateRequestSchema",
+              "line": 77
+            },
+            {
+              "kind": "type",
+              "name": "IOrderUpdateRequest",
+              "line": 116
+            },
+            {
+              "kind": "const",
+              "name": "OrderUpdateSchema",
+              "line": 130
+            },
+            {
+              "kind": "type",
+              "name": "IOrderUpdate",
+              "line": 154
+            },
+            {
+              "kind": "const",
+              "name": "OrderLineItemSchema",
+              "line": 157
+            },
+            {
+              "kind": "type",
+              "name": "IOrderLineItem",
+              "line": 175
+            }
+          ]
+        },
+        {
+          "path": "shared/src/product.ts",
+          "loc": 90,
+          "description": "Product Zod schema/types (IProduct, IProductInput, IProductUpdateRequest, EProductCategory). default_price validated with an anchored /^price_[A-Za-z0-9]+$/ regex (rejects bare prefix + embedded-newline bypass).",
+          "exports": [
+            {
+              "kind": "enum",
+              "name": "EProductCategory",
+              "line": 15
+            },
+            {
+              "kind": "type",
+              "name": "ProductCategory",
+              "line": 33
+            },
+            {
+              "kind": "const",
+              "name": "ProductSchema",
+              "line": 36
+            },
+            {
+              "kind": "type",
+              "name": "IProduct",
+              "line": 60
+            },
+            {
+              "kind": "const",
+              "name": "ProductInputSchema",
+              "line": 63
+            },
+            {
+              "kind": "type",
+              "name": "IProductInput",
+              "line": 65
+            },
+            {
+              "kind": "const",
+              "name": "ProductUpdateRequestSchema",
+              "line": 73
+            },
+            {
+              "kind": "type",
+              "name": "IProductUpdateRequest",
+              "line": 90
+            }
+          ]
+        },
+        {
+          "path": "shared/src/settings.ts",
+          "loc": 160,
+          "description": "Site content, category, nav link, social, process step, testimonial schemas; ESettingsType.",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "CategorySchema",
+              "line": 21
+            },
+            {
+              "kind": "type",
+              "name": "ICategory",
+              "line": 25
+            },
+            {
+              "kind": "const",
+              "name": "NavLinkSchema",
+              "line": 28
+            },
+            {
+              "kind": "type",
+              "name": "INavLink",
+              "line": 32
+            },
+            {
+              "kind": "const",
+              "name": "SocialLinksSchema",
+              "line": 35
+            },
+            {
+              "kind": "type",
+              "name": "ISocialLinks",
+              "line": 42
+            },
+            {
+              "kind": "const",
+              "name": "SiteContentSchema",
+              "line": 48
+            },
+            {
+              "kind": "type",
+              "name": "ISiteContent",
+              "line": 105
+            },
+            {
+              "kind": "const",
+              "name": "SiteContentPartialSchema",
+              "line": 113
+            },
+            {
+              "kind": "const",
+              "name": "ProcessStepSchema",
+              "line": 116
+            },
+            {
+              "kind": "type",
+              "name": "IProcessStep",
+              "line": 123
+            },
+            {
+              "kind": "const",
+              "name": "TestimonialSchema",
+              "line": 126
+            },
+            {
+              "kind": "type",
+              "name": "ITestimonial",
+              "line": 134
+            },
+            {
+              "kind": "const",
+              "name": "ProcessStepsSchema",
+              "line": 137
+            },
+            {
+              "kind": "const",
+              "name": "TestimonialsSchema",
+              "line": 138
+            },
+            {
+              "kind": "const",
+              "name": "CategoriesSchema",
+              "line": 139
+            },
+            {
+              "kind": "enum",
+              "name": "ESettingsType",
+              "line": 142
+            },
+            {
+              "kind": "type",
+              "name": "SettingsType",
+              "line": 159
+            }
+          ]
+        },
+        {
+          "path": "shared/src/staff.ts",
+          "loc": 48,
+          "description": "Staff role enum, role rank map, roleSatisfies() authority check.",
+          "exports": [
+            {
+              "kind": "enum",
+              "name": "EStaffRole",
+              "line": 12
+            },
+            {
+              "kind": "const",
+              "name": "StaffRoleSchema",
+              "line": 19
+            },
+            {
+              "kind": "const",
+              "name": "STAFF_ROLE_RANK",
+              "line": 30
+            },
+            {
+              "kind": "function",
+              "name": "roleSatisfies",
+              "line": 42
+            }
+          ]
+        },
+        {
+          "path": "shared/src/stripe.ts",
+          "loc": 51,
+          "description": "Stripe API response shapes (price, product, product list).",
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IStripePriceRecurring",
+              "line": 15
+            },
+            {
+              "kind": "interface",
+              "name": "IStripePriceResponse",
+              "line": 21
+            },
+            {
+              "kind": "interface",
+              "name": "IStripeProductResponse",
+              "line": 32
+            },
+            {
+              "kind": "interface",
+              "name": "IStripeProductsListResponse",
+              "line": 45
+            }
+          ]
+        }
+      ]
+    },
+    "services": {
+      "name": "bee-epic-apiary-services",
+      "role": "Cloudflare Worker: Stripe checkout/CRUD, auth, settings, contact email, SSE notifications, rate limiting.",
+      "stack": [
+        "Cloudflare Workers",
+        "Wrangler",
+        "Stripe SDK",
+        "Zod",
+        "Durable Objects",
+        "KV"
+      ],
+      "srcFileCount": 80,
+      "testFileCount": 0,
+      "exportedSymbolCount": 131,
+      "files": [
+        {
+          "path": "services/src/auth/cookies.ts",
+          "loc": 161,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ACCESS_COOKIE",
+              "line": 33
+            },
+            {
+              "kind": "const",
+              "name": "REFRESH_COOKIE",
+              "line": 34
+            },
+            {
+              "kind": "const",
+              "name": "REFRESH_COOKIE_PATH",
+              "line": 41
+            },
+            {
+              "kind": "function",
+              "name": "buildAccessCookie",
+              "line": 68
+            },
+            {
+              "kind": "function",
+              "name": "buildRefreshCookie",
+              "line": 76
+            },
+            {
+              "kind": "function",
+              "name": "buildClearAccessCookie",
+              "line": 86
+            },
+            {
+              "kind": "function",
+              "name": "buildClearRefreshCookie",
+              "line": 96
+            },
+            {
+              "kind": "function",
+              "name": "setSessionCookies",
+              "line": 111
+            },
+            {
+              "kind": "function",
+              "name": "clearSessionCookies",
+              "line": 126
+            },
+            {
+              "kind": "function",
+              "name": "readCookie",
+              "line": 146
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/crypto/jwt.ts",
+          "loc": 81,
+          "description": null,
+          "exports": [
+            {
+              "kind": "type",
+              "name": "TJwtType",
+              "line": 5
+            },
+            {
+              "kind": "interface",
+              "name": "IJwtPayload",
+              "line": 7
+            },
+            {
+              "kind": "type",
+              "name": "IJwtInput",
+              "line": 18
+            },
+            {
+              "kind": "function",
+              "name": "signJwt",
+              "line": 24
+            },
+            {
+              "kind": "function",
+              "name": "verifyJwt",
+              "line": 39
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/crypto/passwordHash.ts",
+          "loc": 57,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "hashPassword",
+              "line": 17
+            },
+            {
+              "kind": "function",
+              "name": "verifyPassword",
+              "line": 24
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/crypto/tokens.ts",
+          "loc": 30,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "generateUrlSafeToken",
+              "line": 8
+            },
+            {
+              "kind": "function",
+              "name": "base64UrlEncode",
+              "line": 15
+            },
+            {
+              "kind": "function",
+              "name": "base64UrlDecode",
+              "line": 23
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/emails/from.ts",
+          "loc": 92,
+          "description": null,
+          "exports": [
+            {
+              "kind": "type",
+              "name": "TAuthEmailKind",
+              "line": 22
+            },
+            {
+              "kind": "function",
+              "name": "authFromAddress",
+              "line": 69
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/emails/greeting.ts",
+          "loc": 40,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "escapeHtml",
+              "line": 21
+            },
+            {
+              "kind": "function",
+              "name": "renderGreeting",
+              "line": 36
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/emails/sendInvite.ts",
+          "loc": 96,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "sendInvite",
+              "line": 76
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/emails/sendPasswordChanged.ts",
+          "loc": 96,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "sendPasswordChanged",
+              "line": 76
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/emails/sendReset.ts",
+          "loc": 83,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "sendReset",
+              "line": 63
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/handlers/acceptInvite.ts",
+          "loc": 240,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/bootstrapOwner.ts",
+          "loc": 201,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/changePassword.ts",
+          "loc": 154,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/completeReset.ts",
+          "loc": 222,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/deleteUser.ts",
+          "loc": 120,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/inviteUser.ts",
+          "loc": 164,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/listUsers.ts",
+          "loc": 45,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/login.ts",
+          "loc": 160,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/logout.ts",
+          "loc": 65,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/policyHandlers.ts",
+          "loc": 110,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "getPolicyHandler",
+              "line": 103
+            },
+            {
+              "kind": "const",
+              "name": "putPolicyHandler",
+              "line": 107
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/handlers/refresh.ts",
+          "loc": 163,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/reinviteUser.ts",
+          "loc": 111,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/requestReset.ts",
+          "loc": 165,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/updateMe.ts",
+          "loc": 82,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/handlers/updateUser.ts",
+          "loc": 160,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/auth/policy/truncateIp.ts",
+          "loc": 64,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "truncateIp",
+              "line": 20
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/policy/validatePassword.ts",
+          "loc": 162,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IValidatePasswordResult",
+              "line": 31
+            },
+            {
+              "kind": "const",
+              "name": "PASSWORD_DENYLIST",
+              "line": 41
+            },
+            {
+              "kind": "function",
+              "name": "validatePassword",
+              "line": 71
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/readVerifiedRefreshPayload.ts",
+          "loc": 24,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "readVerifiedRefreshPayload",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/repo/inviteRepo.ts",
+          "loc": 144,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "createInvite",
+              "line": 46
+            },
+            {
+              "kind": "function",
+              "name": "getInvite",
+              "line": 60
+            },
+            {
+              "kind": "function",
+              "name": "consumeInvite",
+              "line": 94
+            },
+            {
+              "kind": "function",
+              "name": "invalidateForEmail",
+              "line": 108
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/repo/policyRepo.ts",
+          "loc": 95,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "getPolicy",
+              "line": 33
+            },
+            {
+              "kind": "function",
+              "name": "putPolicy",
+              "line": 69
+            },
+            {
+              "kind": "function",
+              "name": "_clearCacheForTests",
+              "line": 92
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/repo/refreshFamilyRepo.ts",
+          "loc": 206,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "getFamily",
+              "line": 63
+            },
+            {
+              "kind": "function",
+              "name": "createFamily",
+              "line": 99
+            },
+            {
+              "kind": "function",
+              "name": "rotateFamily",
+              "line": 123
+            },
+            {
+              "kind": "function",
+              "name": "deleteFamily",
+              "line": 142
+            },
+            {
+              "kind": "function",
+              "name": "deleteAllForEmail",
+              "line": 152
+            },
+            {
+              "kind": "function",
+              "name": "listForEmail",
+              "line": 180
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/repo/resetRepo.ts",
+          "loc": 144,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "createReset",
+              "line": 46
+            },
+            {
+              "kind": "function",
+              "name": "getReset",
+              "line": 60
+            },
+            {
+              "kind": "function",
+              "name": "consumeReset",
+              "line": 94
+            },
+            {
+              "kind": "function",
+              "name": "invalidateForEmail",
+              "line": 108
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/repo/userRepo.ts",
+          "loc": 172,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "getUser",
+              "line": 53
+            },
+            {
+              "kind": "function",
+              "name": "createUser",
+              "line": 77
+            },
+            {
+              "kind": "function",
+              "name": "updateUser",
+              "line": 97
+            },
+            {
+              "kind": "function",
+              "name": "deleteUser",
+              "line": 117
+            },
+            {
+              "kind": "function",
+              "name": "listUsers",
+              "line": 134
+            },
+            {
+              "kind": "function",
+              "name": "countByRole",
+              "line": 145
+            },
+            {
+              "kind": "function",
+              "name": "toPublic",
+              "line": 151
+            },
+            {
+              "kind": "function",
+              "name": "rebuildIndex",
+              "line": 160
+            }
+          ]
+        },
+        {
+          "path": "services/src/auth/utils/parsePath.ts",
+          "loc": 56,
+          "description": null,
+          "exports": [
+            {
+              "kind": "type",
+              "name": "UsersPathSuffix",
+              "line": 30
+            },
+            {
+              "kind": "function",
+              "name": "extractEmailFromUsersPath",
+              "line": 43
+            }
+          ]
+        },
+        {
+          "path": "services/src/contact/comm-template.ts",
+          "loc": 39,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "buildCommNotificationHtml",
+              "line": 13
+            },
+            {
+              "kind": "function",
+              "name": "buildCommNotificationText",
+              "line": 22
+            },
+            {
+              "kind": "function",
+              "name": "buildCommNotificationMarkdown",
+              "line": 28
+            }
+          ]
+        },
+        {
+          "path": "services/src/contact/contact-handler.ts",
+          "loc": 118,
+          "description": "POST /contact: routes to Formspark or Cloudflare Email.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleContact",
+              "line": 4
+            }
+          ]
+        },
+        {
+          "path": "services/src/index.ts",
+          "loc": 23,
+          "description": "Worker entry: default fetch handler + Durable Object exports (NotificationHub, RateLimiterDO).",
+          "exports": []
+        },
+        {
+          "path": "services/src/notifications/notification-hub.ts",
+          "loc": 315,
+          "description": "NotificationHub Durable Object: SQLite-backed SSE fanout with replay window + eviction. heartbeat()/broadcast() iterate a snapshot of the connection set and delete-in-place on failed write, so a concurrent fetch() subscribe is never lost to a set swap.",
+          "exports": [
+            {
+              "kind": "class",
+              "name": "NotificationHub",
+              "line": 25
+            }
+          ]
+        },
+        {
+          "path": "services/src/notifications/types.ts",
+          "loc": 21,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/router.ts",
+          "loc": 308,
+          "description": "Manual request router; exact-path matching, per-route method + role gating.",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "router",
+              "line": 56
+            }
+          ]
+        },
+        {
+          "path": "services/src/settings/schemas.ts",
+          "loc": 18,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "categorySchema",
+              "line": 14
+            },
+            {
+              "kind": "const",
+              "name": "siteContentSchema",
+              "line": 15
+            },
+            {
+              "kind": "const",
+              "name": "processStepsSchema",
+              "line": 16
+            },
+            {
+              "kind": "const",
+              "name": "testimonialsSchema",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "services/src/settings/settings-handler.ts",
+          "loc": 82,
+          "description": "GET|PUT /settings/:type (site|process|testimonials|categories).",
+          "exports": []
+        },
+        {
+          "path": "services/src/stripe/checkout/index.ts",
+          "loc": 2,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/stripe/checkout/stripe-checkout.ts",
+          "loc": 98,
+          "description": "POST /checkout: splits recurring + one-time Stripe sessions.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleCheckout",
+              "line": 4
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/index.ts",
+          "loc": 5,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/stripe/notifications/notifications-stream.ts",
+          "loc": 90,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleNotificationsStream",
+              "line": 20
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/order/confirm-order.ts",
+          "loc": 108,
+          "description": "Confirms an order from a completed checkout session; sends notification + email.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "confirmOrder",
+              "line": 82
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/order/get-orders.ts",
+          "loc": 100,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleGetOrders",
+              "line": 51
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/order/index.ts",
+          "loc": 3,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/stripe/order/order-template.ts",
+          "loc": 83,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "buildOrderNotificationHtml",
+              "line": 5
+            },
+            {
+              "kind": "function",
+              "name": "buildOrderNotificationText",
+              "line": 55
+            },
+            {
+              "kind": "function",
+              "name": "buildOrderNotificationMarkdown",
+              "line": 69
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/order/update-order.ts",
+          "loc": 66,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleUpdateOrder",
+              "line": 5
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/price/create-price.ts",
+          "loc": 32,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleCreatePrice",
+              "line": 5
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/price/index.ts",
+          "loc": 2,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/stripe/product/cleanup-products.ts",
+          "loc": 105,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleCleanupProducts",
+              "line": 28
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/product/create-product.ts",
+          "loc": 39,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleCreateProduct",
+              "line": 7
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/product/delete-product.ts",
+          "loc": 140,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "archiveProduct",
+              "line": 14
+            },
+            {
+              "kind": "function",
+              "name": "handleDeleteProduct",
+              "line": 56
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/product/get-products-count.ts",
+          "loc": 24,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleGetProductsCount",
+              "line": 5
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/product/get-products-stats.ts",
+          "loc": 111,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "PRODUCT_STATS_CACHE_KEY",
+              "line": 24
+            },
+            {
+              "kind": "interface",
+              "name": "IProductStats",
+              "line": 27
+            },
+            {
+              "kind": "function",
+              "name": "invalidateProductStatsCache",
+              "line": 35
+            },
+            {
+              "kind": "function",
+              "name": "aggregateProductStats",
+              "line": 46
+            },
+            {
+              "kind": "function",
+              "name": "handleGetProductsStats",
+              "line": 65
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/product/get-products.ts",
+          "loc": 124,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleGetProducts",
+              "line": 44
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/product/index.ts",
+          "loc": 6,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/stripe/product/shared.ts",
+          "loc": 72,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "PRODUCT_COUNT_CACHE_KEY",
+              "line": 7
+            },
+            {
+              "kind": "function",
+              "name": "invalidateProductCountCache",
+              "line": 14
+            },
+            {
+              "kind": "function",
+              "name": "fetchAllActiveProducts",
+              "line": 24
+            },
+            {
+              "kind": "function",
+              "name": "matchesSearch",
+              "line": 47
+            },
+            {
+              "kind": "function",
+              "name": "matchesCategory",
+              "line": 58
+            },
+            {
+              "kind": "function",
+              "name": "matchesTag",
+              "line": 63
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/product/update-product.ts",
+          "loc": 53,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleUpdateProduct",
+              "line": 6
+            }
+          ]
+        },
+        {
+          "path": "services/src/stripe/webhook/webhook-handler.ts",
+          "loc": 118,
+          "description": "POST /stripe/webhook: signature-verified, idempotent checkout.session.completed -> confirmOrder. Idempotency key is RESERVED in CONTENT_KV before dispatch and released (deleted) on confirmOrder failure, closing the concurrent-duplicate window while staying retryable.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "handleWebhook",
+              "line": 35
+            }
+          ]
+        },
+        {
+          "path": "services/src/types/index.ts",
+          "loc": 47,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IEmailMessageBuilder",
+              "line": 29
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/buildEmailBody.ts",
+          "loc": 45,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "buildEmailBody",
+              "line": 25
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/escapeHtml.ts",
+          "loc": 13,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "escapeHtml",
+              "line": 10
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/getClientIp.ts",
+          "loc": 19,
+          "description": "Resolve client IP as a guaranteed string: cf.connectingIp -> CF-Connecting-IP header -> 'unknown'. Centralises a coercion that workerd's over-wide cf typing otherwise breaks.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "getClientIp",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/handleCORS.ts",
+          "loc": 78,
+          "description": null,
+          "exports": [
+            {
+              "kind": "type",
+              "name": "HttpMethod",
+              "line": 4
+            },
+            {
+              "kind": "function",
+              "name": "handleCORS",
+              "line": 44
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/hostnameAllowed.ts",
+          "loc": 38,
+          "description": "Origin allow-list check: compares full URL origin (scheme+host+port), not just hostname, so http:// downgrades and arbitrary ports are rejected.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "hostnameAllowed",
+              "line": 9
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/index.ts",
+          "loc": 15,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "services/src/utils/isAllowedOrigin.ts",
+          "loc": 39,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "isAllowedOrigin",
+              "line": 18
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/isValidUrl.ts",
+          "loc": 24,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "isValidUrl",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/jsonResponse.ts",
+          "loc": 93,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "jsonResponse",
+              "line": 8
+            },
+            {
+              "kind": "function",
+              "name": "jsonOk",
+              "line": 32
+            },
+            {
+              "kind": "function",
+              "name": "jsonErr",
+              "line": 40
+            },
+            {
+              "kind": "function",
+              "name": "httpStatusFor",
+              "line": 45
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/paginate.ts",
+          "loc": 30,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "paginateArray",
+              "line": 8
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/rate-limiter-do.ts",
+          "loc": 64,
+          "description": "RateLimiterDO Durable Object + pure checkRateLimit() logic.",
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IRateLimitStorage",
+              "line": 8
+            },
+            {
+              "kind": "function",
+              "name": "checkRateLimit",
+              "line": 21
+            },
+            {
+              "kind": "class",
+              "name": "RateLimiterDO",
+              "line": 46
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/rateLimiter.ts",
+          "loc": 37,
+          "description": "RateLimiter client for the DO; fail-open on DO error.",
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IRateLimiterOptions",
+              "line": 1
+            },
+            {
+              "kind": "interface",
+              "name": "IRateLimiterResult",
+              "line": 6
+            },
+            {
+              "kind": "class",
+              "name": "RateLimiter",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/resolveCaller.ts",
+          "loc": 88,
+          "description": "Three-path auth chain: cookie JWT -> bearer API key -> dev X-Dev-Email header.",
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ICaller",
+              "line": 7
+            },
+            {
+              "kind": "function",
+              "name": "resolveCaller",
+              "line": 37
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/stripeErrorResponse.ts",
+          "loc": 30,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "stripeErrorResponse",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/timingSafeEqual.ts",
+          "loc": 24,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "timingSafeEqual",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/withAuthHandler.ts",
+          "loc": 120,
+          "description": "Middleware: CORS, method check, origin allow-list, auth resolution, write-floor, rate limit, try/catch.",
+          "exports": [
+            {
+              "kind": "type",
+              "name": "AuthHandler",
+              "line": 7
+            },
+            {
+              "kind": "interface",
+              "name": "IWithAuthHandlerOptions",
+              "line": 10
+            },
+            {
+              "kind": "function",
+              "name": "withAuthHandler",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "path": "services/src/utils/withStripeHandler.ts",
+          "loc": 110,
+          "description": "Middleware injecting memoised Stripe client + Stripe error mapping; delegates to withAuthHandler.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "setStripeInstance",
+              "line": 29
+            },
+            {
+              "kind": "function",
+              "name": "getStripeInstance",
+              "line": 45
+            },
+            {
+              "kind": "type",
+              "name": "StripeHandler",
+              "line": 56
+            },
+            {
+              "kind": "interface",
+              "name": "IWithStripeHandlerOptions",
+              "line": 59
+            },
+            {
+              "kind": "function",
+              "name": "withStripeHandler",
+              "line": 87
+            }
+          ]
+        }
+      ]
+    },
+    "admin": {
+      "name": "bee-epic-apiary-admin",
+      "role": "React 19 admin SPA: manage products, orders, users, settings; cookie auth.",
+      "stack": [
+        "React 19",
+        "TypeScript",
+        "Vite",
+        "Redux Toolkit",
+        "Tailwind 4",
+        "Axios"
+      ],
+      "srcFileCount": 56,
+      "testFileCount": 49,
+      "exportedSymbolCount": 131,
+      "files": [
+        {
+          "path": "admin/src/App.tsx",
+          "loc": 84,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "admin/src/components/auth/BootstrapGuard.tsx",
+          "loc": 72,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "BootstrapGuard",
+              "line": 30
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/auth/ChangePasswordModal.tsx",
+          "loc": 246,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ChangePasswordModal",
+              "line": 41
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/auth/PasswordField.tsx",
+          "loc": 105,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "PasswordField",
+              "line": 36
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/auth/RequireCaller.tsx",
+          "loc": 63,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "RequireCaller",
+              "line": 20
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/auth/RoleGate.tsx",
+          "loc": 60,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IRoleGateProps",
+              "line": 5
+            },
+            {
+              "kind": "function",
+              "name": "RoleGate",
+              "line": 35
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/auth/UserMenu.tsx",
+          "loc": 297,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "UserMenu",
+              "line": 38
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/forms/index.ts",
+          "loc": 5,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "admin/src/components/forms/Section.tsx",
+          "loc": 30,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ISectionProps",
+              "line": 4
+            },
+            {
+              "kind": "function",
+              "name": "Section",
+              "line": 13
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/forms/SelectField.tsx",
+          "loc": 82,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ISelectFieldOption",
+              "line": 4
+            },
+            {
+              "kind": "interface",
+              "name": "ISelectFieldProps",
+              "line": 10
+            },
+            {
+              "kind": "function",
+              "name": "SelectField",
+              "line": 24
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/forms/TextAreaField.tsx",
+          "loc": 78,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ITextAreaFieldProps",
+              "line": 4
+            },
+            {
+              "kind": "function",
+              "name": "TextAreaField",
+              "line": 22
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/forms/TextField.tsx",
+          "loc": 83,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ITextFieldProps",
+              "line": 4
+            },
+            {
+              "kind": "function",
+              "name": "TextField",
+              "line": 26
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/layout/AdminLayout.tsx",
+          "loc": 52,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "AdminLayout",
+              "line": 7
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/layout/AdminNavbar.tsx",
+          "loc": 344,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IAdminNavbarProps",
+              "line": 22
+            },
+            {
+              "kind": "function",
+              "name": "AdminNavbar",
+              "line": 27
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/layout/Sidebar.tsx",
+          "loc": 98,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ISidebarProps",
+              "line": 12
+            },
+            {
+              "kind": "function",
+              "name": "Sidebar",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/notifications/NotificationsPanel.tsx",
+          "loc": 94,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "NotificationsPanel",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/products/CleanupDialog.tsx",
+          "loc": 166,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ICleanupDialogProps",
+              "line": 12
+            },
+            {
+              "kind": "function",
+              "name": "CleanupDialog",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/products/ProductFormDialog.tsx",
+          "loc": 895,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IProductFormDialogProps",
+              "line": 17
+            },
+            {
+              "kind": "function",
+              "name": "ProductFormDialog",
+              "line": 120
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/shared/DeleteConfirmDialog.tsx",
+          "loc": 84,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IDeleteConfirmDialogProps",
+              "line": 4
+            },
+            {
+              "kind": "function",
+              "name": "DeleteConfirmDialog",
+              "line": 15
+            }
+          ]
+        },
+        {
+          "path": "admin/src/components/shared/Spinner.tsx",
+          "loc": 23,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ISpinnerProps",
+              "line": 2
+            },
+            {
+              "kind": "function",
+              "name": "Spinner",
+              "line": 7
+            }
+          ]
+        },
+        {
+          "path": "admin/src/hooks/useAuthActions.ts",
+          "loc": 76,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IUseAuthActionsResult",
+              "line": 7
+            },
+            {
+              "kind": "function",
+              "name": "useAuthActions",
+              "line": 36
+            }
+          ]
+        },
+        {
+          "path": "admin/src/hooks/useCaller.ts",
+          "loc": 41,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IUseCallerResult",
+              "line": 7
+            },
+            {
+              "kind": "function",
+              "name": "useCaller",
+              "line": 22
+            }
+          ]
+        },
+        {
+          "path": "admin/src/hooks/useTheme.tsx",
+          "loc": 76,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ThemeProvider",
+              "line": 42
+            },
+            {
+              "kind": "function",
+              "name": "useTheme",
+              "line": 71
+            }
+          ]
+        },
+        {
+          "path": "admin/src/main.tsx",
+          "loc": 91,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "admin/src/pages/AcceptInvitePage.tsx",
+          "loc": 210,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "AcceptInvitePage",
+              "line": 42
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/BootstrapOwnerPage.tsx",
+          "loc": 177,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "BootstrapOwnerPage",
+              "line": 27
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/CompleteResetPage.tsx",
+          "loc": 206,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "CompleteResetPage",
+              "line": 38
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/DashboardPage.tsx",
+          "loc": 677,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "DashboardPage",
+              "line": 60
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/LoginPage.tsx",
+          "loc": 158,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "LoginPage",
+              "line": 27
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/OrderDetailPage.tsx",
+          "loc": 1083,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "OrderDetailPage",
+              "line": 41
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/OrdersPage.tsx",
+          "loc": 826,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "OrdersPage",
+              "line": 56
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/ProductDetailPage.tsx",
+          "loc": 453,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ProductDetailPage",
+              "line": 29
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/ProductsPage.tsx",
+          "loc": 709,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ProductsPage",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/RequestResetPage.tsx",
+          "loc": 134,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "RequestResetPage",
+              "line": 21
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/settings/AdminConfigTab.tsx",
+          "loc": 134,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IAdminConfigTabProps",
+              "line": 8
+            },
+            {
+              "kind": "function",
+              "name": "AdminConfigTab",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/settings/CategoriesTab.tsx",
+          "loc": 70,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ICategoriesTabProps",
+              "line": 6
+            },
+            {
+              "kind": "function",
+              "name": "CategoriesTab",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/settings/ProcessTab.tsx",
+          "loc": 82,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IProcessTabProps",
+              "line": 6
+            },
+            {
+              "kind": "function",
+              "name": "ProcessTab",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/settings/SecurityTab.tsx",
+          "loc": 360,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "SecurityTab",
+              "line": 61
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/settings/SiteContentTab.tsx",
+          "loc": 429,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ISiteContentTabProps",
+              "line": 6
+            },
+            {
+              "kind": "function",
+              "name": "SiteContentTab",
+              "line": 23
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/settings/TestimonialsTab.tsx",
+          "loc": 121,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ITestimonialsTabProps",
+              "line": 6
+            },
+            {
+              "kind": "function",
+              "name": "TestimonialsTab",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/settings/UsersTab.tsx",
+          "loc": 657,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "UsersTab",
+              "line": 222
+            }
+          ]
+        },
+        {
+          "path": "admin/src/pages/SettingsPage.tsx",
+          "loc": 582,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "SettingsPage",
+              "line": 50
+            }
+          ]
+        },
+        {
+          "path": "admin/src/store/authSlice.ts",
+          "loc": 248,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IAuthState",
+              "line": 8
+            },
+            {
+              "kind": "const",
+              "name": "fetchCaller",
+              "line": 46
+            },
+            {
+              "kind": "const",
+              "name": "login",
+              "line": 76
+            },
+            {
+              "kind": "const",
+              "name": "logout",
+              "line": 94
+            },
+            {
+              "kind": "const",
+              "name": "refresh",
+              "line": 115
+            },
+            {
+              "kind": "const",
+              "name": "changePassword",
+              "line": 135
+            }
+          ]
+        },
+        {
+          "path": "admin/src/store/index.ts",
+          "loc": 27,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "store",
+              "line": 8
+            },
+            {
+              "kind": "type",
+              "name": "RootState",
+              "line": 24
+            },
+            {
+              "kind": "type",
+              "name": "AppDispatch",
+              "line": 26
+            }
+          ]
+        },
+        {
+          "path": "admin/src/store/ordersSlice.ts",
+          "loc": 191,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IOrdersState",
+              "line": 32
+            },
+            {
+              "kind": "const",
+              "name": "fetchOrders",
+              "line": 56
+            },
+            {
+              "kind": "const",
+              "name": "fetchOrderById",
+              "line": 81
+            },
+            {
+              "kind": "const",
+              "name": "updateOrder",
+              "line": 89
+            }
+          ]
+        },
+        {
+          "path": "admin/src/store/productsSlice.ts",
+          "loc": 320,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IFetchParams",
+              "line": 8
+            },
+            {
+              "kind": "interface",
+              "name": "IProductsState",
+              "line": 35
+            },
+            {
+              "kind": "const",
+              "name": "fetchProducts",
+              "line": 60
+            },
+            {
+              "kind": "const",
+              "name": "fetchProductsCount",
+              "line": 72
+            },
+            {
+              "kind": "const",
+              "name": "fetchProductById",
+              "line": 81
+            },
+            {
+              "kind": "const",
+              "name": "createProduct",
+              "line": 90
+            },
+            {
+              "kind": "const",
+              "name": "updateProduct",
+              "line": 111
+            },
+            {
+              "kind": "const",
+              "name": "deleteProduct",
+              "line": 135
+            },
+            {
+              "kind": "const",
+              "name": "cleanupProducts",
+              "line": 155
+            }
+          ]
+        },
+        {
+          "path": "admin/src/types/index.ts",
+          "loc": 52,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ICaller",
+              "line": 23
+            },
+            {
+              "kind": "interface",
+              "name": "IDashboardStats",
+              "line": 42
+            }
+          ]
+        },
+        {
+          "path": "admin/src/types/order.ts",
+          "loc": 15,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "admin/src/types/settings.ts",
+          "loc": 27,
+          "description": null,
+          "exports": [
+            {
+              "kind": "type",
+              "name": "SettingsTab",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "path": "admin/src/types/stripe.ts",
+          "loc": 14,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "admin/src/utils/api.ts",
+          "loc": 712,
+          "description": "Axios API client (envelope unwrap, typed ApiError, coalesced 401-refresh). updateProduct creates the new Price first, then applies metadata + default_price in a single PUT (atomic — no orphaned price-then-failed-update window).",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "bindStore",
+              "line": 56
+            },
+            {
+              "kind": "function",
+              "name": "__unbindStoreForTests",
+              "line": 61
+            },
+            {
+              "kind": "class",
+              "name": "ApiError",
+              "line": 207
+            },
+            {
+              "kind": "function",
+              "name": "apiErrorMessage",
+              "line": 222
+            },
+            {
+              "kind": "interface",
+              "name": "IProductCleanupCandidate",
+              "line": 275
+            },
+            {
+              "kind": "interface",
+              "name": "IProductCleanupResult",
+              "line": 281
+            },
+            {
+              "kind": "const",
+              "name": "api",
+              "line": 300
+            }
+          ]
+        },
+        {
+          "path": "admin/src/utils/authPolicy.ts",
+          "loc": 91,
+          "description": null,
+          "exports": [
+            {
+              "kind": "type",
+              "name": "IAuthPolicyHint",
+              "line": 7
+            },
+            {
+              "kind": "function",
+              "name": "evaluate",
+              "line": 65
+            }
+          ]
+        },
+        {
+          "path": "admin/src/utils/badgeClasses.ts",
+          "loc": 187,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "stockBadgeClass",
+              "line": 5
+            },
+            {
+              "kind": "function",
+              "name": "stockLabel",
+              "line": 12
+            },
+            {
+              "kind": "function",
+              "name": "categoryBadgeClass",
+              "line": 17
+            },
+            {
+              "kind": "function",
+              "name": "categoryLabel",
+              "line": 24
+            },
+            {
+              "kind": "function",
+              "name": "recurringText",
+              "line": 31
+            },
+            {
+              "kind": "function",
+              "name": "formatPrice",
+              "line": 50
+            },
+            {
+              "kind": "function",
+              "name": "orderStatusBadge",
+              "line": 58
+            },
+            {
+              "kind": "function",
+              "name": "orderStatusLabel",
+              "line": 72
+            },
+            {
+              "kind": "function",
+              "name": "orderPaymentStatusBadge",
+              "line": 86
+            },
+            {
+              "kind": "function",
+              "name": "orderPaymentStatusLabel",
+              "line": 100
+            },
+            {
+              "kind": "function",
+              "name": "orderModeBadge",
+              "line": 114
+            },
+            {
+              "kind": "function",
+              "name": "orderModeLabel",
+              "line": 128
+            },
+            {
+              "kind": "function",
+              "name": "orderMetadataStatusBadge",
+              "line": 142
+            },
+            {
+              "kind": "function",
+              "name": "orderMetadataStatusLabel",
+              "line": 156
+            },
+            {
+              "kind": "function",
+              "name": "truncateOrderId",
+              "line": 170
+            },
+            {
+              "kind": "function",
+              "name": "formatDate",
+              "line": 178
+            }
+          ]
+        },
+        {
+          "path": "admin/src/utils/constants.ts",
+          "loc": 199,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "DEFAULT_LOGO",
+              "line": 9
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_PRODUCT_IMAGE",
+              "line": 12
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_PRODUCT_THUMBNAIL",
+              "line": 14
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_API_URL",
+              "line": 16
+            },
+            {
+              "kind": "const",
+              "name": "ORDER_STATUS_CHANGED_EVENT",
+              "line": 19
+            },
+            {
+              "kind": "const",
+              "name": "NEW_ORDER_EVENT",
+              "line": 22
+            },
+            {
+              "kind": "const",
+              "name": "PRODUCT_UPDATED_EVENT",
+              "line": 25
+            },
+            {
+              "kind": "const",
+              "name": "PRODUCT_DELETED_EVENT",
+              "line": 28
+            },
+            {
+              "kind": "const",
+              "name": "CATEGORIES",
+              "line": 31
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_SITE",
+              "line": 38
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_PROCESS",
+              "line": 107
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_CATEGORIES",
+              "line": 150
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_TESTIMONIALS",
+              "line": 157
+            }
+          ]
+        },
+        {
+          "path": "admin/src/utils/cookieScope.ts",
+          "loc": 31,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "sharesETldPlusOne",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "admin/src/utils/transform.ts",
+          "loc": 337,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "transformStripeProduct",
+              "line": 81
+            },
+            {
+              "kind": "function",
+              "name": "transformToStripeParams",
+              "line": 151
+            },
+            {
+              "kind": "function",
+              "name": "transformToStripePriceParams",
+              "line": 185
+            },
+            {
+              "kind": "function",
+              "name": "transformStripeSession",
+              "line": 241
+            },
+            {
+              "kind": "function",
+              "name": "transformStripeLineItem",
+              "line": 274
+            },
+            {
+              "kind": "function",
+              "name": "transformStripeSessionsList",
+              "line": 311
+            },
+            {
+              "kind": "function",
+              "name": "transformStripeLineItemsList",
+              "line": 320
+            },
+            {
+              "kind": "function",
+              "name": "transformStripeProductsList",
+              "line": 329
+            }
+          ]
+        }
+      ]
+    },
+    "web": {
+      "name": "bee-epic-apiary-web",
+      "role": "Public React 19 PWA storefront: catalog, cart, Stripe checkout, SEO.",
+      "stack": [
+        "React 19",
+        "TypeScript",
+        "Vite",
+        "Redux Toolkit",
+        "Tailwind 4",
+        "Framer Motion",
+        "vite-plugin-pwa"
+      ],
+      "srcFileCount": 45,
+      "testFileCount": 5,
+      "exportedSymbolCount": 71,
+      "files": [
+        {
+          "path": "web/src/App.tsx",
+          "loc": 186,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "web/src/components/icons/BrandIcons.tsx",
+          "loc": 81,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "IBrandIconProps",
+              "line": 3
+            },
+            {
+              "kind": "const",
+              "name": "SiFacebook",
+              "line": 17
+            },
+            {
+              "kind": "const",
+              "name": "SiInstagram",
+              "line": 30
+            },
+            {
+              "kind": "const",
+              "name": "SiEtsy",
+              "line": 43
+            },
+            {
+              "kind": "const",
+              "name": "SiTwitter",
+              "line": 56
+            },
+            {
+              "kind": "const",
+              "name": "SiYouTube",
+              "line": 69
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/layout/Footer.tsx",
+          "loc": 185,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "Footer",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/layout/Layout.tsx",
+          "loc": 33,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "Layout",
+              "line": 11
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/layout/Navbar.tsx",
+          "loc": 226,
+          "description": "Storefront top nav + cart button. Count badge is aria-hidden; a polite sr-only aria-live region announces the cart item total to screen readers.",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "Navbar",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pages/AboutProcessPage.tsx",
+          "loc": 25,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "AboutProcessPage",
+              "line": 11
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pages/CancelPage.tsx",
+          "loc": 146,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "CancelPage",
+              "line": 18
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pages/ContactPage.tsx",
+          "loc": 22,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ContactPage",
+              "line": 9
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pages/HomePage.tsx",
+          "loc": 36,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "HomePage",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pages/ProductDetailPage.tsx",
+          "loc": 464,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ProductDetailPage",
+              "line": 28
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pages/ProductsPage.tsx",
+          "loc": 26,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ProductsPage",
+              "line": 10
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pages/SuccessPage.tsx",
+          "loc": 203,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "SuccessPage",
+              "line": 22
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/pwa/UpdatePrompt.tsx",
+          "loc": 76,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "UpdatePrompt",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/sections/AboutSection.tsx",
+          "loc": 284,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "AboutSection",
+              "line": 11
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/sections/ContactSection.tsx",
+          "loc": 363,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ContactSection",
+              "line": 32
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/sections/HeroSection.tsx",
+          "loc": 126,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "HeroSection",
+              "line": 11
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/sections/ProcessSection.tsx",
+          "loc": 118,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ProcessSection",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/sections/ProductsSection.tsx",
+          "loc": 427,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ProductsSection",
+              "line": 26
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/sections/TestimonialsSection.tsx",
+          "loc": 87,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "TestimonialsSection",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/seo/SeoHead.tsx",
+          "loc": 49,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "SeoHead",
+              "line": 13
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/shop/CartDrawer.tsx",
+          "loc": 146,
+          "description": "Slide-in cart dialog. Uses useFocusTrap for accessible Tab-trapping, Escape-to-close, and focus restoration to the trigger on close.",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "CartDrawer",
+              "line": 9
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/shop/CartItem.tsx",
+          "loc": 100,
+          "description": "Single cart line row. Thumbnail has explicit width/height + loading=lazy to curb layout shift.",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "CartItem",
+              "line": 12
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/shop/CheckoutButton.tsx",
+          "loc": 46,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "CheckoutButton",
+              "line": 10
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/shop/ProductCard.tsx",
+          "loc": 129,
+          "description": "Product grid card. Image has explicit width/height + loading=lazy to curb layout shift and defer offscreen loads.",
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ProductCard",
+              "line": 17
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/shop/ProductGrid.tsx",
+          "loc": 15,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "ProductGrid",
+              "line": 5
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/ui/Badge.tsx",
+          "loc": 36,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "Badge",
+              "line": 10
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/ui/Button.tsx",
+          "loc": 84,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "Button",
+              "line": 9
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/ui/LoadingSpinner.tsx",
+          "loc": 38,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "LoadingSpinner",
+              "line": 8
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/ui/LocationMap.tsx",
+          "loc": 83,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "LocationMap",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "path": "web/src/components/ui/SectionHeader.tsx",
+          "loc": 50,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "SectionHeader",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "path": "web/src/hooks/useCart.ts",
+          "loc": 71,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "useCart",
+              "line": 13
+            }
+          ]
+        },
+        {
+          "path": "web/src/hooks/useFocusTrap.ts",
+          "loc": 82,
+          "description": "Reusable accessible-dialog hook: traps Tab/Shift+Tab within a container, closes on Escape via onClose, and restores focus to the previously focused element on cleanup. Returns the container ref.",
+          "exports": [
+            {
+              "kind": "function",
+              "name": "useFocusTrap",
+              "line": 21
+            }
+          ]
+        },
+        {
+          "path": "web/src/hooks/useStripeCheckout.ts",
+          "loc": 130,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "useStripeCheckout",
+              "line": 14
+            }
+          ]
+        },
+        {
+          "path": "web/src/hooks/useTheme.tsx",
+          "loc": 53,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "ThemeProvider",
+              "line": 19
+            },
+            {
+              "kind": "function",
+              "name": "useTheme",
+              "line": 48
+            }
+          ]
+        },
+        {
+          "path": "web/src/main.tsx",
+          "loc": 81,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "web/src/store/cartSlice.ts",
+          "loc": 97,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "web/src/store/index.ts",
+          "loc": 20,
+          "description": null,
+          "exports": [
+            {
+              "kind": "type",
+              "name": "RootState",
+              "line": 8
+            },
+            {
+              "kind": "const",
+              "name": "store",
+              "line": 13
+            },
+            {
+              "kind": "type",
+              "name": "AppDispatch",
+              "line": 19
+            }
+          ]
+        },
+        {
+          "path": "web/src/store/persistenceMiddleware.ts",
+          "loc": 23,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "persistenceMiddleware",
+              "line": 6
+            }
+          ]
+        },
+        {
+          "path": "web/src/store/uiSlice.ts",
+          "loc": 40,
+          "description": null,
+          "exports": []
+        },
+        {
+          "path": "web/src/types/index.ts",
+          "loc": 31,
+          "description": null,
+          "exports": [
+            {
+              "kind": "interface",
+              "name": "ICartItem",
+              "line": 27
+            }
+          ]
+        },
+        {
+          "path": "web/src/utils/api.ts",
+          "loc": 176,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "fetchSiteContent",
+              "line": 37
+            },
+            {
+              "kind": "function",
+              "name": "fetchProcessSteps",
+              "line": 46
+            },
+            {
+              "kind": "function",
+              "name": "fetchTestimonials",
+              "line": 55
+            },
+            {
+              "kind": "function",
+              "name": "fetchCategories",
+              "line": 64
+            },
+            {
+              "kind": "interface",
+              "name": "IPaginatedProductsResult",
+              "line": 72
+            },
+            {
+              "kind": "function",
+              "name": "fetchProductBySlug",
+              "line": 79
+            },
+            {
+              "kind": "function",
+              "name": "fetchProductsPaginated",
+              "line": 94
+            },
+            {
+              "kind": "interface",
+              "name": "IContactFormData",
+              "line": 127
+            },
+            {
+              "kind": "function",
+              "name": "submitContactForm",
+              "line": 136
+            },
+            {
+              "kind": "function",
+              "name": "fetchAllSiteData",
+              "line": 155
+            }
+          ]
+        },
+        {
+          "path": "web/src/utils/constants.ts",
+          "loc": 91,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "DEFAULT_LOGO",
+              "line": 3
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_API_URL",
+              "line": 5
+            },
+            {
+              "kind": "const",
+              "name": "SITE_URL",
+              "line": 8
+            },
+            {
+              "kind": "const",
+              "name": "STRIPE_PUBLISHABLE_KEY",
+              "line": 10
+            },
+            {
+              "kind": "const",
+              "name": "PRODUCTS_PER_PAGE",
+              "line": 13
+            },
+            {
+              "kind": "const",
+              "name": "DEFAULT_SITE",
+              "line": 15
+            },
+            {
+              "kind": "const",
+              "name": "SECTION_IDS",
+              "line": 83
+            }
+          ]
+        },
+        {
+          "path": "web/src/utils/formatters.ts",
+          "loc": 23,
+          "description": null,
+          "exports": [
+            {
+              "kind": "const",
+              "name": "formatPrice",
+              "line": 1
+            },
+            {
+              "kind": "const",
+              "name": "formatDate",
+              "line": 8
+            },
+            {
+              "kind": "const",
+              "name": "formatPhoneNumber",
+              "line": 16
+            }
+          ]
+        },
+        {
+          "path": "web/src/utils/structuredData.ts",
+          "loc": 100,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "organizationSchema",
+              "line": 4
+            },
+            {
+              "kind": "function",
+              "name": "websiteSchema",
+              "line": 28
+            },
+            {
+              "kind": "function",
+              "name": "productSchema",
+              "line": 46
+            },
+            {
+              "kind": "function",
+              "name": "breadcrumbSchema",
+              "line": 66
+            },
+            {
+              "kind": "function",
+              "name": "localBusinessSchema",
+              "line": 79
+            }
+          ]
+        },
+        {
+          "path": "web/src/utils/transform.ts",
+          "loc": 94,
+          "description": null,
+          "exports": [
+            {
+              "kind": "function",
+              "name": "transformStripeProduct",
+              "line": 21
+            },
+            {
+              "kind": "function",
+              "name": "transformStripeProductsList",
+              "line": 81
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "stats": {
+    "totalSrcFiles": 191,
+    "totalTestFiles": 60,
+    "totalExportedSymbols": 427
+  }
+}

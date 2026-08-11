@@ -23,6 +23,7 @@ import {
   AlertCircle,
   X,
   ChevronDown,
+  Sparkles,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
 import {
@@ -35,6 +36,7 @@ import type { ICategory } from "../types/settings";
 import * as api from "../utils/api";
 import { Spinner } from "../components/shared/Spinner";
 import { ProductFormDialog } from "../components/products/ProductFormDialog";
+import { CleanupDialog } from "../components/products/CleanupDialog";
 import { DeleteConfirmDialog } from "../components/shared/DeleteConfirmDialog";
 import {
   stockBadgeClass,
@@ -45,6 +47,16 @@ import {
   formatPrice,
 } from "../utils/badgeClasses";
 
+/**
+ * Products list with URL-synced search + category filter, cursor pagination,
+ * and a desktop-table / mobile-card split. A single effect covers both the
+ * initial fetch and filter changes: it debounces (300ms), aborts the prior
+ * in-flight request on change (review I13), and guards against StrictMode's
+ * double initial fetch via a ref (review I6). Add/edit route to
+ * {@link ProductFormDialog}; delete and the un-priced-product
+ * {@link CleanupDialog} run through their own confirm dialogs. Scroll position
+ * is preserved across detail navigation via sessionStorage.
+ */
 export function ProductsPage() {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
@@ -68,6 +80,7 @@ export function ProductsPage() {
 
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [showCleanup, setShowCleanup] = useState(false);
   const [showFilters, setShowFilters] = useState(
     () => (searchParams.get("category") || "ALL") !== "ALL",
   );
@@ -82,24 +95,22 @@ export function ProductsPage() {
     [setSearchParams],
   );
 
-  const buildFetchParams = (includeLimit?: boolean) => {
-    const params: { search?: string; category?: string; limit?: number } = {};
-    if (searchTerm) params.search = searchTerm;
-    if (selectedCategory !== "ALL") params.category = selectedCategory;
-    if (includeLimit) {
-      const limitParam = searchParams.get("limit");
-      if (limitParam) {
-        const parsed = parseInt(limitParam, 10);
-        if (!isNaN(parsed) && parsed > 0) params.limit = parsed;
+  const buildFetchParams = useCallback(
+    (includeLimit?: boolean) => {
+      const params: { search?: string; category?: string; limit?: number } = {};
+      if (searchTerm) params.search = searchTerm;
+      if (selectedCategory !== "ALL") params.category = selectedCategory;
+      if (includeLimit) {
+        const limitParam = searchParams.get("limit");
+        if (limitParam) {
+          const parsed = parseInt(limitParam, 10);
+          if (!isNaN(parsed) && parsed > 0) params.limit = parsed;
+        }
       }
-    }
-    return params;
-  };
-
-  useLayoutEffect(() => {
-    dispatch(fetchProducts(buildFetchParams(true)));
-    dispatch(fetchProductsCount(buildFetchParams(true)));
-  }, []);
+      return params;
+    },
+    [searchTerm, selectedCategory, searchParams],
+  );
 
   useLayoutEffect(() => {
     const saved = sessionStorage.getItem("adminProductsScrollY");
@@ -124,13 +135,32 @@ export function ProductsPage() {
       });
   }, []);
 
+  // Single effect handles BOTH initial mount and filter changes. A separate
+  // mount-only useLayoutEffect previously fired the initial fetch; that
+  // double-fired under React.StrictMode because layout effects re-run, and
+  // it forced the change-detection branch below to special-case "first run".
+  // The didMount ref persists across StrictMode's intentional double-effect
+  // because ref values aren't reset between the two invocations (review I6,
+  // same shape as Task 16 in OrdersPage).
+  const didMount = useRef(false);
+  // Track the most recent fetchProducts dispatch so a follow-up filter
+  // change can abort it before the new one fires (review I13). A stale
+  // response could otherwise land after the fresh one and overwrite it.
+  const fetchPromiseRef = useRef<{ abort?: () => void } | null>(null);
   useEffect(() => {
+    if (!didMount.current) {
+      didMount.current = true;
+      prevSearch.current = searchTerm;
+      prevCategory.current = selectedCategory;
+      fetchPromiseRef.current = dispatch(fetchProducts(buildFetchParams(true)));
+      dispatch(fetchProductsCount(buildFetchParams(true)));
+      return;
+    }
+
     if (
       prevSearch.current === searchTerm &&
       prevCategory.current === selectedCategory
     ) {
-      prevSearch.current = searchTerm;
-      prevCategory.current = selectedCategory;
       return;
     }
 
@@ -138,14 +168,18 @@ export function ProductsPage() {
     prevCategory.current = selectedCategory;
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
+    // Abort the in-flight fetch (if any) before queuing the new one — the
+    // slice's rejected reducer ignores aborted dispatches (review I13).
+    fetchPromiseRef.current?.abort?.();
     searchTimer.current = setTimeout(async () => {
-      await dispatch(fetchProducts(buildFetchParams()));
+      fetchPromiseRef.current = dispatch(fetchProducts(buildFetchParams()));
+      await fetchPromiseRef.current;
       await dispatch(fetchProductsCount(buildFetchParams()));
     }, 300);
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
     };
-  }, [searchTerm, selectedCategory, dispatch]);
+  }, [searchTerm, selectedCategory, dispatch, buildFetchParams]);
 
   const saveScroll = useCallback(() => {
     sessionStorage.setItem("adminProductsScrollY", String(window.scrollY));
@@ -228,14 +262,25 @@ export function ProductsPage() {
         >
           Products Management
         </h2>
-        <button
-          data-testid="products-page_add-btn"
-          onClick={handleAddProduct}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Product
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            data-testid="products-page_cleanup-btn"
+            onClick={() => setShowCleanup(true)}
+            title="Remove un-priced (unsellable) products"
+            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-dark-700 rounded-lg hover:bg-gray-50 transition-colors dark:border-gray-600 dark:text-dark-300 dark:hover:bg-dark-200"
+          >
+            <Sparkles className="w-4 h-4" />
+            Cleanup
+          </button>
+          <button
+            data-testid="products-page_add-btn"
+            onClick={handleAddProduct}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+          >
+            <Plus className="w-4 h-4" />
+            Add Product
+          </button>
+        </div>
       </div>
 
       {error && (
@@ -260,7 +305,10 @@ export function ProductsPage() {
         >
           {/* Search */}
           <div data-testid="products-page_search" className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400" />
+            <Search
+              className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400"
+              aria-hidden="true"
+            />
             <label htmlFor="products-search" className="sr-only">
               Search products
             </label>
@@ -281,7 +329,7 @@ export function ProductsPage() {
                 data-testid="products-page_search-clear"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors dark:text-dark-500 dark:hover:text-dark-300"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -291,12 +339,14 @@ export function ProductsPage() {
             onClick={() => setShowFilters(!showFilters)}
             data-testid="products-page_filter-toggle"
             aria-label="Toggle filters"
+            aria-expanded={showFilters}
             className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-200"
           >
-            <Filter className="w-4 h-4 text-dark-600" />
+            <Filter className="w-4 h-4 text-dark-600" aria-hidden="true" />
             <span className="text-sm font-medium text-dark-700">Filters</span>
             <ChevronDown
               className={`w-4 h-4 text-dark-400 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`}
+              aria-hidden="true"
             />
           </button>
         </div>
@@ -357,7 +407,10 @@ export function ProductsPage() {
       {/* Products Display */}
       {products.length === 0 && !loading ? (
         <div data-testid="products-page_empty" className="text-center py-12">
-          <Package className="w-16 h-16 text-dark-300 mx-auto mb-4" />
+          <Package
+            className="w-16 h-16 text-dark-300 mx-auto mb-4"
+            aria-hidden="true"
+          />
           <h3 className="font-heading text-xl font-semibold text-dark-700 mb-2">
             No products found
           </h3>
@@ -368,9 +421,10 @@ export function ProductsPage() {
           </p>
           <button
             onClick={handleAddProduct}
+            data-testid="products-page_empty-add-btn"
             className="inline-flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-4 h-4" aria-hidden="true" />
             Add Product
           </button>
         </div>
@@ -395,27 +449,48 @@ export function ProductsPage() {
             <table data-testid="products-page_table" className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-dark-100 dark:border-gray-700">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Product
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Category
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Price
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Status
                   </th>
-                  <th className="w-[25px] px-1 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="w-[25px] px-1 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Featured
                   </th>
-                  <th className="px-6 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider">
+                  <th
+                    scope="col"
+                    className="px-6 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider"
+                  >
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody
+                data-testid="products-page_table-tbody"
+                className="divide-y divide-gray-200 dark:divide-gray-700"
+              >
                 {products.map((product) => (
                   <tr
                     key={product.id}
@@ -456,7 +531,7 @@ export function ProductsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="text-dark-700">
-                        {formatPrice(product.price)}
+                        {formatPrice(product.price, "usd")}
                       </span>
                       {product.recurringInterval && (
                         <p className="text-xs text-blue-600 mt-0.5 dark:text-blue-400">
@@ -547,7 +622,7 @@ export function ProductsPage() {
                   <div>
                     <span className="text-dark-500">Price:</span>
                     <span className="ml-1 text-dark-700">
-                      {formatPrice(product.price)}
+                      {formatPrice(product.price, "usd")}
                     </span>
                     {product.recurringInterval && (
                       <span className="ml-1 text-xs text-blue-600 dark:text-blue-400">
@@ -626,6 +701,12 @@ export function ProductsPage() {
         productName={deleteTarget?.name || ""}
         onCancel={() => setDeleteConfirm(null)}
         onConfirm={() => deleteConfirm && handleDelete(deleteConfirm)}
+      />
+
+      {/* Cleanup (un-priced products) Dialog */}
+      <CleanupDialog
+        isOpen={showCleanup}
+        onClose={() => setShowCleanup(false)}
       />
 
       {/* Product Form Dialog */}

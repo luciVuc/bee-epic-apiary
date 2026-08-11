@@ -27,7 +27,8 @@ describe('create-product handler', () => {
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Product name is required and must be a non-empty string');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for empty name', async () => {
@@ -51,7 +52,8 @@ describe('create-product handler', () => {
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Invalid product URL');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for invalid image URL', async () => {
@@ -67,7 +69,8 @@ describe('create-product handler', () => {
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toContain('Invalid image URL');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('creates product successfully', async () => {
@@ -81,10 +84,11 @@ describe('create-product handler', () => {
 		});
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(201);
 		const body = (await response.json()) as any;
-		expect(body.id).toBe('prod_123');
-		expect(body.name).toBe('Test Product');
+		expect(body.ok).toBe(true);
+		expect(body.data.id).toBe('prod_123');
+		expect(body.data.name).toBe('Test Product');
 	});
 
 	it('handles Stripe errors gracefully', async () => {
@@ -99,7 +103,8 @@ describe('create-product handler', () => {
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Invalid product data');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('creates product with valid URL', async () => {
@@ -113,9 +118,10 @@ describe('create-product handler', () => {
 		});
 		const env = { STRIPE_SECRET_KEY: 'sk_test_123', ALLOWED_ORIGINS: 'https://example.com' } as Env;
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
-		expect(response.status).toBe(200);
+		expect(response.status).toBe(201);
 		const body = (await response.json()) as any;
-		expect(body.url).toBe('https://example.com/product');
+		expect(body.ok).toBe(true);
+		expect(body.data.url).toBe('https://example.com/product');
 	});
 
 	it('returns 401 with invalid Stripe API key', async () => {
@@ -128,9 +134,12 @@ describe('create-product handler', () => {
 		});
 		const env = { STRIPE_SECRET_KEY: 'invalid_key', ALLOWED_ORIGINS: 'https://example.com' } as Env;
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
-		expect(response.status).toBe(401);
+		// Stripe's own 401 (invalid API key) is surfaced as BAD_REQUEST to the caller —
+		// it's the operator's misconfiguration, not the caller's auth failure.
+		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Invalid API Key');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('handles Stripe errors with statusCode >= 500', async () => {
@@ -145,7 +154,8 @@ describe('create-product handler', () => {
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(500);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
 	});
 
 	it('handles Stripe errors with missing message when statusCode < 500', async () => {
@@ -160,7 +170,8 @@ describe('create-product handler', () => {
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('handles Stripe errors with undefined statusCode (defaults to 500)', async () => {
@@ -175,7 +186,8 @@ describe('create-product handler', () => {
 		const response = await handleCreateProduct(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(500);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
 	});
 
 	// Tests for middleware (using worker.fetch)

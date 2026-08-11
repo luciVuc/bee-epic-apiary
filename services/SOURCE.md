@@ -36,15 +36,23 @@ This document provides comprehensive documentation for all source code in the `.
 5. [Settings](#settings)
    - [src/settings/schemas.ts](#srcsettingsschemasts)
    - [src/settings/settings-handler.ts](#srcsettingssettings-handlerts)
-6. [Utilities](#utilities)
+6. [Auth](#auth)
+   - [root (cookies.ts, readVerifiedRefreshPayload.ts)](#srcauth-root)
+   - [utils/ (parsePath.ts)](#srcauthutils)
+   - [crypto/](#srcauthcrypto)
+   - [repo/](#srcauthrepo)
+   - [policy/](#srcauthpolicy)
+   - [emails/](#srcauthemails)
+   - [handlers/](#srcauthhandlers)
+7. [Utilities](#utilities)
    - [src/utils/index.ts](#srcutilsindexts)
-   - [auth.ts](#srcutilsauthts)
    - [handleCORS.ts](#srcutilshandlecorsts)
    - [isAllowedOrigin.ts](#srcutilsisallowedorigints)
    - [isValidUrl.ts](#srcutilsisvalidurlts)
    - [jsonResponse.ts](#srcutilsjsonresponsets)
    - [rateLimiter.ts](#srcutilsratelimiterts)
    - [withStripeHandler.ts](#srcutilswithstripehandlerts)
+8. [Removed / Historical](#removed--historical)
 
 ---
 
@@ -82,7 +90,7 @@ Handles all incoming request routing, method validation, CORS preflight, and aut
 
 - `checkoutHandler` from `./stripe/checkout/stripe-checkout`
 - `createProductHandler`, `getProductsHandler`, `updateProductHandler`, `deleteProductHandler` from `./stripe/product`
-- `jsonResponse`, `handleCORS`, `checkAuth` from `./utils`
+- `jsonResponse`, `handleCORS` from `./utils`
 
 **Exported Function**:
 
@@ -152,7 +160,7 @@ Handles `POST /prices` to create a new Stripe Price for a product.
 
 ```typescript
 export default {
-	fetch: withStripeHandler('POST', handleCreatePrice, { requireAuth: true }),
+	fetch: withStripeHandler('POST', handleCreatePrice, { requiredRole: EStaffRole.MANAGER }),
 } satisfies ExportedHandler<Env>;
 ```
 
@@ -482,7 +490,7 @@ Sends an email notification to the admin. If `formsparkFormId` is set in the `si
 1. Validates `sessionId` in request body
 2. Retrieves the Stripe Checkout Session and verifies `payment_status === 'paid'`
 3. Updates Stripe session metadata with `order_status: 'new'`
-4. Writes a notification to `CONTENT_KV` under `notifications:{sessionId}` with 24h TTL (consumed by `notifications-stream.ts` SSE endpoint)
+4. Calls `NotificationHub.notify({ type: 'new-order', orderId: sessionId })` on the `default` DO instance — the hub persists the event in its SQLite storage and fans it out to every connected admin SSE client (consumed by `notifications-stream.ts`)
 5. Sends admin notification email via `sendOrderNotificationEmail` (routes through Formspark if `formsparkFormId` is set in site content, otherwise through Cloudflare Email Service)
 6. Returns `{ success: true }`
 
@@ -530,22 +538,39 @@ Handles `DELETE /products/:id` to archive a product (Stripe does not support har
 
 ### Notifications
 
+#### src/notifications/notification-hub.ts
+
+The `NotificationHub` Durable Object — single-tenant, single-instance (name `default`). Persists every broadcast event in its SQLite storage (`new_sqlite_classes: ["NotificationHub"]` migration), supports SSE `Last-Event-ID` replay, and broadcasts to every connected admin SSE client.
+
+**Persistence**:
+
+- Table `notifications(id TEXT PRIMARY KEY, ts INTEGER NOT NULL, type TEXT NOT NULL, payload TEXT NOT NULL)` with index on `ts`
+- Each `id` is `${ts}-${counter}` (zero-padded, lexicographically sortable)
+- `payload` stores everything except `id`/`ts`/`type` as JSON
+
+**Replay window**: read fresh from `CONTENT_KV.site.notificationReplayHours` on each fetch and each eviction. Clamped to 1–24 hours; defaults to 1 if unset or invalid.
+
+**Eviction** (runs on every `notify`):
+
+- Age: rows older than the configured window are deleted
+- Count: at most `MAX_EVENTS = 500` rows are kept; the rest are deleted oldest-first
+
+**Public methods**:
+
+- `notify(input: INotificationEventInput): Promise<void>` — appends an event, evicts, broadcasts to live writers. Caller passes the typed event minus `id`/`ts`; the hub stamps both.
+- `fetch(request: Request): Promise<Response>` — opens a new SSE connection. Honors `Last-Event-ID` header (and `?lastEventId=` query parameter as fallback). Replays missed events within the window, then emits `event: connected`, then streams live.
+- `alarm(): Promise<void>` — heartbeat every 30s; cleans dead writers.
+
+**Event types** (`src/notifications/types.ts`): `INotificationEvent` discriminated union with `new-order`, `order-status-changed`, `product-updated`, `product-deleted` variants.
+
 #### src/stripe/notifications/notifications-stream.ts
 
-Handles `GET /notifications/stream` to provide a Server-Sent Events (SSE) stream for real-time order notifications to the admin UI.
+Thin pass-through that delegates to `NotificationHub` and adds CORS + cache headers. Forwards the `Last-Event-ID` header explicitly so the DO can replay missed events on reconnect. Sets `Cache-Control: no-cache, no-store` and `X-Accel-Buffering: no` so intermediaries don't buffer the stream.
 
 **Dependencies**:
 
-- `withStripeHandler` from `../../utils`
-
-**Handler Logic**:
-
-1. Sets up an SSE `ReadableStream` with CORS headers
-2. Sends an initial `event: connected` message
-3. Polls `CONTENT_KV` every 5 seconds for keys with prefix `notifications:`
-4. Emits `event: new-order` for notifications newer than `lastCheck`
-5. Sends `event: heartbeat` every 30 seconds to keep the connection alive
-6. Cleans up when the client disconnects
+- `env.NOTIFICATION_HUB` DO binding
+- `env.ALLOWED_ORIGINS`
 
 ---
 
@@ -628,34 +653,35 @@ export * from './auth';
 
 ---
 
-### src/utils/auth.ts
+### src/utils/resolveCaller.ts
 
-Optional API key authentication middleware for protecting endpoints.
+Cookie-session caller identity resolution. The canonical entry point for all admin-route auth (Phase 9).
 
-**Exported Function**:
-
-#### `checkAuth(request: Request, env: Env): AuthResult`
-
-Validates the `Authorization` header against `API_SECRET_KEY` env var.
-
-**Parameters**:
-
-- `request`: Incoming HTTP request
-- `env`: Cloudflare Worker environment variables
-
-**Returns**: `AuthResult` object with:
-
-- `authenticated`: Boolean indicating if request is authenticated
-- `error`: Optional `Response` object if authentication fails
-
-**Types**:
+**Exported Types**:
 
 ```typescript
-export interface AuthResult {
-	authenticated: boolean;
-	error?: Response;
+export interface ICaller {
+	email: string;
+	role: EStaffRole; // OWNER | MANAGER | EMPLOYEE | VENDOR (from @bee-epic/shared)
+	via: 'cookie' | 'bearer' | 'dev';
 }
 ```
+
+**Exported Functions**:
+
+#### `resolveCaller(request: Request, env: Env): Promise<ICaller | null>`
+
+Resolves the caller identity using a three-path trust chain, evaluated in order (cookie → bearer → dev):
+
+1. **Cookie** — `bea_at` HttpOnly `SameSite=Lax` HS256 JWT signed with `env.JWT_SIGNING_SECRET` (1-hour TTL). On successful verification the subject (caller email) is resolved from user KV.
+2. **Bearer** — `Authorization: Bearer <env.API_SECRET_KEY>` returns `{ email: 'ci@service', role: OWNER, via: 'bearer' }`. Intended for CI / scripts.
+3. **Dev** — `X-Dev-Email: <email>` header, honored only when `env.ENVIRONMENT === 'development'`. Resolves as OWNER if email is in `OWNER_EMAILS`, otherwise reads the user's role from user KV (must be ACTIVE). Never honored in production.
+
+Returns `null` when none of the paths produce an identity.
+
+#### `roleSatisfies(actual: EStaffRole, required: EStaffRole): boolean`
+
+Returns `true` when `actual` rank ≥ `required` rank. Rank: `OWNER > MANAGER > EMPLOYEE > VENDOR`.
 
 ---
 
@@ -804,14 +830,14 @@ Wraps a Stripe handler function with common middleware.
 **StripeHandler Type**:
 
 ```typescript
-type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
+type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null, caller?: ICaller) => Promise<Response>;
 ```
 
 **Options**:
 
 ```typescript
 interface IWithStripeHandlerOptions {
-	requireAuth?: boolean; // If true, API key authentication is required
+	requiredRole?: EStaffRole; // Minimum role required to call this endpoint. Omit for public routes.
 }
 ```
 
@@ -820,8 +846,91 @@ interface IWithStripeHandlerOptions {
 1. Handles CORS preflight (OPTIONS requests)
 2. Validates request method matches `method`
 3. Validates request origin using `isAllowedOrigin`
-4. Applies optional authentication via `checkAuth` (if `requireAuth: true`)
+4. If `requiredRole` is set, calls `resolveCaller(request, env)` and checks `roleSatisfies(caller.role, requiredRole)`. Returns `UNAUTHORIZED` if no caller resolved, `FORBIDDEN.requiredRole` if rank too low.
 5. Applies rate limiting (if KV binding is available)
 6. Initializes/reuses cached Stripe client (lazy singleton)
-7. Calls the provided handler with Stripe client
+7. Calls the provided handler with Stripe client (and the resolved `caller` as the 5th arg)
 8. Catches Stripe errors and returns appropriate error responses
+
+---
+
+## Auth
+
+The `services/src/auth/` tree implements the full cookie-session authentication system (Phase 9). It is organized into five subdirectories, plus two root-level modules and a `utils/` subdirectory.
+
+### src/auth/ (root)
+
+Root-level auth modules:
+
+- **`cookies.ts`** — `setCookie(name, value, options)` and `clearCookie(name, options)` helpers that produce `Set-Cookie` header strings for `bea_at` (HttpOnly, `SameSite=Lax`). Encapsulates cookie attribute defaults so callers do not need to repeat them.
+- **`readVerifiedRefreshPayload.ts`** — `readVerifiedRefreshPayload(request, env)` verifies the refresh-family cookie, checks the family has not been invalidated in KV, and returns the decoded payload (or throws a typed `REFRESH_FAMILY_INVALIDATED` error).
+
+### src/auth/utils/
+
+Shared utility helpers for the auth subsystem:
+
+- **`parsePath.ts`** — `parsePath(pathname)` splits a URL pathname into its route family and sub-segments; used by the router to extract dynamic path parameters (e.g. email from `/users/{email}`) without a full regex sweep.
+
+### src/auth/crypto/
+
+Cryptographic primitives. Actual files on disk:
+
+- **`jwt.ts`** — `signJwt(payload, secret)` and `verifyJwt(token, secret)` using the Web Crypto API (HS256). No external JWT library.
+- **`passwordHash.ts`** — `hashPassword(plain)` (Argon2-style scrypt via Web Crypto) and `verifyPassword(plain, hash)` constant-time comparison.
+- **`tokens.ts`** — `generateUrlSafeToken(byteLength?)` produces a cryptographically random base64url token suitable for invite and reset links.
+
+### src/auth/repo/
+
+KV-backed data access for auth entities. Actual files on disk:
+
+- **`userRepo.ts`** — CRUD for user records stored in `CONTENT_KV`. Fields: `email`, `role`, `status`, `passwordHash`, `displayName`, `lastSeenAt`.
+- **`inviteRepo.ts`** — stores and retrieves invite tokens (KV key `invite:<token>`), enforces expiry.
+- **`resetRepo.ts`** — stores and retrieves password-reset tokens (KV key `reset:<token>`), enforces expiry.
+- **`refreshFamilyRepo.ts`** — tracks refresh-family identifiers in KV; `invalidateFamily(familyId)` revokes all tokens in a family (used by `changePassword` and `logout`).
+- **`policyRepo.ts`** — reads and writes the auth policy object from `CONTENT_KV` (key `auth-policy`). Merges partials onto defaults.
+
+### src/auth/policy/
+
+Password and request policy. Actual files on disk:
+
+- **`validatePassword.ts`** — `validatePassword(plain, policy)` returns `{ ok: boolean, reasons: string[] }`. Checks minimum length, uppercase, number, special-character requirements from the stored policy, and optionally checks the Have I Been Pwned (HIBP) k-anonymity API.
+- **`truncateIp.ts`** — `truncateIp(ip)` masks the last octet of IPv4 (or last 64 bits of IPv6) for privacy-safe rate-limit keys.
+
+### src/auth/emails/
+
+Transactional email builders. Actual files on disk:
+
+- **`from.ts`** — `buildFromAddress(env)` constructs the `From` header address from site content KV.
+- **`greeting.ts`** — `buildGreeting(displayName?)` returns a personalized greeting line.
+- **`sendInvite.ts`** — `sendInvite(email, token, env)` sends the invite email containing the accept-invite link.
+- **`sendReset.ts`** — `sendReset(email, token, env)` sends the password-reset email containing the complete-reset link.
+- **`sendPasswordChanged.ts`** — `sendPasswordChanged(email, env)` sends a confirmation that the password was changed; includes a link to request a reset if the change was unauthorized.
+
+### src/auth/handlers/
+
+Route handlers wired to `/auth/*` and `/users/*`. One file per logical endpoint. Actual files on disk:
+
+- **`login.ts`** — `POST /auth/login`. Verifies credentials, signs `bea_at` cookie, returns caller.
+- **`logout.ts`** — `POST /auth/logout`. Clears `bea_at` cookie, invalidates refresh family.
+- **`refresh.ts`** — `POST /auth/refresh`. Verifies refresh-family cookie, reissues `bea_at`.
+- **`acceptInvite.ts`** — `POST /auth/accept-invite`. Validates invite token, sets password, activates user, signs cookie.
+- **`requestReset.ts`** — `POST /auth/request-reset`. Always-200; sends reset email if address is known.
+- **`completeReset.ts`** — `POST /auth/complete-reset`. Validates reset token, updates password hash.
+- **`changePassword.ts`** — `POST /auth/change-password`. Validates current password, updates hash, invalidates refresh families, sends confirmation email.
+- **`bootstrapOwner.ts`** — `POST /auth/bootstrap-owner`. Gated by `bootstrapAvailable`; creates the first OWNER user.
+- **`listUsers.ts`** — `GET /users`. Returns all users (OWNER only).
+- **`inviteUser.ts`** — `POST /users/invite`. Creates INVITED user, sends invite email (OWNER only).
+- **`updateUser.ts`** — `PUT /users/{email}`. Partial update of role/status; guards against demoting the last OWNER (OWNER only).
+- **`deleteUser.ts`** — `DELETE /users/{email}`. Hard-deletes user record; guards against deleting the last OWNER (OWNER only).
+- **`reinviteUser.ts`** — `POST /users/{email}/reinvite`. Re-sends invite email with a fresh token (OWNER only).
+- **`updateMe.ts`** — `PUT /users/me`. Allows any authenticated user to update self-editable fields (e.g. `displayName`).
+- **`policyHandlers.ts`** — `GET /settings/auth-policy` (any authenticated) and `PUT /settings/auth-policy` (OWNER). Reads and writes the auth policy via `policyRepo`.
+
+---
+
+## Removed / Historical
+
+The following modules were present in earlier phases of this codebase and have since been deleted or rewritten:
+
+- **`services/src/utils/resolveCaller.ts` (pre-Phase 9)** — Previously implemented a three-path chain of Dev → Cloudflare edge JWT (verified with an external npm JWT library against the team JWKS endpoint) → Bearer. Rewritten in Phase 9 to Cookie → Bearer → Dev using HS256 Web Crypto — no external JWT library, no JWKS, and the legacy `*_TEAM_DOMAIN` / `*_AUD` env vars are no longer used.
+- **`src/settings/` — staff module** (deleted) — The `staff.ts` module within the settings package handled the staff-list content GET and PUT routes. Deleted in Phase 3–9 as part of the migration from a flat staff-list KV model to the per-user KV model in `src/auth/repo/userRepo.ts`.

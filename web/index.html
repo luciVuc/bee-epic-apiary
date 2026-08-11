@@ -2,10 +2,15 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="manifest" href="%BASE_URL%manifest.webmanifest" />
+    <!-- The <link rel="manifest"> is injected automatically by vite-plugin-pwa
+         (see vite.config.ts). Do not add a manual one here — it produces a
+         duplicate link in the production build. -->
     <link rel="icon" type="image/svg+xml" href="%BASE_URL%images/favicon.ico" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#f59e0b" />
+    <!-- mobile-web-app-capable is the standard; keep the apple-prefixed one for
+         older iOS Safari that still reads it. -->
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta

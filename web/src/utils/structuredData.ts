@@ -1,6 +1,12 @@
+/**
+ * Builders for JSON-LD structured data (schema.org) embedded in page `<head>`s
+ * via SeoHead. Each returns a plain object that gets JSON-stringified into a
+ * `<script type="application/ld+json">` tag to improve search-engine rich results.
+ */
 import type { IProduct, ISiteContent } from "../types";
 import { SITE_URL } from "./constants";
 
+/** schema.org Organization node describing the business, its contact point, and social profiles. */
 export function organizationSchema(content: ISiteContent) {
   return {
     "@context": "https://schema.org",
@@ -25,6 +31,7 @@ export function organizationSchema(content: ISiteContent) {
   };
 }
 
+/** schema.org WebSite node, including a SearchAction pointing at the products search. */
 export function websiteSchema(content: ISiteContent) {
   return {
     "@context": "https://schema.org",
@@ -43,6 +50,7 @@ export function websiteSchema(content: ISiteContent) {
   };
 }
 
+/** schema.org Product node with a priced Offer; price is converted from cents to dollars. */
 export function productSchema(product: IProduct) {
   return {
     "@context": "https://schema.org",
@@ -63,6 +71,7 @@ export function productSchema(product: IProduct) {
   };
 }
 
+/** schema.org BreadcrumbList from ordered {name, url} items; positions are 1-based and URLs prefixed with SITE_URL. */
 export function breadcrumbSchema(items: { name: string; url: string }[]) {
   return {
     "@context": "https://schema.org",
@@ -76,6 +85,7 @@ export function breadcrumbSchema(items: { name: string; url: string }[]) {
   };
 }
 
+/** schema.org LocalBusiness node; omits the Place/address block when no location is set. */
 export function localBusinessSchema(content: ISiteContent) {
   return {
     "@context": "https://schema.org",

@@ -13,6 +13,12 @@ interface IFooterProps {
   content: ISiteContent;
 }
 
+/**
+ * Site footer: business blurb, social links (rendered only for populated
+ * `socialLinks`), a quick-links nav derived from `content.navLinks` (excluding
+ * process/testimonials and the leading home link), contact details, and a
+ * copyright line with the current year.
+ */
 export const Footer = ({ content }: IFooterProps) => {
   const currentYear = new Date().getFullYear();
 

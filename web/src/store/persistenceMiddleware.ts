@@ -3,6 +3,12 @@ import type { RootState } from ".";
 
 const CART_STORAGE_KEY = "beeEpicCart";
 
+/**
+ * Redux middleware that mirrors the cart to localStorage. After any action
+ * whose type starts with "cart/" is reduced, it writes the current
+ * `cart.items` array to the `beeEpicCart` key so the cart survives reloads.
+ * cartSlice reads this key back (validated) on init.
+ */
 export const persistenceMiddleware: Middleware<object, RootState> =
   (store) => (next) => (action) => {
     const result = next(action);

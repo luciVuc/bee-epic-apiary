@@ -4,13 +4,17 @@
 	"private": true,
 	"scripts": {
 		"deploy": "wrangler deploy",
-		"dev": "wrangler dev --env development",
+		"dev": "npx -y concurrently -n worker,stripe -c blue,magenta \"npm run dev:main\" \"npm run dev:webhooks\"",
+		"dev:main": "wrangler dev --env development",
+		"dev:webhooks": "npx -y @stripe/cli listen --forward-to localhost:8787/stripe/webhook",
 		"start": "wrangler dev",
 		"cf-typegen": "wrangler types",
+		"typecheck": "tsc --noEmit",
 		"format": "npx -y prettier --write .",
 		"format:staged": "npx -y pretty-quick --staged --no-restage --verbose",
 		"lint": "npx -y eslint . --report-unused-disable-directives --max-warnings 0",
 		"postinstall": "npm run cf-typegen",
+		"cleanup:products": "node scripts/cleanup-unpriced-products.mjs",
 		"test": "vitest run",
 		"test:watch": "vitest",
 		"test:coverage": "vitest run --coverage"
@@ -31,6 +35,7 @@
 		"wrangler": "^4.95.0"
 	},
 	"dependencies": {
+		"@bee-epic/shared": "file:../shared",
 		"marked": "^18.0.5",
 		"stripe": "^22.2.0",
 		"zod": "^4.4.3"

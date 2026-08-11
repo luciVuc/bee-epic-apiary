@@ -1,4 +1,4 @@
-/** Central settings page with tabbed interface for admin config, site content, process steps, testimonials, and categories */
+/** Central settings page with tabbed interface for admin config, site content, process steps, testimonials, categories, users, and security */
 import { useState, useEffect, useRef } from "react";
 import { Save, AlertCircle, CheckCircle } from "lucide-react";
 import {
@@ -14,12 +14,17 @@ import type {
   ICategory,
   SettingsTab,
 } from "../types/settings";
+import { EStaffRole } from "../types";
+import { useCaller } from "../hooks/useCaller";
 import * as api from "../utils/api";
+import { apiErrorMessage } from "../utils/api";
 import { AdminConfigTab } from "./settings/AdminConfigTab";
 import { SiteContentTab } from "./settings/SiteContentTab";
 import { ProcessTab } from "./settings/ProcessTab";
 import { TestimonialsTab } from "./settings/TestimonialsTab";
 import { CategoriesTab } from "./settings/CategoriesTab";
+import { UsersTab } from "./settings/UsersTab";
+import { SecurityTab } from "./settings/SecurityTab";
 
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
@@ -42,8 +47,18 @@ function deepEqual(a: unknown, b: unknown): boolean {
 
 type ContentStatus = "idle" | "loading" | "saving" | "error" | "success";
 
+/**
+ * Tabbed settings hub. Owns the draft state for the four KV-backed content
+ * sections (site, process, testimonials, categories) plus all the add/update/
+ * remove helpers passed down to the presentational tabs, and gates the Save
+ * button per tab via a `deepEqual` dirty check against the last-loaded snapshot
+ * held in `initialContentRef`. The Users and Security tabs are OWNER-only and
+ * self-manage their own data, so they render no Save button here.
+ */
 export function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("admin");
+  const { caller } = useCaller();
+  const isOwner = caller?.role === EStaffRole.OWNER;
 
   const [siteContent, setSiteContent] = useState<ISiteContent>(DEFAULT_SITE);
   const [processContent, setProcessContent] =
@@ -148,15 +163,7 @@ export function SettingsPage() {
       setContentStatus("success");
       setTimeout(() => setContentStatus("idle"), 3000);
     } catch (err: unknown) {
-      const axiosErr = err as {
-        response?: { data?: { error?: string } };
-        message?: string;
-      };
-      setContentError(
-        axiosErr?.response?.data?.error ||
-          axiosErr?.message ||
-          "Failed to save content",
-      );
+      setContentError(apiErrorMessage(err, "Failed to save content"));
       setContentStatus("error");
     }
   };
@@ -346,16 +353,23 @@ export function SettingsPage() {
           role="alert"
           className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2 dark:bg-red-900/20 dark:border-red-800/30"
         >
-          <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+          <AlertCircle
+            className="w-5 h-5 text-red-500 shrink-0"
+            aria-hidden="true"
+          />
           <span className="text-red-700 dark:text-red-300">{contentError}</span>
         </div>
       )}
       {contentStatus === "success" && (
         <div
           role="status"
+          aria-live="polite"
           className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2 dark:bg-green-900/20 dark:border-green-800/30"
         >
-          <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+          <CheckCircle
+            className="w-5 h-5 text-green-500 shrink-0"
+            aria-hidden="true"
+          />
           <span className="text-green-700 dark:text-green-300">
             Content saved successfully!
           </span>
@@ -382,6 +396,7 @@ export function SettingsPage() {
                 "process",
                 "testimonials",
                 "categories",
+                ...(isOwner ? (["users", "security"] as const) : []),
               ] as const
             ).map((tab) => (
               <button
@@ -402,7 +417,11 @@ export function SettingsPage() {
                       ? "Process"
                       : tab === "testimonials"
                         ? "Testimonials"
-                        : "Categories"}
+                        : tab === "categories"
+                          ? "Categories"
+                          : tab === "users"
+                            ? "Users"
+                            : "Security"}
               </button>
             ))}
           </nav>
@@ -445,7 +464,7 @@ export function SettingsPage() {
                       data-testid="settings-page_save-site-btn"
                       className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Save className="w-4 h-4" />
+                      <Save className="w-4 h-4" aria-hidden="true" />
                       {isSaving ? "Saving..." : "Save Site Content"}
                     </button>
                   </div>
@@ -473,7 +492,7 @@ export function SettingsPage() {
                       data-testid="settings-page_save-process-btn"
                       className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Save className="w-4 h-4" />
+                      <Save className="w-4 h-4" aria-hidden="true" />
                       {isSaving ? "Saving..." : "Save Process Steps"}
                     </button>
                   </div>
@@ -496,7 +515,7 @@ export function SettingsPage() {
                       data-testid="settings-page_save-admin-config-btn"
                       className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Save className="w-4 h-4" />
+                      <Save className="w-4 h-4" aria-hidden="true" />
                       {isSaving ? "Saving..." : "Save Admin Config"}
                     </button>
                   </div>
@@ -524,7 +543,7 @@ export function SettingsPage() {
                       data-testid="settings-page_save-categories-btn"
                       className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Save className="w-4 h-4" />
+                      <Save className="w-4 h-4" aria-hidden="true" />
                       {isSaving ? "Saving..." : "Save Categories"}
                     </button>
                   </div>
@@ -552,12 +571,15 @@ export function SettingsPage() {
                       data-testid="settings-page_save-testimonials-btn"
                       className="flex items-center gap-2 px-6 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                      <Save className="w-4 h-4" />
+                      <Save className="w-4 h-4" aria-hidden="true" />
                       {isSaving ? "Saving..." : "Save Testimonials"}
                     </button>
                   </div>
                 </>
               )}
+
+              {activeTab === "users" && isOwner && <UsersTab />}
+              {activeTab === "security" && isOwner && <SecurityTab />}
             </>
           )}
         </div>

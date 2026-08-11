@@ -4,11 +4,21 @@ import { Button } from "../ui/Button";
 import { CartItem } from "./CartItem";
 import { useCart } from "../../hooks/useCart";
 import { useStripeCheckout } from "../../hooks/useStripeCheckout";
+import { useFocusTrap } from "../../hooks/useFocusTrap";
 import { formatPrice } from "../../utils/formatters";
 
+/**
+ * Slide-in cart panel. Shows cart line items (or an empty state), the running
+ * subtotal, and a checkout button wired to {@link useStripeCheckout}. Opens
+ * from `ui.isCartOpen` and closes on overlay/button click, or on Escape. While
+ * open, keyboard focus is trapped inside the panel and returned to the trigger
+ * on close (WCAG 2.1.2 / 2.4.3) via {@link useFocusTrap}. Surfaces checkout
+ * errors and a processing state inline.
+ */
 export const CartDrawer = () => {
   const { items, totalItems, subtotal, isCartOpen, close } = useCart();
   const { checkout, isProcessing, error } = useStripeCheckout();
+  const dialogRef = useFocusTrap<HTMLDivElement>(isCartOpen, close);
 
   const handleCheckout = async () => {
     await checkout(items);
@@ -29,6 +39,7 @@ export const CartDrawer = () => {
           />
 
           <motion.div
+            ref={dialogRef}
             data-testid="cart-drawer"
             className="fixed top-0 right-0 h-full w-full max-w-md bg-white dark:bg-dark-950 shadow-xl z-50 flex flex-col"
             role="dialog"
@@ -110,13 +121,6 @@ export const CartDrawer = () => {
                     {error}
                   </p>
                 )}
-
-                <div className="p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
-                  <p className="font-body text-xs text-amber-800 dark:text-amber-300">
-                    Note: Stripe is in TEST MODE. Replace your Stripe keys in
-                    .env for production.
-                  </p>
-                </div>
 
                 <div className="space-y-2">
                   <Button

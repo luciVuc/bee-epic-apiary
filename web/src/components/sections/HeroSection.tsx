@@ -8,6 +8,7 @@ interface IHeroSectionProps {
   content: ISiteContent;
 }
 
+/** Full-screen landing hero: tagline pill, headline/subheadline, shop/story CTAs, and animated decorative background. */
 export const HeroSection = ({ content }: IHeroSectionProps) => {
   return (
     <section

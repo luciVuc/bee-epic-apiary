@@ -6,15 +6,19 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: "autoUpdate",
+      // 'prompt' lets the UpdatePrompt component show a toast when a new SW
+      // is waiting, rather than 'autoUpdate' which silently swaps on the
+      // next navigation. See web/src/components/pwa/UpdatePrompt.tsx
+      // (review #12).
+      registerType: "prompt",
       includeAssets: ["favicon.ico", "images/**/*.png"],
       manifest: {
         name: "Bee Epic Apiary",
         short_name: "Bee Epic",
         description: "Raw Honey & Bee Products",
         id: "bee-epic-apiary",
-        start_url: ".",
-        scope: ".",
+        start_url: "/",
+        scope: "/",
         display: "standalone",
         orientation: "portrait",
         background_color: "#ffffff",
@@ -81,6 +85,13 @@ export default defineConfig({
         ],
       },
       devOptions: {
+        // Keep the service worker OFF in dev. Enabling it registers a dev-sw.js
+        // that controls the page and double-mounts React ("createRoot() on a
+        // container that has already been passed to createRoot()"). PWA is a
+        // production concern; the manifest is generated and served only in the
+        // build. In dev there is no manifest <link> (vite-plugin-pwa injects it
+        // only when the SW is active), so nothing requests it and there is no
+        // "Manifest: Syntax error" console noise.
         enabled: false,
       },
     }),

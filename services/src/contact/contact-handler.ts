@@ -1,16 +1,16 @@
-import { ICommTemplateData, ISiteContent } from '../types';
-import { jsonResponse, handleCORS, RateLimiter, buildEmailBody } from '../utils';
+import { ICommTemplateData, ISiteContent, IEmailMessageBuilder } from '../types';
+import { jsonOk, jsonErr, handleCORS, RateLimiter, buildEmailBody } from '../utils';
 
 export async function handleContact(request: Request, env: Env): Promise<Response> {
 	if (request.method === 'OPTIONS') {
 		return handleCORS(request, env, 'POST');
 	}
 
-	if (request.method !== 'POST') {
-		return jsonResponse({ error: 'Method not allowed' }, 405);
-	}
-
 	const origin = request.headers.get('Origin');
+
+	if (request.method !== 'POST') {
+		return jsonErr({ code: 'METHOD_NOT_ALLOWED', allowed: ['POST', 'OPTIONS'] }, origin, env);
+	}
 
 	if (env.RATE_LIMITER) {
 		const clientIP =
@@ -21,7 +21,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 		});
 		const result = await rateLimiter.check(`${clientIP}:POST:/contact`);
 		if (!result.allowed) {
-			return jsonResponse({ error: 'Rate limit exceeded' }, 429, origin, env);
+			return jsonErr({ code: 'RATE_LIMITED', retryAfter: result.resetTime }, origin, env);
 		}
 	}
 
@@ -29,28 +29,29 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 	try {
 		body = await request.json();
 	} catch {
-		return jsonResponse({ error: 'Invalid JSON body' }, 400, origin, env);
+		return jsonErr({ code: 'BAD_REQUEST', message: 'Invalid JSON body' }, origin, env);
 	}
 
+	// Honeypot — silently succeed to fool bots
 	if (body._gotcha) {
-		return jsonResponse({ success: true }, 200, origin, env);
+		return jsonOk({ sent: true }, origin, env);
 	}
 
 	const { name, email, subject, message } = body;
 	if (!name || !email || !subject || !message) {
-		return jsonResponse({ error: 'Missing required fields: name, email, subject, message' }, 400, origin, env);
+		return jsonErr({ code: 'VALIDATION_FAILED', fields: { body: 'Missing required fields: name, email, subject, message' } }, origin, env);
 	}
 
 	const siteContentStr = await env.CONTENT_KV.get('site');
 	if (!siteContentStr) {
-		return jsonResponse({ error: 'Site content not configured' }, 500, origin, env);
+		return jsonErr({ code: 'INTERNAL' }, origin, env);
 	}
 
 	let siteContent: ISiteContent;
 	try {
 		siteContent = JSON.parse(siteContentStr);
 	} catch {
-		return jsonResponse({ error: 'Invalid site content' }, 500, origin, env);
+		return jsonErr({ code: 'INTERNAL' }, origin, env);
 	}
 
 	const adminEmail = siteContent.email;
@@ -58,12 +59,7 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 	const emailFormat = siteContent.emailFormat || 'html';
 	const formsparkFormId = siteContent.formsparkFormId;
 
-	const templateData: ICommTemplateData = {
-		name,
-		email,
-		subject,
-		message,
-	};
+	const templateData: ICommTemplateData = { name, email, subject, message };
 
 	if (formsparkFormId && formsparkFormId !== 'REPLACE_ME') {
 		try {
@@ -71,39 +67,37 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 				_email: { subject: `Message: ${subject}` },
 				body: await buildEmailBody(emailFormat, templateData),
 			};
-
 			const formsparkRes = await fetch(`https://submit-form.com/${formsparkFormId}`, {
 				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					Accept: 'application/json',
-				},
+				headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
 				body: JSON.stringify(formsparkBody),
 			});
 			if (!formsparkRes.ok) {
-				const body = await formsparkRes.text().catch(() => '');
-				console.error('Formspark returned:', formsparkRes.status, body);
-				return jsonResponse({ error: 'Failed to send message' }, 500, origin, env);
+				const errBody = await formsparkRes.text().catch(() => '');
+				console.error('Formspark returned:', formsparkRes.status, errBody);
+				return jsonErr({ code: 'INTERNAL' }, origin, env);
 			}
 		} catch (error) {
 			console.error('Failed to send via Formspark:', error);
-			return jsonResponse({ error: 'Failed to send message' }, 500, origin, env);
+			return jsonErr({ code: 'INTERNAL' }, origin, env);
 		}
-
-		return jsonResponse({ success: true }, 200, origin, env);
+		return jsonOk({ sent: true }, origin, env);
 	}
 
 	if (!adminEmail) {
-		return jsonResponse({ error: 'Contact email not configured' }, 500, origin, env);
+		return jsonErr({ code: 'INTERNAL' }, origin, env);
 	}
 
 	const domain = adminEmail.split('@')[1];
 	if (!domain) {
-		return jsonResponse({ error: 'Invalid contact email configured' }, 500, origin, env);
+		return jsonErr({ code: 'INTERNAL' }, origin, env);
 	}
 
 	try {
-		await env.EMAIL.send({
+		// Typed as IEmailMessageBuilder (like the other EMAIL.send call sites) so
+		// the structured `from` + `body` shape is checked against our contract
+		// rather than the raw SendEmail overloads, which don't expose `body`.
+		const emailPayload: IEmailMessageBuilder = {
 			to: adminEmail,
 			from: { email: `contact@${domain}`, name: businessName },
 			replyTo: email,
@@ -112,13 +106,14 @@ export async function handleContact(request: Request, env: Env): Promise<Respons
 				type: emailFormat === 'html' || emailFormat === 'markdown' ? 'html' : 'text',
 				content: await buildEmailBody(emailFormat, templateData),
 			},
-		});
+		};
+		await env.EMAIL.send(emailPayload);
 	} catch (error) {
 		console.error('Failed to send contact email:', error);
-		return jsonResponse({ error: 'Failed to send message' }, 500, origin, env);
+		return jsonErr({ code: 'INTERNAL' }, origin, env);
 	}
 
-	return jsonResponse({ success: true }, 200, origin, env);
+	return jsonOk({ sent: true }, origin, env);
 }
 
 export default {

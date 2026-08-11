@@ -1,25 +1,49 @@
 import Stripe from 'stripe';
-import { handleCORS, isAllowedOrigin, jsonResponse, RateLimiter, checkAuth } from '.';
+import { EStaffRole } from '@bee-epic/shared';
+import { jsonErr } from '.';
+import { safeStripeMessage } from './stripeErrorResponse';
+import { withAuthHandler } from './withAuthHandler';
 import type { HttpMethod } from './handleCORS';
-import { IAPIResponseError } from '../types';
+import type { ICaller } from './resolveCaller';
+import { IApiUpstreamError } from '../types';
 
 let stripeInstance: Stripe | null = null;
 
 /**
- * Override the Stripe instance for testing purposes.
- * Calling this with a mock Stripe instance will cause all subsequent
- * getStripeInstance calls to return the provided instance instead.
+ * Returns true when running under a vitest worker. Used to gate
+ * `setStripeInstance` so accidental imports of this seam from production
+ * code can't poison the shared Stripe singleton.
+ *
+ * Vitest sets `globalThis.__vitest_worker__` in all of its execution
+ * contexts (Node and `@cloudflare/vitest-pool-workers`). `process.env.NODE_ENV`
+ * is NOT a reliable signal in the workers pool — it's undefined there.
+ */
+function isVitestWorker(): boolean {
+	return typeof (globalThis as { __vitest_worker__?: unknown }).__vitest_worker__ !== 'undefined';
+}
+
+/**
+ * Test-only seam for swapping the Stripe singleton. No-ops when called
+ * outside a vitest worker, so an accidental import from production code
+ * can't replace the real client with a fake.
  */
 export function setStripeInstance(mock: Stripe | null): void {
+	if (!isVitestWorker()) {
+		// Deliberately silent: production callers shouldn't see noise; the
+		// no-op behaviour is the contract.
+		return;
+	}
 	stripeInstance = mock;
 }
 
 /**
- * Gets or initializes a lazy singleton Stripe client instance.
- * Uses `STRIPE_SECRET_KEY` from env and a fixed API version.
- * Can be overridden for testing via setStripeInstance().
+ * Returns a memoised Stripe client. The instance is reused across requests
+ * within the worker isolate (Workers reuse isolates for many requests),
+ * sparing the per-request setup of a fresh HTTP client and TLS handshakes
+ * on the first call. The webhook handler shares this singleton so signature
+ * verification and any follow-up Stripe API calls use the same client.
  */
-function getStripeInstance(env: Env): Stripe {
+export function getStripeInstance(env: Env): Stripe {
 	if (!stripeInstance) {
 		stripeInstance = new Stripe(env.STRIPE_SECRET_KEY, {
 			apiVersion: '2026-05-27.dahlia',
@@ -29,68 +53,58 @@ function getStripeInstance(env: Env): Stripe {
 	return stripeInstance;
 }
 
-/** Handler function type for Stripe endpoints. Receives an initialized Stripe client, request, env bindings, and the CORS origin. */
-export type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null) => Promise<Response>;
+/** Handler function type for Stripe endpoints. */
+export type StripeHandler = (stripe: Stripe, request: Request, env: Env, origin: string | null, caller?: ICaller) => Promise<Response>;
 
 /** Options for configuring the withStripeHandler wrapper. */
 export interface IWithStripeHandlerOptions {
-	/** If true, requires a valid API key via Authorization: Bearer <token>. */
-	requireAuth?: boolean;
+	/** Minimum role required to call this endpoint. If omitted, no auth check is performed. */
+	requiredRole?: EStaffRole;
 }
 
 /**
- * Wraps a Stripe handler function with common middleware:
- * CORS preflight, method validation, origin validation, optional API key auth, KV rate limiting, and Stripe client initialization.
+ * Thin Stripe-flavoured adapter over `withAuthHandler`. Delegates the entire
+ * CORS / method / origin / auth / rate-limit chain to the generic wrapper,
+ * layering on Stripe-specific behaviour:
+ *   1) Instantiates the memoised Stripe client and passes it to the handler.
+ *   2) Wraps handler invocation in a Stripe-error try/catch that maps
+ *      `IApiUpstreamError` (statusCode<500 → BAD_REQUEST, ≥500 → INTERNAL).
  *
- * @param method - Allowed HTTP method for the route
- * @param handler - The Stripe handler function to wrap
- * @param options - Optional configuration (e.g., requireAuth)
- * @returns A fetch-compatible function (request, env) => Promise<Response>
+ * The Stripe try/catch lives INSIDE the AuthHandler closure, not around
+ * `withAuthHandler`. `withAuthHandler` has its own generic top-level
+ * try/catch that returns `INTERNAL`; if Stripe errors bubbled past this
+ * inner catch they'd be swallowed by the generic one and lose their
+ * BAD_REQUEST mapping. Catching at the innermost boundary preserves the
+ * upstream-error shape.
+ *
+ * Options mapping:
+ *   - `requiredRole` passes through unchanged.
+ *   - When `requiredRole` is undefined the wrapper opts into `public: true`
+ *     on the delegate. Existing Stripe routes without `requiredRole`
+ *     (checkout, product listing) are intentionally public — the
+ *     write-method floor introduced in Phase 6.2 would otherwise regress
+ *     `POST /checkout` from unauthenticated to EMPLOYEE-gated.
  */
 export function withStripeHandler(method: HttpMethod, handler: StripeHandler, options?: IWithStripeHandlerOptions) {
-	return async (request: Request, env: Env): Promise<Response> => {
-		if (request.method === 'OPTIONS') {
-			return handleCORS(request, env, method);
-		}
-
-		if (request.method !== method) {
-			return jsonResponse({ error: 'Method not allowed' }, 405);
-		}
-
-		const origin = request.headers.get('Origin');
-		if (!isAllowedOrigin(origin, env)) {
-			return jsonResponse({ error: 'Forbidden' }, 403, origin, env);
-		}
-
-		if (options?.requireAuth) {
-			const auth = checkAuth(request, env);
-			if (!auth.authenticated) return auth.error!;
-		}
-
-		if (env.RATE_LIMITER) {
-			const url = new URL(request.url);
-			const clientIP =
-				(request as Request<unknown, IncomingRequestCfProperties>).cf?.connectingIp || request.headers.get('CF-Connecting-IP') || 'unknown';
-			const rateLimiter = new RateLimiter(env.RATE_LIMITER, {
-				maxRequests: parseInt(env.RATE_LIMIT_MAX, 10),
-				windowSeconds: parseInt(env.RATE_LIMIT_WINDOW, 10),
-			});
-			const result = await rateLimiter.check(`${clientIP}:${method}:${url.pathname}`);
-			if (!result.allowed) {
-				return jsonResponse({ error: 'Rate limit exceeded' }, 429, origin, env);
-			}
-		}
-
+	const authHandler = async (request: Request, env: Env, origin: string | null, caller?: ICaller): Promise<Response> => {
 		try {
 			const stripe = getStripeInstance(env);
-			return await handler(stripe, request, env, origin);
+			return await handler(stripe, request, env, origin, caller);
 		} catch (error: unknown) {
-			const err = error as IAPIResponseError;
+			const err = error as IApiUpstreamError;
 			console.error('Stripe error:', err);
 			const statusCode = err.statusCode || 500;
-			return jsonResponse({ error: 'An error occurred' }, statusCode, origin, env);
+			if (statusCode < 500) {
+				return jsonErr({ code: 'BAD_REQUEST', message: safeStripeMessage(err) }, origin, env);
+			}
+			return jsonErr({ code: 'INTERNAL' }, origin, env);
 		}
 	};
+
+	return withAuthHandler(method, authHandler, {
+		requiredRole: options?.requiredRole,
+		public: options?.requiredRole === undefined,
+	});
 }
 
 export default withStripeHandler;

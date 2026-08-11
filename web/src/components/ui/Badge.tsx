@@ -1,12 +1,15 @@
 import { ReactNode } from "react";
 
+/** Props for {@link Badge}. */
 interface IBadgeProps {
   children: ReactNode;
+  /** Visual style; maps to a color set (defaults to "default"). */
   variant?: "default" | "success" | "warning" | "error" | "featured";
   className?: string;
   "data-testid"?: string;
 }
 
+/** Small inline pill label (e.g. "Featured", "Out of Stock") with a color variant. */
 export const Badge = ({
   children,
   variant = "default",

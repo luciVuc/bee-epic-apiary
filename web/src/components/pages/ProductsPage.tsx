@@ -7,6 +7,7 @@ interface IProductsPageProps {
   categories: ICategory[];
 }
 
+/** `/products` route: SEO head plus the filterable/paginated products section. */
 export function ProductsPage({ content, categories }: IProductsPageProps) {
   return (
     <div data-testid="products-page">

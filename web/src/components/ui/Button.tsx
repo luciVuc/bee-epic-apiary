@@ -1,11 +1,18 @@
 import { ButtonHTMLAttributes, forwardRef } from "react";
 
+/** Props for {@link Button}; extends native button attributes with style and loading options. */
 interface IButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost";
   size?: "sm" | "md" | "lg";
+  /** When true, shows a spinner and disables the button (also sets aria-busy). */
   isLoading?: boolean;
 }
 
+/**
+ * Themed button with variant/size options and a built-in loading state.
+ * Forwards its ref to the underlying `<button>` and spreads extra props so a
+ * caller-supplied `data-testid` overrides the default (see spread-order note below).
+ */
 export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
   (
     {
@@ -40,7 +47,11 @@ export const Button = forwardRef<HTMLButtonElement, IButtonProps>(
     };
 
     const combinedClasses = `${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`;
-    const buttonProps = { "data-testid": "button" as const, ...props };
+    // Default data-testid is overridden by anything the caller passes,
+    // because `...props` is spread AFTER the default. The `as const`
+    // narrowing was a stylistic distraction that didn't change behavior;
+    // the spread-order comment above is the actual contract (review #21).
+    const buttonProps = { "data-testid": "button", ...props };
 
     return (
       <button

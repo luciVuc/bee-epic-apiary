@@ -59,4 +59,35 @@ describe("TextField", () => {
     render(<TextField label="Name" value="" onChange={() => {}} />);
     expect(screen.getByRole("textbox")).toHaveAttribute("type", "text");
   });
+
+  it("wires aria-required when required", () => {
+    render(<TextField label="Name" value="" onChange={() => {}} required />);
+    expect(screen.getByRole("textbox")).toHaveAttribute(
+      "aria-required",
+      "true",
+    );
+  });
+
+  it("renders an error node and links it via aria-describedby", () => {
+    render(
+      <TextField
+        label="Name"
+        value=""
+        onChange={() => {}}
+        name="fullname"
+        error="Name is required"
+      />,
+    );
+    const input = screen.getByRole("textbox");
+    const error = screen.getByTestId("text-field_error");
+    expect(input).toHaveAttribute("aria-invalid", "true");
+    expect(error).toHaveTextContent("Name is required");
+    expect(input.getAttribute("aria-describedby")).toBe(error.id);
+  });
+
+  it("has no error node and is not invalid when error is unset", () => {
+    render(<TextField label="Name" value="" onChange={() => {}} />);
+    expect(screen.queryByTestId("text-field_error")).toBeNull();
+    expect(screen.getByRole("textbox")).not.toHaveAttribute("aria-invalid");
+  });
 });

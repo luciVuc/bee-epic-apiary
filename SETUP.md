@@ -152,14 +152,40 @@ ALLOWED_ORIGINS=*
 ```env
 STRIPE_SECRET_KEY=sk_test_your_secret_key_here
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+
+# JWT signing key — required. Generate with: openssl rand -base64 32
+JWT_SIGNING_SECRET=your-jwt-signing-secret-here
+
+# Bearer fallback used by CI / scripts (also accepted at runtime as OWNER role)
 API_SECRET_KEY=your-api-password-change-me
+
+# Bootstrap owner list — never-lockout safety net.
+OWNER_EMAILS=owner@example.com
+
+# Dev-only identity gate — gate is ONLY active when ENVIRONMENT=development.
+# Leave blank for production; the login page handles auth there.
+ENVIRONMENT=development
 ```
 
 > `ALLOWED_ORIGINS=*` in `.env` allows all origins in local dev. If you want
 > to restrict it, put specific origins in `.dev.vars` (it overrides `.env`).
 
-The `API_SECRET_KEY` is a password you choose. It protects your admin API
-endpoints from unauthorized access. Change `change-me` to something real.
+**Auth model (Phase 9).** The admin panel uses a cookie-based login page — no
+credentials are baked into the bundle. Identity is resolved in this order on
+every request:
+
+1. **Cookie session** — `bea_at` HttpOnly JWT signed with `JWT_SIGNING_SECRET`
+   (1-hour TTL, `SameSite=Lax`). Set after a successful login.
+2. **CI / scripts** — `Authorization: Bearer <API_SECRET_KEY>` is accepted and
+   maps to `OWNER` role (`ci@service`).
+3. **Local dev only** — `X-Dev-Email` header honored only when
+   `ENVIRONMENT=development`. The SPA no longer sends this header; it is a
+   server-side escape hatch for scripts and automated tests.
+
+Roles are `OWNER > MANAGER > EMPLOYEE > VENDOR`. Manage users (and their roles)
+from **Settings → Users** in the admin panel — visible only when the signed-in
+user is an OWNER. Password policy is managed from **Settings → Security** (OWNER
+only).
 
 **`admin/.env`** (admin panel — all values are **build-time environment
 variables**, set before you run or build):
@@ -167,14 +193,13 @@ variables**, set before you run or build):
 ```env
 VITE_API_URL=http://localhost:8787
 VITE_STRIPE_PUBLISHABLE_KEY=pk_test_your_publishable_key_here
-VITE_API_SECRET_KEY=your-api-password-change-me
 ```
 
 > **Important**: All `VITE_*` values are baked into the JavaScript bundle at
 > build time. Anyone with browser dev tools can see them. This is normal for
-> Stripe publishable keys. For the API secret key, this is acceptable in
-> development; in production, use Cloudflare Access (Step 10) to protect the
-> admin panel itself.
+> Stripe publishable keys. No secret is baked into the admin bundle — production
+> auth is handled by the cookie login page (Step 10), not by a baked-in
+> credential.
 
 **`web/.env`** (storefront):
 
@@ -225,24 +250,18 @@ This starts three servers:
 ### 5.1 — Set up Stripe webhook forwarding (local development)
 
 For the backend to receive Stripe events locally (like completed checkouts),
-you need to forward Stripe's webhooks to your local server.
+Stripe's webhooks must be forwarded to your local server. The dev server does
+this for you — `npm run dev` starts the worker **and** the forwarder together —
+but you still need a one-time login and to match the signing secret.
 
-1. **Install the Stripe CLI** (one-time):
-
-   ```bash
-   npm install -g @stripe/cli
-   ```
-
-2. **Start forwarding** (run this in a separate terminal and leave it running):
+1. **Log in to the Stripe CLI** (one-time — opens a browser to authorize):
 
    ```bash
-   stripe listen --forward-to localhost:8787/stripe/webhook
+   npx -y @stripe/cli login
    ```
 
-   The first time, it will ask you to log in — paste your Stripe secret key
-   when prompted.
-
-3. **Copy the signing secret** — the CLI prints something like:
+2. **Get the signing secret.** Start the dev server (`npm run dev` from the
+   repo root, or `npm run dev` in `services/`). The forwarder prints:
 
    ```
    Your webhook signing secret is whsec_abc123... (^C to quit)
@@ -251,13 +270,17 @@ you need to forward Stripe's webhooks to your local server.
    Copy this `whsec_...` value and paste it as `STRIPE_WEBHOOK_SECRET` in
    `services/.dev.vars`.
 
-4. **Restart the dev server** so it picks up the new secret. Press `Ctrl+C`
+   > You no longer run `stripe listen` in a separate terminal — the dev server
+   > runs it for you. To start the worker without the forwarder, use
+   > `npm run dev:main` in `services/`.
+
+3. **Restart the dev server** so it picks up the new secret. Press `Ctrl+C`
    where `npm run dev` is running, then run `npm run dev` again.
 
-5. **Test it** by triggering a test event:
+4. **Test it** by triggering a test event:
 
    ```bash
-   stripe trigger checkout.session.completed
+   npx -y @stripe/cli trigger checkout.session.completed
    ```
 
    You should see `POST /stripe/webhook 200 OK` in the backend logs.
@@ -270,7 +293,11 @@ Open the admin panel at `http://localhost:5174`. The first time, go to:
 These values come from your `admin/.env` file and can only be changed there:
 
 - **API URL** — `http://localhost:8787` (read-only, from `VITE_API_URL`)
-- **API Secret Key** — shows whether one is configured (from `VITE_API_SECRET_KEY`)
+- **Auth status** — shows your resolved identity (email + role) and
+  which path authenticated you (`cookie` / `bearer` / `dev`). In local dev
+  this is populated after you log in through the login page (or via
+  `X-Dev-Email` if running the server with `ENVIRONMENT=development` and
+  a script header).
 - **Stripe Publishable Key** — set this in `admin/.env` and restart the dev server
 
 To configure your site content, go to **Settings → Site Content**:
@@ -280,8 +307,13 @@ To configure your site content, go to **Settings → Site Content**:
 3. Click **Save** — everything is stored in the backend KV and served to your
    storefront immediately
 
-> There is no "login" for the local admin panel — it's unprotected. In
-> production, you'll add Cloudflare Access (Step 10) to require a real login.
+If you signed in as an OWNER, you'll also see **Settings → Users** — use it to
+add team members and assign them `OWNER`, `MANAGER`, `EMPLOYEE`, or `VENDOR`
+roles. Roles control which endpoints they can call (orders → EMPLOYEE, products
+→ MANAGER, users list → OWNER).
+
+> In local dev the admin uses the standard login page like production. Sign in
+> with an email in `OWNER_EMAILS` after completing the bootstrap flow (Step 10).
 
 ---
 
@@ -296,15 +328,18 @@ Go to your forked repository on GitHub. Click **Settings → Secrets and
 variables → Actions**. Add the following **secrets** (click "New repository
 secret" for each):
 
-| Secret name                   | Value                                                                                                    |
-| ----------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `CF_API_TOKEN`                | The Cloudflare API token from Step 3.1                                                                   |
-| `STRIPE_SECRET_KEY`           | Your Stripe secret key (`sk_live_...` for production)                                                    |
-| `STRIPE_WEBHOOK_SECRET`       | Your Stripe webhook signing secret (`whsec_...`)                                                         |
-| `ALLOWED_ORIGINS`             | Your live site URLs, comma-separated (e.g., `https://beeepicapiary.com,https://admin.beeepicapiary.com`) |
-| `API_SECRET_KEY`              | The API password you chose in Step 4.1                                                                   |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Your Stripe publishable key (`pk_live_...` for production)                                               |
-| `VITE_API_SECRET_KEY`         | Same API password as `API_SECRET_KEY` (used by the admin panel build)                                    |
+| Secret name                   | Value                                                                                                                       |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `CF_API_TOKEN`                | The Cloudflare API token from Step 3.1                                                                                      |
+| `STRIPE_SECRET_KEY`           | Your Stripe secret key (`sk_live_...` for production)                                                                       |
+| `STRIPE_WEBHOOK_SECRET`       | Your Stripe webhook signing secret (`whsec_...`)                                                                            |
+| `ALLOWED_ORIGINS`             | Your live site URLs, comma-separated (e.g., `https://beeepicapiary.com,https://admin.beeepicapiary.com`)                    |
+| `JWT_SIGNING_SECRET`          | HS256 signing key for session cookies — **required**. Generate: `openssl rand -base64 32`.                                  |
+| `API_SECRET_KEY`              | A long random string. Used as the bearer fallback for CI / scripts (maps to OWNER role). Never shipped to the admin bundle. |
+| `OWNER_EMAILS`                | Comma-separated bootstrap owner emails. These addresses always get OWNER role even before the user list is populated.       |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Your Stripe publishable key (`pk_live_...` for production)                                                                  |
+
+> Note: `VITE_API_SECRET_KEY` is **no longer needed** — remove it if it exists as a GitHub secret. The admin bundle contains no credentials.
 
 Then add these **variables** (click the "Variables" tab, then "New repository
 variable"):
@@ -414,37 +449,84 @@ You have two options:
 
 ---
 
-## Step 10 — Protect the admin panel with Cloudflare Access
+## Step 10 — Auth secrets & first-time bootstrap
 
-> **This is strongly recommended for production.** Without it, anyone who knows
-> your admin URL can access the admin panel.
+> **Required for production.** The admin panel uses a cookie-based login page.
+> You need to set the JWT signing secret before deploying, then complete the
+> bootstrap flow to create your first OWNER account.
+>
+> **Note on legacy Zero Trust gating**: The admin panel no longer uses an
+> external identity proxy for authentication. If you previously had an Access
+> application in front of the admin Pages site, **disable it** — leaving it in
+> place creates a double-gating problem (users would have to pass the external
+> gate and then the login page).
 
-[Cloudflare Access](https://www.cloudflare.com/zero-trust/access/) creates a
-login page that sits in front of your admin panel. Users must sign in before
-they can reach it.
+### 10.1 — Set the required Wrangler secrets
 
-1. In Cloudflare dashboard, go to **Zero Trust** (left sidebar)
-2. If prompted, set up a team name (e.g., `bee-epic-apiary`) and choose a plan
-   (the free plan supports up to 50 users)
-3. Go to **Access → Applications**
-4. Click **Add an application** → **Self-hosted**
-5. **Application name**: `Admin Panel`
-6. **Session duration**: `24h`
-7. **Domain**: `admin.yourdomain.com` (your actual admin domain from Step 7.2)
-8. Click **Next**
-9. Under **Configure rules**, set up a policy:
-   - **Policy name**: `Allow admins`
-   - **Action**: `Allow`
-   - Add a rule like **Emails ending with**: `@yourcompany.com`
-   - Or **Everyone** if you just want a basic email + one-time-passcode login
-10. Click **Next** → **Add application**
+The admin cookie session is signed with `JWT_SIGNING_SECRET`. Generate a
+strong random value and set it as a Wrangler secret:
 
-Now when you visit `admin.yourdomain.com`, Cloudflare will show a login page.
-Only authenticated users will reach the admin panel.
+```bash
+# Generate a strong key (copy the output):
+openssl rand -base64 32
 
-> Cloudflare Access works at the edge — the request never reaches your app
-> if the user isn't logged in. The backend API (`api.yourdomain.com`) is still
-> protected by the `API_SECRET_KEY` and does not go through Access.
+# Set it in your Worker:
+npx wrangler secret put JWT_SIGNING_SECRET
+# Paste the generated value when prompted.
+```
+
+The two other optional secrets should also be set if you need them:
+
+```bash
+# CI / script bearer bypass — maps to OWNER role when present:
+npx wrangler secret put API_SECRET_KEY
+
+# Bootstrap owner allowlist — comma-separated emails:
+npx wrangler secret put OWNER_EMAILS
+# Example value: owner@example.com,backup@example.com
+```
+
+For **local development**, add these to `services/.dev.vars` (not committed):
+
+```env
+JWT_SIGNING_SECRET=any-local-dev-value-here
+OWNER_EMAILS=owner@example.com
+ENVIRONMENT=development
+```
+
+`ENVIRONMENT=development` enables the server-side `X-Dev-Email` header bypass
+for scripts and automated tests. The SPA does **not** send this header — local
+dev uses the login page just like production.
+
+### 10.2 — Bootstrap your first owner account
+
+On the **first deploy** (before any user accounts exist), the backend signals
+that setup is needed:
+
+1. Visit `admin.yourdomain.com` — the SPA calls `GET /whoami`.
+2. The response includes `"bootstrapAvailable": true` — the SPA automatically
+   redirects to `/bootstrap`.
+3. On the Bootstrap page, type the email address you want as the first OWNER.
+   - This email must be in `OWNER_EMAILS` (the bootstrap allowlist).
+4. The server sends an **invite email** to that address.
+5. Open the invite email and click the link → you land on the
+   **Accept Invite** page.
+6. Set your password (must meet the password policy) and submit.
+7. You are now signed in. `/whoami` returns `"bootstrapAvailable": false`
+   from this point on — the bootstrap page is permanently disabled.
+
+### 10.3 — Add more users
+
+Once you're signed in as OWNER:
+
+1. Go to **Settings → Users** (visible only to OWNER).
+2. Click **Invite user**, enter their email and choose a role
+   (`OWNER`, `MANAGER`, `EMPLOYEE`, or `VENDOR`).
+3. They receive an invite email, set their password, and can log in.
+
+> The `OWNER_EMAILS` allowlist is a "never-lockout" safety net — anyone in
+> that list can always log in (bypassing the user KV) and recover access even
+> if the user list is accidentally emptied.
 
 ---
 
@@ -508,12 +590,17 @@ This works automatically on Cloudflare — no additional configuration required.
 - If using Formspark: double-check the Formspark Form ID in Admin Config.
 - Check that the admin email in Site Content matches a domain you control.
 
-**Admin panel shows 401 errors on orders/products**
+**Admin panel shows 401 / 403 errors on orders/products**
 
-- The API secret key in `admin/.env` (`VITE_API_SECRET_KEY`) must match
-  the `API_SECRET_KEY` on the backend Worker.
-- In production, ensure both GitHub secrets (`VITE_API_SECRET_KEY` and
-  `API_SECRET_KEY`) have the same value.
+- 401 means the worker couldn't resolve any caller identity. In local dev,
+  make sure you've completed the bootstrap flow and are signed in through the
+  login page. If the session cookie has expired, log in again. For CI/scripts,
+  check that `Authorization: Bearer <API_SECRET_KEY>` is set correctly.
+- 403 means you signed in successfully, but your role is too low. The error
+  body carries `requiredRole`: e.g., `{ "code": "FORBIDDEN", "requiredRole": "MANAGER" }`.
+  Have an OWNER bump your role in **Settings → Users**.
+- For CI / scripts, set `Authorization: Bearer <API_SECRET_KEY>` — that path
+  still works and maps to OWNER.
 
 **Webhook returns 401 Unauthorized**
 

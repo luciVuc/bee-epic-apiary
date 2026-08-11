@@ -8,6 +8,7 @@ interface IProcessSectionProps {
   content: ISiteContent;
 }
 
+/** Maps a step's string `icon` name to its lucide-react component; falls back to ChevronRight for unknown names. */
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Home,
   Flower2,
@@ -16,6 +17,7 @@ const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   Award,
 };
 
+/** "Hive to table" process steps rendered as a horizontal timeline on desktop and a vertical one on mobile. */
 export const ProcessSection = ({ steps, content }: IProcessSectionProps) => {
   return (
     <section

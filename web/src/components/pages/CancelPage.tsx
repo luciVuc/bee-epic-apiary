@@ -15,6 +15,7 @@ interface ICancelPageProps {
   content: ISiteContent;
 }
 
+/** `/cancel` route shown when Stripe checkout is abandoned; reassures no charge was made and links back to shop/support. */
 export const CancelPage = ({ content }: ICancelPageProps) => {
   return (
     <div

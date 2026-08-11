@@ -10,13 +10,20 @@ import ordersReducer, {
 } from "../ordersSlice";
 import type { IOrder } from "../../types";
 
-vi.mock("../../utils/api", () => ({
-  api: {
-    getOrders: vi.fn(),
-    getOrderById: vi.fn(),
-    updateOrder: vi.fn(),
-  },
-}));
+vi.mock("../../utils/api", async () => {
+  // Use importOriginal so ApiError + apiErrorMessage carry their real
+  // implementations through; only the `api` namespace is mocked.
+  const actual =
+    await vi.importActual<typeof import("../../utils/api")>("../../utils/api");
+  return {
+    ...actual,
+    api: {
+      getOrders: vi.fn(),
+      getOrderById: vi.fn(),
+      updateOrder: vi.fn(),
+    },
+  };
+});
 
 function createStore() {
   return configureStore({
@@ -190,6 +197,29 @@ describe("ordersSlice", () => {
           status: "open",
         });
       });
+
+      it("lastFetchParams excludes pagination keys (starting_after, limit) after Load More", async () => {
+        // Regression: previously the slice stored the raw params, so the second
+        // (paginated) fetch would write { search, starting_after, limit } into
+        // lastFetchParams. That payload was then used by deleteProduct (and
+        // potential count refresh paths) which re-asked the worker with a
+        // poisoned cursor and the wrong limit.
+        const store = createStore();
+        const apiModule = await import("../../utils/api");
+        vi.mocked(apiModule.api.getOrders).mockResolvedValue({
+          orders: [mockOrder],
+          hasMore: false,
+          lastId: "cs_x",
+          totalCount: 1,
+        });
+
+        await store.dispatch(fetchOrders({ search: "foo", limit: 10 }));
+        await store.dispatch(
+          fetchOrders({ search: "foo", starting_after: "cs_x", limit: 10 }),
+        );
+        const state = store.getState().orders;
+        expect(state.lastFetchParams).toEqual({ search: "foo" });
+      });
     });
 
     describe("fetchOrderById", () => {
@@ -269,9 +299,15 @@ describe("ordersSlice", () => {
       it("sets error on rejected", async () => {
         const store = createStore();
         const apiModule = await import("../../utils/api");
-        vi.mocked(apiModule.api.updateOrder).mockRejectedValue({
-          response: { data: { error: "Update failed" } },
-        });
+        // The slice now extracts user-facing messages via apiErrorMessage,
+        // which understands the structured IApiError envelope wrapped in
+        // ApiError. BAD_REQUEST is the simplest "carry a message" code.
+        vi.mocked(apiModule.api.updateOrder).mockRejectedValue(
+          new apiModule.ApiError({
+            code: "BAD_REQUEST",
+            message: "Update failed",
+          }),
+        );
 
         await store.dispatch(updateOrder({ id: "cs_test_1", metadata: {} }));
         const state = store.getState().orders;

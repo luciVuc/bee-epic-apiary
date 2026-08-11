@@ -225,14 +225,12 @@ describe('paginateArray', () => {
 			{ id: 'b', name: 'B' },
 		]);
 		expect(result.hasMore).toBe(true);
-		expect(result.lastId).toBe('b');
 	});
 
 	it('returns page without hasMore when limit covers all items', () => {
 		const result = paginateArray(items, 10);
 		expect(result.data).toEqual(items);
 		expect(result.hasMore).toBe(false);
-		expect(result.lastId).toBe('e');
 	});
 
 	it('paginates after a given id', () => {
@@ -242,37 +240,32 @@ describe('paginateArray', () => {
 			{ id: 'd', name: 'D' },
 		]);
 		expect(result.hasMore).toBe(true);
-		expect(result.lastId).toBe('d');
 	});
 
 	it('returns empty data when starting after last item', () => {
 		const result = paginateArray(items, 10, 'e');
 		expect(result.data).toEqual([]);
 		expect(result.hasMore).toBe(false);
-		expect(result.lastId).toBe(null);
 	});
 
-	it('falls back to first page when starting_after id not found', () => {
+	it('returns an empty page when starting_after id is not found (review I5)', () => {
+		// Previously this fell back to "return the first page", which silently
+		// duplicated page 1 for any stale / tampered cursor. The honest signal
+		// is an empty page with hasMore:false.
 		const result = paginateArray(items, 2, 'nonexistent');
-		expect(result.data).toEqual([
-			{ id: 'a', name: 'A' },
-			{ id: 'b', name: 'B' },
-		]);
-		expect(result.hasMore).toBe(true);
-		expect(result.lastId).toBe('b');
+		expect(result.data).toEqual([]);
+		expect(result.hasMore).toBe(false);
 	});
 
 	it('handles empty array', () => {
 		const result = paginateArray([], 10);
 		expect(result.data).toEqual([]);
 		expect(result.hasMore).toBe(false);
-		expect(result.lastId).toBe(null);
 	});
 
 	it('returns hasMore false when at end of array', () => {
 		const result = paginateArray(items, 2, 'd');
 		expect(result.data).toEqual([{ id: 'e', name: 'E' }]);
 		expect(result.hasMore).toBe(false);
-		expect(result.lastId).toBe('e');
 	});
 });

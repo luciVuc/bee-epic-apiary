@@ -8,6 +8,7 @@ interface IAboutProcessPageProps {
   steps: IProcessStep[];
 }
 
+/** `/about` route: SEO head plus the About and Process sections. */
 export function AboutProcessPage({ content, steps }: IAboutProcessPageProps) {
   return (
     <div data-testid="about-process-page">

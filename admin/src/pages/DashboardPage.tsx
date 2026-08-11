@@ -1,5 +1,11 @@
-/** Dashboard overview page with stat cards, category breakdown, quick actions, and recent products */
-import { useEffect, useMemo, useCallback, type ComponentType } from "react";
+/** Dashboard overview page with stat cards, orders-by-status and category breakdowns, quick actions, and recent orders/products */
+import {
+  useEffect,
+  useMemo,
+  useCallback,
+  useState,
+  type ComponentType,
+} from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link } from "react-router-dom";
 import {
@@ -12,8 +18,7 @@ import {
   ArrowRight,
 } from "lucide-react";
 import type { RootState, AppDispatch } from "../store";
-import { fetchProducts, fetchProductsCount } from "../store/productsSlice";
-import { useState } from "react";
+import { fetchProducts } from "../store/productsSlice";
 import type { IDashboardStats } from "../types";
 import { EProductCategory } from "../types";
 import {
@@ -21,29 +26,101 @@ import {
   DEFAULT_CATEGORIES,
   NEW_ORDER_EVENT,
 } from "../utils/constants";
-import { formatPrice } from "../utils/badgeClasses";
+import {
+  formatPrice,
+  formatDate,
+  truncateOrderId,
+  orderMetadataStatusBadge,
+  orderMetadataStatusLabel,
+} from "../utils/badgeClasses";
 import { Spinner } from "../components/shared/Spinner";
 import type { ICategory } from "../types/settings";
+import type { IOrder } from "../types";
 import * as api from "../utils/api";
 
+interface IServerProductStats {
+  totalProducts: number;
+  inStock: number;
+  featured: number;
+  byCategory: Record<string, number>;
+}
+
+/** Order statuses shown in the "Orders by Status" breakdown. Mirrors the
+ * metadata order_status values used in OrdersPage and orderMetadataStatus*. */
+const ORDER_STATUS_BREAKDOWN: {
+  value: string;
+  label: string;
+  color: string;
+}[] = [
+  { value: "new", label: "New", color: "blue" },
+  { value: "pending", label: "Pending", color: "yellow" },
+  { value: "fulfilled", label: "Fulfilled", color: "green" },
+];
+
+/**
+ * Admin landing page: stat cards, an orders-by-status and a products-by-
+ * category breakdown, quick-action links, and recent orders/products.
+ * Product totals come from the server-aggregated `/products/stats` endpoint
+ * (falling back to the ~5 in-store products if it fails, review I12); order
+ * counts are derived by fetching each status with `limit:1` and reading
+ * `totalCount` since there is no orders-stats endpoint. Refreshes on
+ * `NEW_ORDER_EVENT` from the notifications stream.
+ */
 export function DashboardPage() {
   const dispatch = useDispatch<AppDispatch>();
   const { items: products, loading } = useSelector(
     (state: RootState) => state.products,
   );
   const [categories, setCategories] = useState<ICategory[]>([]);
-  const [newOrdersCount, setNewOrdersCount] = useState(0);
+  const [orderStatusCounts, setOrderStatusCounts] = useState<
+    Record<string, number>
+  >({});
+  const [recentOrders, setRecentOrders] = useState<IOrder[]>([]);
+  const [serverStats, setServerStats] = useState<IServerProductStats | null>(
+    null,
+  );
 
-  const fetchNewOrdersCount = useCallback(() => {
+  const newOrdersCount = orderStatusCounts.new ?? 0;
+  const totalOrders = ORDER_STATUS_BREAKDOWN.reduce(
+    (sum, { value }) => sum + (orderStatusCounts[value] ?? 0),
+    0,
+  );
+
+  const fetchOrderStatusCounts = useCallback(() => {
+    // No server-side orders-stats endpoint exists, so fetch each status with
+    // limit:1 and read totalCount (same trick the New Orders card has always
+    // used). Only paid orders count toward the breakdown.
+    ORDER_STATUS_BREAKDOWN.forEach(({ value }) => {
+      api.api
+        .getOrders({ order_status: value, payment_status: "paid", limit: 1 })
+        .then((result) =>
+          setOrderStatusCounts((prev) => ({
+            ...prev,
+            [value]: result.totalCount,
+          })),
+        )
+        .catch(() => {});
+    });
+  }, []);
+
+  const fetchRecentOrders = useCallback(() => {
+    // Newest paid orders for the Recent Orders card. The worker returns
+    // sessions newest-first, so the first 5 are the most recent.
     api.api
-      .getOrders({ order_status: "new", payment_status: "paid", limit: 1 })
-      .then((result) => setNewOrdersCount(result.totalCount))
+      .getOrders({ payment_status: "paid", limit: 5 })
+      .then((result) => setRecentOrders(result.orders))
       .catch(() => {});
   }, []);
 
   useEffect(() => {
-    dispatch(fetchProducts({ limit: 100 }));
-    dispatch(fetchProductsCount());
+    // Pull aggregated stats from the worker — replaces fetching 100 products
+    // and aggregating client-side every dashboard load (review I12). Recent
+    // products section still needs the row data, but only the first 5.
+    dispatch(fetchProducts({ limit: 5 }));
+    api.api
+      .getProductsStats()
+      .then((s) => setServerStats(s))
+      .catch(() => setServerStats(null));
     api.api
       .getSettings<ICategory[]>("categories")
       .then((cats) => {
@@ -53,45 +130,60 @@ export function DashboardPage() {
   }, [dispatch]);
 
   useEffect(() => {
-    fetchNewOrdersCount();
-    const handleNewOrder = () => fetchNewOrdersCount();
+    fetchOrderStatusCounts();
+    fetchRecentOrders();
+    const handleNewOrder = () => {
+      fetchOrderStatusCounts();
+      fetchRecentOrders();
+    };
     window.addEventListener(NEW_ORDER_EVENT, handleNewOrder);
     return () => window.removeEventListener(NEW_ORDER_EVENT, handleNewOrder);
-  }, [fetchNewOrdersCount]);
+  }, [fetchOrderStatusCounts, fetchRecentOrders]);
 
   const stats: IDashboardStats = useMemo(() => {
-    const honeyProducts = products.filter(
-      (p) => p.category === EProductCategory.HONEY,
-    ).length;
-    const beeswaxProducts = products.filter(
-      (p) => p.category === EProductCategory.BEESWAX,
-    ).length;
-    const giftProducts = products.filter(
-      (p) => p.category === EProductCategory.GIFTS,
-    ).length;
-    const subscriptionProducts = products.filter(
-      (p) => p.category === EProductCategory.SUBSCRIPTIONS,
-    ).length;
+    // Prefer server-aggregated stats; fall back to client-side over the
+    // (limited) products in store if /products/stats failed. The fallback
+    // numbers will be wrong for tenants with >5 products, but the dashboard
+    // remains usable instead of crashing.
+    const byCategoryServer = serverStats?.byCategory ?? {};
+    const honeyProducts =
+      byCategoryServer[EProductCategory.HONEY] ??
+      products.filter((p) => p.category === EProductCategory.HONEY).length;
+    const beeswaxProducts =
+      byCategoryServer[EProductCategory.BEESWAX] ??
+      products.filter((p) => p.category === EProductCategory.BEESWAX).length;
+    const giftProducts =
+      byCategoryServer[EProductCategory.GIFTS] ??
+      products.filter((p) => p.category === EProductCategory.GIFTS).length;
+    const subscriptionProducts =
+      byCategoryServer[EProductCategory.SUBSCRIPTIONS] ??
+      products.filter((p) => p.category === EProductCategory.SUBSCRIPTIONS)
+        .length;
 
     return {
-      totalProducts: products.length,
-      inStockProducts: products.filter((p) => p.inStock).length,
-      featuredProducts: products.filter((p) => p.featured).length,
+      totalProducts: serverStats?.totalProducts ?? products.length,
+      inStockProducts:
+        serverStats?.inStock ?? products.filter((p) => p.inStock).length,
+      featuredProducts:
+        serverStats?.featured ?? products.filter((p) => p.featured).length,
       totalCategories: categories.length || 4,
       honeyProducts,
       beeswaxProducts,
       giftProducts,
       subscriptionProducts,
     };
-  }, [products, categories]);
+  }, [products, categories, serverStats]);
 
   if (loading) {
     return <Spinner />;
   }
 
   return (
-    <div>
-      <div className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between dark:bg-dark-950 dark:border-gray-700">
+    <div data-testid="dashboard-page">
+      <div
+        data-testid="dashboard-page_header"
+        className="sticky top-0 z-20 bg-white border-b border-gray-200 px-4 py-4 mb-6 flex items-center justify-between dark:bg-dark-950 dark:border-gray-700"
+      >
         <h2
           className="font-heading text-3xl font-bold text-dark-900"
           data-testid="dashboard-page_title"
@@ -103,20 +195,25 @@ export function DashboardPage() {
           data-testid="dashboard-page_add-product-link"
           className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-4 h-4" aria-hidden="true" />
           Add Product
         </Link>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div
+        data-testid="dashboard-page_stats-grid"
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+      >
         <StatCard
+          data-testid="dashboard-page_stat-card_new-orders"
           title="New Orders"
           value={newOrdersCount}
           icon={ShoppingCart}
           color="red"
         />
         <StatCard
+          data-testid="dashboard-page_stat-card_total-active-products"
           title="Total Active Products"
           value={stats.totalProducts}
           icon={Package}
@@ -129,12 +226,14 @@ export function DashboardPage() {
           color="green"
         />
         <StatCard
+          data-testid="dashboard-page_stat-card_featured-products"
           title="Featured"
           value={stats.featuredProducts}
           icon={Star}
           color="yellow"
         />
         <StatCard
+          data-testid="dashboard-page_stat-card_total-categories"
           title="Categories"
           value={stats.totalCategories}
           icon={AlertCircle}
@@ -142,18 +241,77 @@ export function DashboardPage() {
         />
       </div>
 
-      {/* Category Breakdown */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700">
-          <h3 className="font-heading text-xl font-semibold mb-4 dark:text-dark-800">
+      {/* Orders by Status and Category Breakdown Grid */}
+      <div
+        data-testid="dashboard-page_status-grid"
+        className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+      >
+        {/* Orders by Status */}
+        <div
+          data-testid="dashboard-page_orders-by-status"
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
+        >
+          <div
+            data-testid="dashboard-page_orders-by-status_header"
+            className="flex items-center justify-between mb-4"
+          >
+            <h3
+              data-testid="dashboard-page_orders-by-status_header-title"
+              className="font-heading text-xl font-semibold dark:text-dark-800"
+            >
+              Orders by Status
+            </h3>
+            <Link
+              data-testid="dashboard-page_orders-by-status_view-all-link"
+              to="/orders"
+              className="text-primary-500 hover:text-primary-600 text-sm font-medium dark:text-primary-400 dark:hover:text-primary-300"
+            >
+              View All →
+            </Link>
+          </div>
+          <div
+            data-testid="dashboard-page_orders-by-status_content"
+            className="space-y-3"
+          >
+            {ORDER_STATUS_BREAKDOWN.map(({ value, label, color }) => {
+              const count = orderStatusCounts[value] ?? 0;
+              return (
+                <CategoryBar
+                  data-testid={`dashboard-page_orders-by-status_category-bar-${value}`}
+                  key={value}
+                  label={label}
+                  count={count}
+                  total={totalOrders}
+                  color={color}
+                />
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Category Breakdown */}
+        <div
+          data-testid="dashboard-page_category-breakdown"
+          className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
+        >
+          <h3
+            data-testid="dashboard-page_category-breakdown_header-title"
+            className="font-heading text-xl font-semibold mb-4 dark:text-dark-800"
+          >
             Products by Category
           </h3>
-          <div className="space-y-3">
+          <div
+            data-testid="dashboard-page_category-breakdown_content"
+            className="space-y-3"
+          >
             {categories.length > 0
               ? categories.map((cat, i) => {
-                  const count = products.filter(
-                    (p) => p.category === cat.id,
-                  ).length;
+                  // Use the server-aggregated byCategory map; fall back to the
+                  // in-memory product list (which only has ~5 entries now) so
+                  // the dashboard degrades gracefully if /products/stats fails.
+                  const count =
+                    serverStats?.byCategory[cat.id] ??
+                    products.filter((p) => p.category === cat.id).length;
                   const colors = [
                     "amber",
                     "yellow",
@@ -205,7 +363,13 @@ export function DashboardPage() {
                 })}
           </div>
         </div>
+      </div>
 
+      <div
+        data-testid="dashboard-page_category-breakdown-grid"
+        className="grid grid-cols-1 gap-6 mb-8"
+      >
+        {/* Quick Actions */}
         <div
           data-testid="dashboard-page_quick-actions"
           className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 dark:bg-dark-950 dark:border-gray-700"
@@ -228,7 +392,10 @@ export function DashboardPage() {
               <span className="font-medium text-dark-700 dark:text-dark-800">
                 View Orders
               </span>
-              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
+              <ArrowRight
+                className="w-4 h-4 text-dark-400 dark:text-dark-400"
+                aria-hidden="true"
+              />
             </Link>
             <Link
               data-testid="dashboard-page_quick-actions_manage-products-link"
@@ -238,7 +405,10 @@ export function DashboardPage() {
               <span className="font-medium text-dark-700 dark:text-dark-800">
                 Manage Products
               </span>
-              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
+              <ArrowRight
+                className="w-4 h-4 text-dark-400 dark:text-dark-400"
+                aria-hidden="true"
+              />
             </Link>
             <Link
               data-testid="dashboard-page_quick-actions_add-product-link"
@@ -248,7 +418,10 @@ export function DashboardPage() {
               <span className="font-medium text-dark-700 dark:text-dark-800">
                 Add New Product
               </span>
-              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
+              <ArrowRight
+                className="w-4 h-4 text-dark-400 dark:text-dark-400"
+                aria-hidden="true"
+              />
             </Link>
             <Link
               data-testid="dashboard-page_quick-actions_update-settings-link"
@@ -258,9 +431,87 @@ export function DashboardPage() {
               <span className="font-medium text-dark-700 dark:text-dark-800">
                 Update Settings
               </span>
-              <ArrowRight className="w-4 h-4 text-dark-400 dark:text-dark-400" />
+              <ArrowRight
+                className="w-4 h-4 text-dark-400 dark:text-dark-400"
+                aria-hidden="true"
+              />
             </Link>
           </div>
+        </div>
+      </div>
+
+      {/* Recent Orders */}
+      <div
+        data-testid="dashboard-page_recent-orders"
+        className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-8 dark:bg-dark-950 dark:border-gray-700"
+      >
+        <div
+          data-testid="dashboard-page_recent-orders_title"
+          className="flex items-center justify-between mb-4"
+        >
+          <h3
+            data-testid="dashboard-page_recent-orders_title-text"
+            className="font-heading text-xl font-semibold dark:text-dark-800"
+          >
+            Recent Orders
+          </h3>
+          <Link
+            data-testid="dashboard-page_recent-orders_view-all-link"
+            to="/orders"
+            className="text-primary-500 hover:text-primary-600 text-sm font-medium dark:text-primary-400 dark:hover:text-primary-300"
+          >
+            View All →
+          </Link>
+        </div>
+        <div
+          data-testid="dashboard-page_recent-orders_list"
+          className="space-y-3"
+        >
+          {recentOrders.length === 0 ? (
+            <p
+              data-testid="dashboard-page_recent-orders_empty"
+              className="text-sm text-dark-500 dark:text-dark-400"
+            >
+              No orders yet.
+            </p>
+          ) : (
+            recentOrders.map((order) => (
+              <Link
+                data-testid={`dashboard-page_recent-orders_order-${order.id}`}
+                key={order.id}
+                to={`/orders/${order.id}`}
+                className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors dark:bg-dark-100 dark:hover:bg-dark-200"
+              >
+                <div className="w-12 h-12 rounded-lg bg-primary-50 flex items-center justify-center dark:bg-primary-900/30">
+                  <ShoppingCart
+                    className="w-5 h-5 text-primary-600 dark:text-primary-300"
+                    aria-hidden="true"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-dark-800 truncate">
+                    {order.customerName || order.customerEmail || "Guest"}
+                  </h4>
+                  <p className="text-sm text-dark-500">
+                    <span className="font-mono">
+                      {truncateOrderId(order.id)}
+                    </span>{" "}
+                    • {formatDate(order.created)}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-medium text-dark-800 dark:text-dark-700">
+                    {formatPrice(order.amountTotal, order.currency)}
+                  </span>
+                  <span
+                    className={`px-2 py-1 text-xs rounded-full ${orderMetadataStatusBadge(order.orderStatus)}`}
+                  >
+                    {orderMetadataStatusLabel(order.orderStatus)}
+                  </span>
+                </div>
+              </Link>
+            ))
+          )}
         </div>
       </div>
 
@@ -307,7 +558,7 @@ export function DashboardPage() {
               <div className="flex-1">
                 <h4 className="font-medium text-dark-800">{product.name}</h4>
                 <p className="text-sm text-dark-500">
-                  {formatPrice(product.price)} • {product.category}
+                  {formatPrice(product.price, "usd")} • {product.category}
                 </p>
                 {product.recurringInterval && (
                   <p className="text-xs text-blue-600">
@@ -341,6 +592,7 @@ export function DashboardPage() {
   );
 }
 
+/** Single dashboard metric tile: label, numeric value, and a colored icon. */
 function StatCard({
   title,
   value,
@@ -385,6 +637,11 @@ function StatCard({
   );
 }
 
+/**
+ * Labeled horizontal bar showing `count` as a percentage of `total`. Used for
+ * both the orders-by-status and products-by-category breakdowns; renders 0%
+ * safely when `total` is 0.
+ */
 function CategoryBar({
   label,
   count,

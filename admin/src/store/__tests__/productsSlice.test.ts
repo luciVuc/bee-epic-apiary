@@ -8,6 +8,7 @@ import productsReducer, {
   createProduct,
   updateProduct,
   deleteProduct,
+  cleanupProducts,
   setSelectedProduct,
   clearError,
   setScrollPosition,
@@ -17,16 +18,24 @@ import productsReducer, {
 import type { IProduct, IProductInput } from "../../types";
 import { EProductCategory } from "../../types";
 
-vi.mock("../../utils/api", () => ({
-  api: {
-    getProducts: vi.fn(),
-    getProductsCount: vi.fn(),
-    getProductById: vi.fn(),
-    createProduct: vi.fn(),
-    updateProduct: vi.fn(),
-    deleteProduct: vi.fn(),
-  },
-}));
+vi.mock("../../utils/api", async () => {
+  // Use importOriginal so ApiError + apiErrorMessage carry their real
+  // implementations through; only the `api` namespace is mocked.
+  const actual =
+    await vi.importActual<typeof import("../../utils/api")>("../../utils/api");
+  return {
+    ...actual,
+    api: {
+      getProducts: vi.fn(),
+      getProductsCount: vi.fn(),
+      getProductById: vi.fn(),
+      createProduct: vi.fn(),
+      updateProduct: vi.fn(),
+      deleteProduct: vi.fn(),
+      cleanupProducts: vi.fn(),
+    },
+  };
+});
 
 function createStore() {
   return configureStore({
@@ -208,6 +217,28 @@ describe("productsSlice", () => {
         const state = store.getState().products;
         expect(state.items).toHaveLength(1);
       });
+
+      it("lastFetchParams excludes pagination keys (starting_after, limit) after Load More", async () => {
+        // Regression: previously the slice stored the raw params, so the
+        // second (paginated) fetch overwrote lastFetchParams with
+        // { search, starting_after, limit }. fetchProductsCount then re-asked
+        // the worker with a poisoned cursor instead of just { search, category }.
+        const store = createStore();
+        const apiModule = await import("../../utils/api");
+        vi.mocked(apiModule.api.getProducts).mockResolvedValue({
+          products: [mockProduct],
+          hasMore: false,
+          lastId: "prod_1",
+          totalCount: 1,
+        });
+
+        await store.dispatch(fetchProducts({ search: "foo", limit: 10 }));
+        await store.dispatch(
+          fetchProducts({ search: "foo", starting_after: "prod_1", limit: 10 }),
+        );
+        const state = store.getState().products;
+        expect(state.lastFetchParams).toEqual({ search: "foo" });
+      });
     });
 
     describe("fetchProductsCount", () => {
@@ -279,9 +310,15 @@ describe("productsSlice", () => {
       it("sets error on rejected with payload", async () => {
         const store = createStore();
         const apiModule = await import("../../utils/api");
-        vi.mocked(apiModule.api.createProduct).mockRejectedValue({
-          response: { data: { error: "Validation failed" } },
-        });
+        // The slice now extracts user-facing messages via apiErrorMessage,
+        // which understands the structured IApiError envelope wrapped in
+        // ApiError. BAD_REQUEST is the simplest "carry a message" code.
+        vi.mocked(apiModule.api.createProduct).mockRejectedValue(
+          new apiModule.ApiError({
+            code: "BAD_REQUEST",
+            message: "Validation failed",
+          }),
+        );
 
         const input: IProductInput = {
           name: "Bad",
@@ -359,9 +396,9 @@ describe("productsSlice", () => {
       it("sets error on rejected", async () => {
         const store = createStore();
         const apiModule = await import("../../utils/api");
-        vi.mocked(apiModule.api.updateProduct).mockRejectedValue({
-          message: "Update failed",
-        });
+        vi.mocked(apiModule.api.updateProduct).mockRejectedValue(
+          new Error("Update failed"),
+        );
 
         await store.dispatch(
           updateProduct({ id: "prod_1", product: { name: "X" } }),
@@ -395,6 +432,108 @@ describe("productsSlice", () => {
         const state = store.getState().products;
         expect(state.items).toHaveLength(0);
         expect(state.selectedProduct).toBeNull();
+      });
+    });
+
+    describe("cleanupProducts", () => {
+      it("re-fetches list + count and clears loading on fulfilled", async () => {
+        const store = createStore();
+        const apiModule = await import("../../utils/api");
+
+        // Seed the list with two products so we can prove a refetch replaces it.
+        vi.mocked(apiModule.api.getProducts).mockResolvedValueOnce({
+          products: [mockProduct, { ...mockProduct, id: "prod_2" }],
+          hasMore: false,
+          lastId: "prod_2",
+          totalCount: 2,
+        });
+        vi.mocked(apiModule.api.getProductsCount).mockResolvedValue(1);
+        await store.dispatch(fetchProducts({}));
+        expect(store.getState().products.items).toHaveLength(2);
+
+        // Cleanup removes prod_2; the thunk's refetch returns only prod_1.
+        vi.mocked(apiModule.api.cleanupProducts).mockResolvedValue({
+          dry_run: false,
+          deleted: ["prod_2"],
+          archived: [],
+          failed: [],
+          deleted_count: 1,
+          archived_count: 0,
+          failed_count: 0,
+        });
+        vi.mocked(apiModule.api.getProducts).mockResolvedValueOnce({
+          products: [mockProduct],
+          hasMore: false,
+          lastId: "prod_1",
+          totalCount: 1,
+        });
+
+        await store.dispatch(cleanupProducts());
+
+        const state = store.getState().products;
+        expect(apiModule.api.cleanupProducts).toHaveBeenCalledWith(false);
+        expect(state.items).toHaveLength(1);
+        expect(state.items[0].id).toBe("prod_1");
+        expect(state.loading).toBe(false);
+        expect(state.error).toBeNull();
+      });
+
+      it("sets error on rejected", async () => {
+        const store = createStore();
+        const apiModule = await import("../../utils/api");
+        vi.mocked(apiModule.api.cleanupProducts).mockRejectedValue(
+          new Error("boom"),
+        );
+
+        await store.dispatch(cleanupProducts());
+
+        const state = store.getState().products;
+        expect(state.loading).toBe(false);
+        expect(state.error).toBe("boom");
+      });
+    });
+
+    describe("abort handling (review I13)", () => {
+      // When the user types fast in a search box, the slice used to commit
+      // every resolved result in arrival order. Network reordering meant a
+      // slow stale fetch could land AFTER the fresh one and overwrite it
+      // (the "lagging keystroke" footgun). Now createAsyncThunk forwards an
+      // AbortSignal and the rejected reducer special-cases meta.aborted so
+      // the slice stays on the freshest result.
+
+      it("ignores aborted fetchProducts results in the rejected reducer", async () => {
+        const store = createStore();
+        const apiModule = await import("../../utils/api");
+        // First call simulates a slow request that gets aborted mid-flight.
+        const aborted = new Error("aborted");
+        aborted.name = "AbortError";
+        vi.mocked(apiModule.api.getProducts).mockRejectedValueOnce(aborted);
+
+        const promise = store.dispatch(fetchProducts({ search: "old" }));
+        promise.abort();
+        await promise;
+
+        const state = store.getState().products;
+        // The slice MUST NOT have set state.error from the aborted fetch.
+        expect(state.error).toBeNull();
+      });
+
+      it("forwards AbortSignal to api.getProducts", async () => {
+        const store = createStore();
+        const apiModule = await import("../../utils/api");
+        const getSpy = vi.mocked(apiModule.api.getProducts).mockResolvedValue({
+          products: [],
+          hasMore: false,
+          lastId: undefined,
+          totalCount: 0,
+        });
+        await store.dispatch(fetchProducts({ search: "honey" }));
+        expect(getSpy).toHaveBeenCalled();
+        const arg = getSpy.mock.calls[0][0];
+        // The slice now passes a signal alongside the user params so axios
+        // can cancel the underlying request when the thunk aborts.
+        expect(arg?.signal).toBeDefined();
+        expect((arg!.signal as AbortSignal).aborted).toBeDefined();
       });
     });
   });

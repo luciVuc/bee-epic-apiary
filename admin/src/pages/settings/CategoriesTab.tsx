@@ -3,17 +3,27 @@ import { Plus, Trash2 } from "lucide-react";
 import type { ICategory } from "../../types/settings";
 import { TextField } from "../../components/forms";
 
+/** Props for {@link CategoriesTab}; CRUD callbacks are owned by the parent. */
 export interface ICategoriesTabProps {
+  /** Current category list being edited. */
   categoriesContent: ICategory[];
+  /** Append a new blank category row. */
   addCategoryItem: () => void;
+  /** Update one field of the category at `index`. */
   updateCategoryItem: (
     index: number,
     field: keyof ICategory,
     value: string,
   ) => void;
+  /** Remove the category at `index`. */
   removeCategoryItem: (index: number) => void;
 }
 
+/**
+ * Settings tab for editing the store's product categories (id + label pairs).
+ * Purely presentational — add/update/remove are delegated to the parent so the
+ * draft and its dirty/save lifecycle stay centralized on SettingsPage.
+ */
 export function CategoriesTab({
   categoriesContent,
   addCategoryItem,
@@ -38,7 +48,7 @@ export function CategoriesTab({
               title={`Remove category ${i + 1}`}
               className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg dark:hover:bg-red-900/30"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -62,7 +72,7 @@ export function CategoriesTab({
         data-testid="categories-tab_add-btn"
         className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
       >
-        <Plus className="w-4 h-4" /> Add Category
+        <Plus className="w-4 h-4" aria-hidden="true" /> Add Category
       </button>
     </div>
   );

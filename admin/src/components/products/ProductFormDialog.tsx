@@ -1,5 +1,5 @@
 /** Modal dialog for creating and editing products. Handles Stripe product + price creation in sequence. */
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { X, Plus, Trash2 } from "lucide-react";
 import type { RootState, AppDispatch } from "../../store";
@@ -14,9 +14,24 @@ import type { ICategory } from "../../types/settings";
 import { CATEGORIES } from "../../utils/constants";
 import * as api from "../../utils/api";
 
+/** Props for {@link ProductFormDialog}. */
 export interface IProductFormDialogProps {
+  /** Stripe product id to edit; omit for create mode. */
   productId?: string;
+  /** Close handler (also called after a successful create/update). */
   onClose: () => void;
+}
+
+/** Shallow equality check for arrays of primitives. Hoisted above the
+ *  component so it doesn't get redeclared on every render and so the
+ *  hook below can reference it without the React-Hooks linter
+ *  complaining about a function defined after the hooks that use it. */
+function arraysEqual<T>(a: T[], b: T[]): boolean {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
 }
 
 const INITIAL_FORM_DATA: IProductInput = {
@@ -50,6 +65,11 @@ interface IUrlInputListProps {
   onRemove: (index: number) => void;
 }
 
+/**
+ * Repeating list of URL inputs with per-row remove and an add button. Backs
+ * both the image and thumbnail URL fields in {@link ProductFormDialog}; the
+ * caller owns the array and the change/add/remove callbacks.
+ */
 function UrlInputList({
   id,
   urls,
@@ -88,7 +108,7 @@ function UrlInputList({
             title={`${removeButtonLabelPrefix} ${index + 1}`}
             className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors dark:hover:bg-red-900/30"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
       ))}
@@ -98,13 +118,22 @@ function UrlInputList({
         className="flex items-center gap-2 text-sm text-primary-500 hover:text-primary-600 dark:text-primary-400 dark:hover:text-primary-300"
         title={`Add ${inputLabel.toLowerCase()}`}
       >
-        <Plus className="w-4 h-4" />
+        <Plus className="w-4 h-4" aria-hidden="true" />
         {addButtonLabel}
       </button>
     </div>
   );
 }
 
+/**
+ * Create/edit modal for a product. In edit mode it fetches the product and
+ * seeds the form exactly once per `productId` (guarded by a ref) so a
+ * background refetch can't clobber unsaved edits (review I4), and the Submit
+ * button stays disabled until something actually changes (`hasChanges`). Price
+ * is entered in integer cents with digit-only enforcement (review I14).
+ * Submitting dispatches create or update and closes on success; the underlying
+ * API sequences the Stripe product + price writes.
+ */
 export function ProductFormDialog({
   productId,
   onClose,
@@ -151,15 +180,6 @@ export function ProductFormDialog({
     );
   }, [isEditMode, selectedProduct, formData]);
 
-  // Helper function to compare arrays
-  function arraysEqual<T>(a: T[], b: T[]): boolean {
-    if (a.length !== b.length) return false;
-    for (let i = 0; i < a.length; i++) {
-      if (a[i] !== b[i]) return false;
-    }
-    return true;
-  }
-
   useEffect(() => {
     setTagInput("");
   }, [productId]);
@@ -184,33 +204,47 @@ export function ProductFormDialog({
     }
   }, [selectedProduct, productId]);
 
+  // Seed the form ONCE per productId. Without this gate, every reference
+  // change of `selectedProduct` (e.g. a background fetchProductById landing
+  // while the admin is mid-edit, or any sibling slice action that produces a
+  // new reference) would clobber unsaved edits with the freshly-fetched
+  // values (review I4).
+  const seededFor = useRef<string | null>(null);
   useEffect(() => {
-    if (isEditMode && selectedProduct) {
-      setFormData({
-        name: selectedProduct.name,
-        slug: selectedProduct.slug,
-        description: selectedProduct.description,
-        longDescription: selectedProduct.longDescription || "",
-        price: selectedProduct.price,
-        stripePaymentLinkId: selectedProduct.stripePaymentLinkId || "",
-        category: selectedProduct.category as EProductCategory,
-        imageUrls:
-          selectedProduct.imageUrls.length > 0
-            ? selectedProduct.imageUrls
-            : [""],
-        thumbnailUrls:
-          selectedProduct.thumbnailUrls.length > 0
-            ? selectedProduct.thumbnailUrls
-            : [""],
-        inStock: selectedProduct.inStock,
-        featured: selectedProduct.featured,
-        weight: selectedProduct.weight,
-        tags: selectedProduct.tags || [],
-        recurringInterval: selectedProduct.recurringInterval || "",
-        recurringIntervalCount: selectedProduct.recurringIntervalCount || 1,
-      });
-    }
-  }, [isEditMode, selectedProduct]);
+    if (!isEditMode || !selectedProduct || selectedProduct.id !== productId)
+      return;
+    if (seededFor.current === productId) return;
+    seededFor.current = productId ?? null;
+    setFormData({
+      name: selectedProduct.name,
+      slug: selectedProduct.slug,
+      description: selectedProduct.description,
+      longDescription: selectedProduct.longDescription || "",
+      price: selectedProduct.price,
+      stripePaymentLinkId: selectedProduct.stripePaymentLinkId || "",
+      category: selectedProduct.category as EProductCategory,
+      imageUrls:
+        selectedProduct.imageUrls.length > 0 ? selectedProduct.imageUrls : [""],
+      thumbnailUrls:
+        selectedProduct.thumbnailUrls.length > 0
+          ? selectedProduct.thumbnailUrls
+          : [""],
+      inStock: selectedProduct.inStock,
+      featured: selectedProduct.featured,
+      weight: selectedProduct.weight,
+      tags: selectedProduct.tags || [],
+      recurringInterval: selectedProduct.recurringInterval || "",
+      recurringIntervalCount: selectedProduct.recurringIntervalCount || 1,
+    });
+  }, [isEditMode, selectedProduct, productId]);
+
+  // Reset the seeding ref when the dialog switches productId or leaves edit
+  // mode entirely so a reopen on a different product re-seeds.
+  useEffect(() => {
+    return () => {
+      seededFor.current = null;
+    };
+  }, [productId]);
 
   useEffect(() => {
     setCategoryFetchError(null);
@@ -228,6 +262,9 @@ export function ProductFormDialog({
   const handleInputChange = useCallback(
     <K extends keyof IProductInput>(field: K, value: IProductInput[K]) => {
       setFormData((prev) => ({ ...prev, [field]: value }));
+      // A prior submit error is stale the moment the user edits any field —
+      // clear it so the banner doesn't linger while they fix the input.
+      setSubmitError(null);
     },
     [],
   );
@@ -372,7 +409,10 @@ export function ProductFormDialog({
             data-testid="product-form-dialog_close-btn"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-200"
           >
-            <X className="w-5 h-5 text-dark-500 dark:text-dark-400" />
+            <X
+              className="w-5 h-5 text-dark-500 dark:text-dark-400"
+              aria-hidden="true"
+            />
           </button>
         </div>
 
@@ -488,19 +528,42 @@ export function ProductFormDialog({
                 </label>
                 <input
                   id="product-price"
-                  type="number"
+                  type="text"
                   required
-                  min="0"
+                  inputMode="numeric"
+                  pattern="\d+"
                   value={formData.price}
-                  onChange={(e) =>
-                    handleInputChange("price", parseInt(e.target.value) || 0)
-                  }
+                  onChange={(e) => {
+                    // Digits-only — the previous type=number let the browser
+                    // surface "1.5", "1e10", or "-3", all silently becoming
+                    // non-integer cents downstream and creating Stripe Price
+                    // records the admin couldn't reconcile (review I14).
+                    const v = e.target.value.replace(/[^\d]/g, "");
+                    handleInputChange("price", v === "" ? 0 : Number(v));
+                  }}
+                  onPaste={(e) => {
+                    const pasted = e.clipboardData
+                      .getData("text")
+                      .replace(/[^\d]/g, "");
+                    if (pasted === "") {
+                      e.preventDefault();
+                    }
+                    // Else let the default paste run; the onChange handler
+                    // will strip non-digits again — idempotent.
+                  }}
+                  aria-describedby="price-hint"
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none dark:border-gray-600 dark:bg-dark-100 dark:text-dark-900 dark:focus:ring-primary-400 dark:focus:border-primary-400"
                   placeholder="1400"
                   data-testid="product-form-dialog_input-price"
                   aria-label="Price in cents"
                   title="Enter price in cents"
                 />
+                <small
+                  id="price-hint"
+                  className="block text-xs text-dark-500 mt-1"
+                >
+                  Enter the price in cents (e.g. 1499 = $14.99).
+                </small>
               </div>
               <div>
                 <label
@@ -751,7 +814,7 @@ export function ProductFormDialog({
                   title="Add tag"
                   className="px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
                 >
-                  <Plus className="w-4 h-4" />
+                  <Plus className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -791,7 +854,7 @@ export function ProductFormDialog({
                   title="Dismiss error"
                   className="text-red-400 hover:text-red-600"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               </div>
             )}
@@ -812,9 +875,7 @@ export function ProductFormDialog({
               <button
                 type="submit"
                 disabled={
-                  loading ||
-                  (isEditMode && !hasChanges) || // In edit mode: disable if no changes
-                  !!submitError
+                  loading || (isEditMode && !hasChanges) // In edit mode: disable if no changes
                 }
                 data-testid="product-form-dialog_submit_btn"
                 className="px-6 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed dark:bg-primary-600 dark:hover:bg-primary-700"

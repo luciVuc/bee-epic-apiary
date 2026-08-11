@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Mail, Phone, MapPin, Send, AlertCircle } from "lucide-react";
 import { LocationMap } from "../ui/LocationMap";
@@ -29,6 +29,12 @@ const subjectOptions = [
   { value: "other", label: "Other" },
 ];
 
+/**
+ * Contact section with a validated message form (name/email/subject/message)
+ * plus a hidden honeypot field for spam protection. Submits via
+ * {@link submitContactForm}, showing loading, success (swaps to a thank-you
+ * view), and error states, alongside contact details and a {@link LocationMap}.
+ */
 export const ContactSection = ({ content }: IContactSectionProps) => {
   const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -38,6 +44,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
   });
   const [status, setStatus] = useState<FormStatus>("idle");
   const [errorMessage, setErrorMessage] = useState<string>("");
+  // Honeypot ref: querying the DOM directly (the previous approach) would
+  // grab the FIRST `input[name="_gotcha"]` on the page, which is wrong as
+  // soon as a second form coexists in a route or modal. A ref pins this to
+  // the form's own hidden input.
+  const gotchaRef = useRef<HTMLInputElement>(null);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -54,21 +65,21 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
     setStatus("loading");
     setErrorMessage("");
 
-    const gotchaInput = document.querySelector<HTMLInputElement>(
-      'input[name="_gotcha"]',
-    );
-
     try {
       await submitContactForm({
         ...formData,
-        _gotcha: gotchaInput?.value || "",
+        _gotcha: gotchaRef.current?.value ?? "",
       });
 
       setStatus("success");
       setFormData({ name: "", email: "", subject: "general", message: "" });
-    } catch {
+    } catch (err) {
       setStatus("error");
-      setErrorMessage("Failed to send message. Please try again.");
+      setErrorMessage(
+        err instanceof Error
+          ? err.message
+          : "Failed to send message. Please try again.",
+      );
     }
   };
 
@@ -143,6 +154,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   value={formData.name}
                   onChange={handleChange}
                   required
+                  aria-required="true"
+                  aria-invalid={status === "error"}
+                  aria-describedby={
+                    status === "error" ? "contact-section_error" : undefined
+                  }
                   className="w-full px-4 py-3 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 outline-none transition-all font-body"
                   placeholder="Your name"
                   aria-label="Your name"
@@ -165,6 +181,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  aria-required="true"
+                  aria-invalid={status === "error"}
+                  aria-describedby={
+                    status === "error" ? "contact-section_error" : undefined
+                  }
                   className="w-full px-4 py-3 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 outline-none transition-all font-body"
                   placeholder="you@example.com"
                   aria-label="Your email address"
@@ -211,6 +232,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                   value={formData.message}
                   onChange={handleChange}
                   required
+                  aria-required="true"
+                  aria-invalid={status === "error"}
+                  aria-describedby={
+                    status === "error" ? "contact-section_error" : undefined
+                  }
                   rows={5}
                   className="w-full px-4 py-3 rounded-xl border border-dark-200 dark:border-dark-600 bg-white dark:bg-dark-100 text-dark-900 dark:text-dark-900 focus:border-primary-500 focus:ring-2 focus:ring-primary-100 dark:focus:ring-primary-900 outline-none transition-all font-body resize-none"
                   placeholder="Your message..."
@@ -220,6 +246,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
               </div>
 
               <input
+                ref={gotchaRef}
                 type="text"
                 name="_gotcha"
                 style={{ display: "none" }}
@@ -230,8 +257,11 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
 
               {status === "error" && errorMessage && (
                 <div
+                  id="contact-section_error"
+                  data-testid="contact-section_error"
                   className="flex items-center space-x-2 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg"
                   role="alert"
+                  aria-live="assertive"
                 >
                   <AlertCircle
                     className="w-5 h-5 text-red-500 dark:text-red-400 flex-shrink-0"
@@ -243,7 +273,12 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                 </div>
               )}
 
-              <Button type="submit" size="lg" disabled={status === "loading"}>
+              <Button
+                type="submit"
+                size="lg"
+                disabled={status === "loading"}
+                data-testid="contact-section_submit-btn"
+              >
                 {status === "loading" ? (
                   <LoadingSpinner size="sm" />
                 ) : (
@@ -276,6 +311,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                     </p>
                     <a
                       href={`mailto:${content.email}`}
+                      data-testid="contact-section_email-link"
                       className="font-body text-dark-900 dark:text-dark-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     >
                       {content.email}
@@ -294,6 +330,7 @@ export const ContactSection = ({ content }: IContactSectionProps) => {
                     </p>
                     <a
                       href={`tel:${content.phone}`}
+                      data-testid="contact-section_phone-link"
                       className="font-body text-dark-900 dark:text-dark-900 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
                     >
                       {formatPhoneNumber(content.phone)}

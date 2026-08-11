@@ -1,4 +1,5 @@
 import Stripe from 'stripe';
+import { ENotificationType } from '@bee-epic/shared';
 import { IOrderTemplateData, ISiteContent, IEmailMessageBuilder } from '../../types';
 import { buildEmailBody } from '../../utils';
 
@@ -68,9 +69,28 @@ async function sendOrderNotificationEmail(sessionId: string, session: Stripe.Che
 	}
 }
 
-export async function confirmOrder(sessionId: string, stripe: Stripe, env: Env): Promise<void> {
-	const session = await stripe.checkout.sessions.retrieve(sessionId);
+/**
+ * Confirms an order after Stripe's `checkout.session.completed` webhook. Takes
+ * the session object directly from `event.data.object` — the previous
+ * implementation re-`retrieve`d the same session, which was a wasted Stripe
+ * round-trip on every webhook (review I8).
+ *
+ * Logs a warning (does not block) when the session's `livemode` disagrees with
+ * the worker's `ENVIRONMENT`. Defensive observability for cross-mode bleed —
+ * e.g. a test-mode webhook landing in production state.
+ */
+export async function confirmOrder(session: Stripe.Checkout.Session, stripe: Stripe, env: Env): Promise<void> {
 	if (session.payment_status !== 'paid') return;
+
+	const sessionId = session.id;
+	const isProdEnv = env.ENVIRONMENT === 'production';
+	if (session.livemode !== isProdEnv) {
+		console.warn('Stripe livemode/ENVIRONMENT mismatch', {
+			livemode: session.livemode,
+			environment: env.ENVIRONMENT,
+			sessionId,
+		});
+	}
 
 	await stripe.checkout.sessions.update(sessionId, {
 		metadata: { order_status: 'new' },
@@ -78,7 +98,7 @@ export async function confirmOrder(sessionId: string, stripe: Stripe, env: Env):
 
 	try {
 		const stub = env.NOTIFICATION_HUB.getByName('default');
-		await stub.notify(sessionId);
+		await stub.notify({ type: ENotificationType.NEW_ORDER, orderId: sessionId });
 	} catch (error) {
 		console.error('Failed to send admin notification:', error);
 	}

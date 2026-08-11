@@ -14,6 +14,13 @@ interface IProductCardProps {
   product: IProduct;
 }
 
+/**
+ * Product tile for the grid: image, featured/out-of-stock badges, name, price,
+ * and an add-to-cart button (disabled when out of stock). Saves scroll position
+ * and the current URL to sessionStorage before navigating to the detail page so
+ * the products list can restore its scroll on back-navigation. Forwards a ref
+ * used to scroll the last card into view after "Load more".
+ */
 export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
   ({ product }, ref) => {
     const { add } = useCart();
@@ -50,6 +57,9 @@ export const ProductCard = forwardRef<HTMLDivElement, IProductCardProps>(
               <img
                 src={product.imageUrls[0]}
                 alt={product.name}
+                width={800}
+                height={600}
+                loading="lazy"
                 className="w-full h-full object-cover"
               />
             ) : (

@@ -2,13 +2,23 @@ import { X } from "lucide-react";
 import type { IOrder } from "../../types/order";
 import { formatPrice } from "../../utils/badgeClasses";
 
+/** Props for {@link NotificationsPanel}. */
 interface INotificationsPanelProps {
+  /** Whether the slide-over panel is visible. */
   isOpen: boolean;
+  /** New-order notifications to list, newest first. */
   notifications: IOrder[];
+  /** Close/dismiss handler (backdrop click or close button). */
   onClose: () => void;
+  /** Invoked with the chosen order when a notification is clicked. */
   onSelect: (order: IOrder) => void;
 }
 
+/**
+ * Right-hand slide-over listing new-order notifications. Renders nothing while
+ * closed. Each entry is a button that hands the order back via `onSelect` (the
+ * navbar navigates to its detail page); a backdrop click dismisses the panel.
+ */
 export function NotificationsPanel({
   isOpen,
   notifications,
@@ -75,8 +85,8 @@ export function NotificationsPanel({
                         "Unknown customer"}
                     </p>
                     <p className="text-sm text-dark-400">
-                      New order &middot; {formatPrice(order.amountTotal)}{" "}
-                      {order.currency.toUpperCase()}
+                      New order &middot;{" "}
+                      {formatPrice(order.amountTotal, order.currency)}
                     </p>
                     <p className="text-xs text-dark-500">
                       {new Date(order.created * 1000).toLocaleString()}

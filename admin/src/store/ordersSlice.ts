@@ -2,6 +2,32 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { IOrder, IOrderLineItem, IOrderUpdate } from "../types";
 import * as api from "../utils/api";
+import { apiErrorMessage } from "../utils/api";
+
+/**
+ * Filter keys that describe WHAT to fetch — these are the bits worth
+ * persisting in `lastFetchParams` for count refreshes and same-filter
+ * refetches. `limit` and `starting_after` are HOW (pagination) and must NOT
+ * round-trip into a follow-up count call.
+ */
+const ORDER_FILTER_KEYS = [
+  "search",
+  "status",
+  "payment_status",
+  "order_status",
+] as const;
+
+function pickFilterParams(
+  params: Record<string, unknown> | null | undefined,
+): Record<string, string | undefined> {
+  if (!params) return {};
+  return Object.fromEntries(
+    ORDER_FILTER_KEYS.filter((k) => k in params).map((k) => [
+      k,
+      params[k] as string | undefined,
+    ]),
+  );
+}
 
 export interface IOrdersState {
   items: IOrder[];
@@ -29,15 +55,22 @@ const initialState: IOrdersState = {
 
 export const fetchOrders = createAsyncThunk(
   "orders/fetchAll",
-  async (params?: {
-    limit?: number;
-    starting_after?: string;
-    search?: string;
-    status?: string;
-    payment_status?: string;
-    order_status?: string;
-  }) => {
-    const result = await api.api.getOrders(params);
+  async (
+    params:
+      | {
+          limit?: number;
+          starting_after?: string;
+          search?: string;
+          status?: string;
+          payment_status?: string;
+          order_status?: string;
+        }
+      | undefined,
+    { signal },
+  ) => {
+    // Thread the thunk's AbortSignal through axios so a follow-up
+    // dispatch().abort() cancels the in-flight request (review I13).
+    const result = await api.api.getOrders({ ...(params ?? {}), signal });
     return {
       ...result,
       params: (params as Record<string, string | undefined>) || null,
@@ -61,15 +94,7 @@ export const updateOrder = createAsyncThunk(
       const updatedOrder = await api.api.updateOrder(id, data);
       return updatedOrder;
     } catch (err: unknown) {
-      const axiosErr = err as {
-        response?: { data?: { error?: string } };
-        message?: string;
-      };
-      const message =
-        axiosErr?.response?.data?.error ||
-        axiosErr?.message ||
-        "Failed to update order";
-      return rejectWithValue(message);
+      return rejectWithValue(apiErrorMessage(err, "Failed to update order"));
     }
   },
 );
@@ -114,11 +139,18 @@ const ordersSlice = createSlice({
           state.items = action.payload.orders;
         }
         state.hasMore = action.payload.hasMore;
-        state.lastId = action.payload.lastId;
+        state.lastId = action.payload.lastId ?? null;
         state.totalCount = action.payload.totalCount;
-        state.lastFetchParams = action.payload.params;
+        state.lastFetchParams = pickFilterParams(action.payload.params);
       })
       .addCase(fetchOrders.rejected, (state, action) => {
+        // Aborted fetches are superseded by a fresh one — leave state.error
+        // alone so a stale "Failed to fetch" banner doesn't appear from a
+        // request that the user already discarded (review I13).
+        if (action.meta.aborted) {
+          state.loading = false;
+          return;
+        }
         state.loading = false;
         state.error = action.error.message || "Failed to fetch orders";
       })

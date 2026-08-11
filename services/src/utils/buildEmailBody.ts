@@ -4,6 +4,20 @@ import { EmailFormat, ICommTemplateData, IOrderTemplateData } from '../types';
 import { marked } from 'marked';
 
 /**
+ * Defense-in-depth: strip raw HTML blocks and inline HTML tokens from any
+ * markdown rendered for email. The template builders already escape user
+ * input via `escapeHtml`, but a future template author who forgets that step
+ * would otherwise see raw <script> reach the rendered output. Overriding the
+ * `html` renderer to emit empty string makes the marked config the safety net
+ * (review I7).
+ */
+marked.use({
+	renderer: {
+		html: () => '',
+	},
+});
+
+/**
  * Build an email body string in the requested format.
  * Dispatches to the correct template builder based on data type (order vs contact).
  * Markdown content is rendered to HTML via `marked`.

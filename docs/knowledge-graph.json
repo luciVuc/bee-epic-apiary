@@ -1,0 +1,1095 @@
+{
+  "schemaVersion": "1.2",
+  "generatedAt": "2026-08-10",
+  "description": "Knowledge graph of the bee-epic-apiary monorepo. Nodes are packages, modules, key types, HTTP routes, Durable Objects, external systems, and cross-cutting flows. Edges capture dependency, data flow, auth gating, storage, and route wiring. Intended for coding-assistant navigation and impact analysis. Companion to docs/index.json (the flat file/symbol map). v1.1 added an `analysis` block (strengths, gaps, vulnerabilities, tech-debt, scalability) from a full development-perspective review on 2026-07-25. v1.2 (2026-07-31) records a code-review remediation pass: SSE fanout race, webhook idempotency reservation, origin allow-list hardening, atomic product update, focus-trap a11y hook, client/server schema parity, and a shared typecheck/test CI gate.",
+
+  "nodeTypes": [
+    "package",
+    "module",
+    "type",
+    "route",
+    "durable-object",
+    "external-system",
+    "storage",
+    "flow",
+    "middleware",
+    "store-slice"
+  ],
+  "edgeTypes": [
+    "depends-on",
+    "imports-types-from",
+    "calls",
+    "routes-to",
+    "gated-by-role",
+    "reads-writes",
+    "produces",
+    "consumes",
+    "persists-to",
+    "transforms",
+    "notifies",
+    "part-of"
+  ],
+
+  "nodes": [
+    {
+      "id": "pkg:shared",
+      "type": "package",
+      "label": "@bee-epic/shared",
+      "path": "shared/",
+      "summary": "Canonical Zod schemas + TS types for everything crossing a network boundary. Wired as an npm file: dep; must be built before consumers."
+    },
+    {
+      "id": "pkg:services",
+      "type": "package",
+      "label": "services (Cloudflare Worker)",
+      "path": "services/",
+      "summary": "Backend Worker: Stripe checkout/CRUD, auth, settings, contact email, SSE notifications, rate limiting. Manual router, no framework."
+    },
+    {
+      "id": "pkg:admin",
+      "type": "package",
+      "label": "admin (React SPA)",
+      "path": "admin/",
+      "summary": "React 19 + Redux Toolkit admin panel. Cookie-authed. Manages products, orders, users, site settings."
+    },
+    {
+      "id": "pkg:web",
+      "type": "package",
+      "label": "web (React PWA storefront)",
+      "path": "web/",
+      "summary": "Public PWA storefront. Catalog, cart (localStorage), Stripe checkout, SEO/JSON-LD."
+    },
+
+    {
+      "id": "ext:stripe",
+      "type": "external-system",
+      "label": "Stripe",
+      "summary": "Source of truth for products, prices, checkout sessions, orders. API version 2026-05-27.dahlia."
+    },
+    {
+      "id": "ext:formspark",
+      "type": "external-system",
+      "label": "Formspark",
+      "summary": "Email delivery fallback when site content has formsparkFormId set."
+    },
+    {
+      "id": "ext:cf-email",
+      "type": "external-system",
+      "label": "Cloudflare Email Service",
+      "summary": "env.EMAIL.send() — default transactional email path when Formspark not configured."
+    },
+
+    {
+      "id": "store:content-kv",
+      "type": "storage",
+      "label": "CONTENT_KV (KV)",
+      "summary": "KV namespace: users, invites, resets, refresh families, auth policy, site/process/testimonials/categories content, product-count cache, webhook idempotency keys."
+    },
+    {
+      "id": "do:notification-hub",
+      "type": "durable-object",
+      "label": "NotificationHub",
+      "path": "services/src/notifications/notification-hub.ts",
+      "summary": "SQLite-backed SSE fanout, single instance ('default'). Replay window 1-24h (site-configurable), max 500 events, two-axis eviction. heartbeat()/broadcast() iterate a snapshot of the connection set and delete-in-place on failed write, so a concurrent subscribe is never dropped by a set swap."
+    },
+    {
+      "id": "do:rate-limiter",
+      "type": "durable-object",
+      "label": "RateLimiterDO",
+      "path": "services/src/utils/rate-limiter-do.ts",
+      "summary": "Atomic per-IP rate limiting (default 100 req/min). Pure checkRateLimit() logic testable outside runtime; client fails open."
+    },
+
+    {
+      "id": "mod:shared/product",
+      "type": "module",
+      "label": "shared/product",
+      "path": "shared/src/product.ts",
+      "summary": "IProduct/IProductInput/IProductUpdateRequest schemas, EProductCategory."
+    },
+    {
+      "id": "mod:shared/order",
+      "type": "module",
+      "label": "shared/order",
+      "path": "shared/src/order.ts",
+      "summary": "IOrder, shipping, fulfillment status, line items, update payloads."
+    },
+    {
+      "id": "mod:shared/settings",
+      "type": "module",
+      "label": "shared/settings",
+      "path": "shared/src/settings.ts",
+      "summary": "ISiteContent, ICategory, IProcessStep, ITestimonial, INavLink, ISocialLinks, ESettingsType."
+    },
+    {
+      "id": "mod:shared/staff",
+      "type": "module",
+      "label": "shared/staff",
+      "path": "shared/src/staff.ts",
+      "summary": "EStaffRole, STAFF_ROLE_RANK, roleSatisfies(). Role rank OWNER>MANAGER>EMPLOYEE>VENDOR."
+    },
+    {
+      "id": "mod:shared/auth",
+      "type": "module",
+      "label": "shared/auth",
+      "path": "shared/src/auth.ts",
+      "summary": "IUser, IInvite, IPasswordReset, IRefreshFamily, IAuthPolicy, EUserStatus, TTL constants, toUserPublic()."
+    },
+    {
+      "id": "mod:shared/notifications",
+      "type": "module",
+      "label": "shared/notifications",
+      "path": "shared/src/notifications.ts",
+      "summary": "INotificationEvent discriminated union + ENotificationType."
+    },
+    {
+      "id": "mod:shared/email",
+      "type": "module",
+      "label": "shared/email",
+      "path": "shared/src/email.ts",
+      "summary": "EmailFormat, IEmailBodyType, IOrderTemplateData, ICommTemplateData."
+    },
+    {
+      "id": "mod:shared/api",
+      "type": "module",
+      "label": "shared/api",
+      "path": "shared/src/api.ts",
+      "summary": "IApiResponse<T> envelope, IApiError discriminated union, ApiResponseSchema()."
+    },
+    {
+      "id": "mod:shared/stripe",
+      "type": "module",
+      "label": "shared/stripe",
+      "path": "shared/src/stripe.ts",
+      "summary": "Stripe API response shapes (price/product/list)."
+    },
+
+    {
+      "id": "mw:withAuthHandler",
+      "type": "middleware",
+      "label": "withAuthHandler",
+      "path": "services/src/utils/withAuthHandler.ts",
+      "summary": "CORS -> method check -> origin allow-list -> resolveCaller -> write-method floor -> rate limit -> handler -> try/catch."
+    },
+    {
+      "id": "mw:withStripeHandler",
+      "type": "middleware",
+      "label": "withStripeHandler",
+      "path": "services/src/utils/withStripeHandler.ts",
+      "summary": "Injects memoised Stripe client, maps Stripe errors, delegates auth to withAuthHandler. Public when no requiredRole."
+    },
+    {
+      "id": "flow:resolveCaller",
+      "type": "flow",
+      "label": "resolveCaller auth chain",
+      "path": "services/src/utils/resolveCaller.ts",
+      "summary": "cookie bea_at JWT (HS256) -> Authorization: Bearer API_SECRET_KEY (=>OWNER ci@service) -> X-Dev-Email header (dev only)."
+    },
+
+    {
+      "id": "flow:checkout",
+      "type": "flow",
+      "label": "Checkout flow",
+      "summary": "web cart -> POST /checkout -> Stripe session(s) -> redirect -> Stripe webhook -> confirmOrder -> notification + email."
+    },
+    {
+      "id": "flow:notifications",
+      "type": "flow",
+      "label": "Admin notifications (SSE)",
+      "summary": "worker events -> NotificationHub DO -> GET /notifications/stream (SSE, Last-Event-ID replay) -> admin NotificationsPanel."
+    },
+    {
+      "id": "flow:site-content",
+      "type": "flow",
+      "label": "Site content flow",
+      "summary": "admin Settings tabs PUT /settings/:type -> CONTENT_KV -> web fetches GET /settings/* at mount."
+    },
+    {
+      "id": "flow:admin-auth",
+      "type": "flow",
+      "label": "Admin cookie auth",
+      "summary": "LoginPage -> POST /auth/login -> bea_at/bea_rt cookies -> whoami probe -> 401 refresh interceptor coalesced via refreshInFlight mutex."
+    },
+
+    {
+      "id": "slice:admin/auth",
+      "type": "store-slice",
+      "label": "admin authSlice",
+      "path": "admin/src/store/authSlice.ts",
+      "summary": "caller/bootstrapAvailable state; fetchCaller/login/logout/refresh/changePassword thunks."
+    },
+    {
+      "id": "slice:admin/products",
+      "type": "store-slice",
+      "label": "admin productsSlice",
+      "path": "admin/src/store/productsSlice.ts",
+      "summary": "Product list, cursor pagination, filters, CRUD thunks; AbortSignal-threaded."
+    },
+    {
+      "id": "slice:admin/orders",
+      "type": "store-slice",
+      "label": "admin ordersSlice",
+      "path": "admin/src/store/ordersSlice.ts",
+      "summary": "Order list, cursor pagination, filters, detail + line items thunks."
+    },
+    {
+      "id": "slice:web/cart",
+      "type": "store-slice",
+      "label": "web cartSlice",
+      "path": "web/src/store/cartSlice.ts",
+      "summary": "Cart items; persisted to localStorage 'beeEpicCart' via persistenceMiddleware; Zod-validated on load."
+    },
+    {
+      "id": "slice:web/ui",
+      "type": "store-slice",
+      "label": "web uiSlice",
+      "path": "web/src/store/uiSlice.ts",
+      "summary": "Cart drawer open state, active section, loading."
+    },
+
+    {
+      "id": "route:POST /stripe/webhook",
+      "type": "route",
+      "label": "POST /stripe/webhook",
+      "role": "public (Stripe-signed)",
+      "handler": "services/src/stripe/webhook/webhook-handler.ts"
+    },
+    {
+      "id": "route:POST /checkout",
+      "type": "route",
+      "label": "POST /checkout",
+      "role": "public",
+      "handler": "services/src/stripe/checkout/stripe-checkout.ts"
+    },
+    {
+      "id": "route:POST /contact",
+      "type": "route",
+      "label": "POST /contact",
+      "role": "public",
+      "handler": "services/src/contact/contact-handler.ts"
+    },
+    {
+      "id": "route:POST /prices",
+      "type": "route",
+      "label": "POST /prices",
+      "role": "MANAGER",
+      "handler": "services/src/stripe/price/create-price.ts"
+    },
+    {
+      "id": "route:GET|POST /products",
+      "type": "route",
+      "label": "GET|POST /products",
+      "role": "GET public, POST MANAGER",
+      "handler": "services/src/stripe/product/get-products.ts, create-product.ts"
+    },
+    {
+      "id": "route:GET /products/count",
+      "type": "route",
+      "label": "GET /products/count",
+      "role": "public",
+      "handler": "services/src/stripe/product/get-products-count.ts"
+    },
+    {
+      "id": "route:GET /products/stats",
+      "type": "route",
+      "label": "GET /products/stats",
+      "role": "EMPLOYEE",
+      "handler": "services/src/stripe/product/get-products-stats.ts"
+    },
+    {
+      "id": "route:POST /products/cleanup",
+      "type": "route",
+      "label": "POST /products/cleanup",
+      "role": "MANAGER",
+      "handler": "services/src/stripe/product/cleanup-products.ts"
+    },
+    {
+      "id": "route:GET|PUT|DELETE /products/:id",
+      "type": "route",
+      "label": "GET|PUT|DELETE /products/:id",
+      "role": "GET public, PUT/DELETE MANAGER",
+      "handler": "services/src/stripe/product/get-products.ts, update-product.ts, delete-product.ts"
+    },
+    {
+      "id": "route:GET /notifications/stream",
+      "type": "route",
+      "label": "GET /notifications/stream",
+      "role": "EMPLOYEE",
+      "handler": "services/src/stripe/notifications/notifications-stream.ts"
+    },
+    {
+      "id": "route:GET /orders",
+      "type": "route",
+      "label": "GET /orders",
+      "role": "EMPLOYEE",
+      "handler": "services/src/stripe/order/get-orders.ts"
+    },
+    {
+      "id": "route:GET|PUT /orders/:id",
+      "type": "route",
+      "label": "GET|PUT /orders/:id",
+      "role": "GET public, PUT EMPLOYEE",
+      "handler": "services/src/stripe/order/get-orders.ts, update-order.ts"
+    },
+    {
+      "id": "route:GET /users",
+      "type": "route",
+      "label": "GET /users",
+      "role": "OWNER",
+      "handler": "services/src/auth/handlers/listUsers.ts"
+    },
+    {
+      "id": "route:POST /users/invite",
+      "type": "route",
+      "label": "POST /users/invite",
+      "role": "OWNER",
+      "handler": "services/src/auth/handlers/inviteUser.ts"
+    },
+    {
+      "id": "route:PUT /users/me",
+      "type": "route",
+      "label": "PUT /users/me",
+      "role": "EMPLOYEE (write-floor; no explicit role)",
+      "handler": "services/src/auth/handlers/updateMe.ts"
+    },
+    {
+      "id": "route:POST /users/:email/reinvite",
+      "type": "route",
+      "label": "POST /users/:email/reinvite",
+      "role": "OWNER",
+      "handler": "services/src/auth/handlers/reinviteUser.ts"
+    },
+    {
+      "id": "route:PUT|DELETE /users/:email",
+      "type": "route",
+      "label": "PUT|DELETE /users/:email",
+      "role": "OWNER",
+      "handler": "services/src/auth/handlers/updateUser.ts, deleteUser.ts"
+    },
+    {
+      "id": "route:GET|PUT /settings/auth-policy",
+      "type": "route",
+      "label": "GET|PUT /settings/auth-policy",
+      "role": "GET VENDOR (any authed), PUT OWNER",
+      "handler": "services/src/auth/handlers/policyHandlers.ts"
+    },
+    {
+      "id": "route:GET|PUT /settings/:type",
+      "type": "route",
+      "label": "GET|PUT /settings/:type",
+      "role": "GET public, PUT MANAGER",
+      "handler": "services/src/settings/settings-handler.ts"
+    },
+    {
+      "id": "route:POST /auth/login",
+      "type": "route",
+      "label": "POST /auth/login",
+      "role": "public (rate-limited)",
+      "handler": "services/src/auth/handlers/login.ts"
+    },
+    {
+      "id": "route:POST /auth/logout",
+      "type": "route",
+      "label": "POST /auth/logout",
+      "role": "EMPLOYEE",
+      "handler": "services/src/auth/handlers/logout.ts"
+    },
+    {
+      "id": "route:POST /auth/refresh",
+      "type": "route",
+      "label": "POST /auth/refresh",
+      "role": "public",
+      "handler": "services/src/auth/handlers/refresh.ts"
+    },
+    {
+      "id": "route:POST /auth/request-reset",
+      "type": "route",
+      "label": "POST /auth/request-reset",
+      "role": "public (rate-limited)",
+      "handler": "services/src/auth/handlers/requestReset.ts"
+    },
+    {
+      "id": "route:POST /auth/complete-reset",
+      "type": "route",
+      "label": "POST /auth/complete-reset",
+      "role": "public",
+      "handler": "services/src/auth/handlers/completeReset.ts"
+    },
+    {
+      "id": "route:POST /auth/accept-invite",
+      "type": "route",
+      "label": "POST /auth/accept-invite",
+      "role": "public",
+      "handler": "services/src/auth/handlers/acceptInvite.ts"
+    },
+    {
+      "id": "route:POST /auth/change-password",
+      "type": "route",
+      "label": "POST /auth/change-password",
+      "role": "EMPLOYEE",
+      "handler": "services/src/auth/handlers/changePassword.ts"
+    },
+    {
+      "id": "route:POST /auth/bootstrap-owner",
+      "type": "route",
+      "label": "POST /auth/bootstrap-owner",
+      "role": "public (rate-limited, first-run gated)",
+      "handler": "services/src/auth/handlers/bootstrapOwner.ts"
+    },
+    {
+      "id": "route:GET /whoami",
+      "type": "route",
+      "label": "GET /whoami",
+      "role": "public",
+      "handler": "services/src/router.ts (inline)",
+      "summary": "Returns { caller, bootstrapAvailable }. Drives admin UI bootstrap state."
+    }
+  ],
+
+  "edges": [
+    {
+      "from": "pkg:services",
+      "to": "pkg:shared",
+      "type": "depends-on",
+      "note": "file:../shared; imports types + schemas + roleSatisfies/toUserPublic."
+    },
+    {
+      "from": "pkg:admin",
+      "to": "pkg:shared",
+      "type": "depends-on",
+      "note": "file:../shared; re-exported via admin/src/types/*."
+    },
+    {
+      "from": "pkg:web",
+      "to": "pkg:shared",
+      "type": "depends-on",
+      "note": "file:../shared; re-exported via web/src/types/index.ts."
+    },
+
+    {
+      "from": "pkg:admin",
+      "to": "pkg:services",
+      "type": "calls",
+      "note": "admin/src/utils/api.ts (axios, withCredentials) -> all admin/auth/settings/product/order/user routes."
+    },
+    {
+      "from": "pkg:web",
+      "to": "pkg:services",
+      "type": "calls",
+      "note": "web/src/utils/api.ts (native fetch) -> GET /settings/*, GET /products, POST /checkout, POST /contact."
+    },
+
+    {
+      "from": "mw:withStripeHandler",
+      "to": "mw:withAuthHandler",
+      "type": "calls",
+      "note": "Delegates CORS/auth/rate-limit; adds Stripe client + error mapping."
+    },
+    {
+      "from": "mw:withAuthHandler",
+      "to": "flow:resolveCaller",
+      "type": "calls",
+      "note": "Resolves caller then enforces roleSatisfies against requiredRole."
+    },
+    {
+      "from": "flow:resolveCaller",
+      "to": "mod:shared/staff",
+      "type": "calls",
+      "note": "roleSatisfies() for role rank comparison."
+    },
+    {
+      "from": "flow:resolveCaller",
+      "to": "store:content-kv",
+      "type": "reads-writes",
+      "note": "Looks up user record by cookie subject / dev email."
+    },
+
+    {
+      "from": "route:POST /checkout",
+      "to": "ext:stripe",
+      "type": "calls",
+      "note": "Creates recurring + one-time checkout sessions."
+    },
+    {
+      "from": "route:POST /stripe/webhook",
+      "to": "ext:stripe",
+      "type": "consumes",
+      "note": "Verifies signature; handles checkout.session.completed."
+    },
+    {
+      "from": "route:POST /stripe/webhook",
+      "to": "store:content-kv",
+      "type": "persists-to",
+      "note": "webhook:event:<id> idempotency key (24h TTL); RESERVED before dispatch, deleted on confirmOrder failure to stay retryable."
+    },
+    {
+      "from": "route:POST /stripe/webhook",
+      "to": "do:notification-hub",
+      "type": "notifies",
+      "note": "Emits new-order event after confirmOrder."
+    },
+    {
+      "from": "route:GET|POST /products",
+      "to": "ext:stripe",
+      "type": "calls",
+      "note": "products.list/search/create; expand default_price."
+    },
+    {
+      "from": "route:GET|POST /products",
+      "to": "store:content-kv",
+      "type": "reads-writes",
+      "note": "products:count:v1 cache (120s TTL)."
+    },
+    {
+      "from": "route:GET|PUT|DELETE /products/:id",
+      "to": "do:notification-hub",
+      "type": "notifies",
+      "note": "product-updated / product-deleted events."
+    },
+    {
+      "from": "route:GET /orders",
+      "to": "ext:stripe",
+      "type": "calls",
+      "note": "Orders derived from Stripe checkout sessions."
+    },
+    {
+      "from": "route:GET|PUT /orders/:id",
+      "to": "do:notification-hub",
+      "type": "notifies",
+      "note": "order-status-changed event on PUT."
+    },
+    {
+      "from": "route:GET|PUT /settings/:type",
+      "to": "store:content-kv",
+      "type": "reads-writes",
+      "note": "site|process|testimonials|categories content."
+    },
+    {
+      "from": "route:GET /notifications/stream",
+      "to": "do:notification-hub",
+      "type": "consumes",
+      "note": "SSE subscribe; replays via Last-Event-ID."
+    },
+    {
+      "from": "route:POST /contact",
+      "to": "ext:formspark",
+      "type": "produces",
+      "note": "If formsparkFormId set in site content."
+    },
+    {
+      "from": "route:POST /contact",
+      "to": "ext:cf-email",
+      "type": "produces",
+      "note": "Default path via env.EMAIL.send()."
+    },
+
+    {
+      "from": "route:POST /auth/login",
+      "to": "store:content-kv",
+      "type": "reads-writes",
+      "note": "User lookup; sets bea_at/bea_rt cookies."
+    },
+    {
+      "from": "route:POST /auth/login",
+      "to": "do:rate-limiter",
+      "type": "calls",
+      "note": "Rate limited (per-IP) to blunt brute force."
+    },
+    {
+      "from": "route:POST /auth/bootstrap-owner",
+      "to": "ext:cf-email",
+      "type": "produces",
+      "note": "Sends first-owner invite email."
+    },
+    {
+      "from": "route:GET|PUT /settings/:type",
+      "to": "flow:site-content",
+      "type": "part-of"
+    },
+    {
+      "from": "flow:site-content",
+      "to": "pkg:web",
+      "type": "consumes",
+      "note": "web fetches site/process/testimonials/categories at mount."
+    },
+    {
+      "from": "flow:site-content",
+      "to": "pkg:admin",
+      "type": "produces",
+      "note": "admin Settings tabs write content."
+    },
+
+    {
+      "from": "flow:checkout",
+      "to": "route:POST /checkout",
+      "type": "part-of"
+    },
+    {
+      "from": "flow:checkout",
+      "to": "route:POST /stripe/webhook",
+      "type": "part-of"
+    },
+    {
+      "from": "flow:checkout",
+      "to": "slice:web/cart",
+      "type": "consumes",
+      "note": "Cart items become checkout line items."
+    },
+    {
+      "from": "flow:notifications",
+      "to": "route:GET /notifications/stream",
+      "type": "part-of"
+    },
+    {
+      "from": "flow:notifications",
+      "to": "do:notification-hub",
+      "type": "part-of"
+    },
+    {
+      "from": "flow:admin-auth",
+      "to": "route:POST /auth/login",
+      "type": "part-of"
+    },
+    {
+      "from": "flow:admin-auth",
+      "to": "route:POST /auth/refresh",
+      "type": "part-of"
+    },
+    { "from": "flow:admin-auth", "to": "route:GET /whoami", "type": "part-of" },
+    { "from": "flow:admin-auth", "to": "slice:admin/auth", "type": "produces" },
+
+    {
+      "from": "slice:admin/products",
+      "to": "route:GET|POST /products",
+      "type": "calls"
+    },
+    {
+      "from": "slice:admin/orders",
+      "to": "route:GET /orders",
+      "type": "calls"
+    },
+    { "from": "slice:admin/auth", "to": "route:GET /whoami", "type": "calls" },
+    {
+      "from": "slice:web/cart",
+      "to": "slice:web/ui",
+      "type": "part-of",
+      "note": "Both under web Redux store; cart persisted, ui ephemeral."
+    },
+
+    {
+      "from": "mod:shared/product",
+      "to": "ext:stripe",
+      "type": "transforms",
+      "note": "Stripe product/price -> IProduct via transform layers in web + admin."
+    },
+    {
+      "from": "mod:shared/api",
+      "to": "pkg:services",
+      "type": "produces",
+      "note": "Every worker response wrapped in IApiResponse<T> envelope."
+    },
+    {
+      "from": "mod:shared/api",
+      "to": "pkg:admin",
+      "type": "consumes",
+      "note": "api.ts unwraps envelope, throws ApiError on ok:false."
+    },
+    {
+      "from": "mod:shared/api",
+      "to": "pkg:web",
+      "type": "consumes",
+      "note": "api.ts parses envelope with graceful fallbacks."
+    },
+    {
+      "from": "do:notification-hub",
+      "to": "mod:shared/notifications",
+      "type": "imports-types-from",
+      "note": "INotificationEvent discriminated union."
+    }
+  ],
+
+  "keyInvariants": [
+    "shared/ must be built (npm run shared:build) before any consumer sees updated .d.ts.",
+    "All interfaces exported and I-prefixed; enums E-prefixed.",
+    "Every worker response is an IApiResponse<T> envelope; errors use the IApiError discriminated union.",
+    "Role rank OWNER>MANAGER>EMPLOYEE>VENDOR (source: services/src/*/handlers). Verified per-handler: products/prices create/update/delete/cleanup = MANAGER; product-stats, orders get/update, notifications-stream = EMPLOYEE; /users/* list/invite/update/delete/reinvite = OWNER; settings/:type PUT = MANAGER; auth-policy GET = VENDOR (any authenticated), PUT = OWNER; login/logout/change-password/refresh/request-reset/complete-reset/accept-invite/bootstrap-owner = public (authenticate internally); /users/me = write-floor EMPLOYEE.",
+    "resolveCaller trust order: cookie -> bearer -> dev header (dev header honored only when ENVIRONMENT=development).",
+    "Stripe API version 2026-05-27.dahlia pinned in withStripeHandler.ts.",
+    "NotificationHub is a single DO instance named 'default'; RateLimiterDO is per-IP.",
+    "web cart persisted to localStorage 'beeEpicCart'; admin theme to localStorage 'theme'.",
+    "Email routes through Formspark when formsparkFormId is set, else Cloudflare Email Service."
+  ],
+
+  "analysis": {
+    "reviewedAt": "2026-07-25",
+    "remediatedAt": "2026-07-31",
+    "verifiedAt": "2026-08-10",
+    "verificationNote": "Sync-verification pass against the codebase: all 4 package nodes, 28 API route nodes (incl. POST /products/cleanup), and 9 key invariants (envelope shape, role rank, resolveCaller trust order, Stripe 2026-05-27.dahlia pin, NotificationHub single 'default' DO, cart/theme localStorage keys, email routing) confirmed accurate. No structural drift; nodes/edges unchanged. Companion docs/index.json corrected: added services/src/utils/getClientIp.ts and refreshed ProductDetailPage.tsx + shared/src/api.ts line numbers.",
+    "method": "Parallel development-perspective review of all four packages (read actual source, not docs) + a dedicated cross-cutting security sweep. Findings verified against code; build/typecheck state verified by running tsc. A follow-up high-recall code-review pass on 2026-07-31 (commit 10fffc4) remediated 11 findings and re-verified 2 as non-bugs — see `remediation2026_07_31`.",
+    "overallAssessment": "Mature, well-engineered single-tenant e-commerce backend + two React frontends. Security posture is a genuine strength (defense-in-depth auth, verified webhook signatures, PII minimization). Backend test discipline is high (~1:1 spec:source, 90% thresholds). Following the 2026-07-31 remediation, the earlier P0/P1 liabilities (broken tree, no typecheck gate) are closed and several correctness/a11y edges hardened. The remaining liabilities are the under-tested storefront and the single-DO / full-catalogue-walk scaling ceilings.",
+
+    "healthSignals": {
+      "buildStatusAtReview": "BROKEN at 2026-07-25 review; RESOLVED 2026-07-27/29 — deleted files restored (commit a169161) and all ~24 tsc errors fixed. services/admin/web now typecheck clean (`npm run typecheck` = 0 errors).",
+      "typecheckGate": "PRESENT since 2026-07-29, EXTENDED 2026-07-31 — `typecheck` script across services/admin/web + shared:typecheck; root `npm run typecheck` now runs shared first; deploy.yml `test` job runs shared:test + shared typecheck before the rest (fail-fast).",
+      "servicesTests": "Strong: ~68 spec files / 79 source, 90% line/branch/fn/stmt thresholds (istanbul). 953 passing / 8 skipped as of 2026-07-31.",
+      "adminTests": "Good: 49 spec files, 545 passing. Enforced thresholds lines 80 / branches 67 / functions 75 / statements 78 (NOT the 88/85/45/88 quoted in AGENTS.md — those are stale never-met targets in a config comment).",
+      "webTests": "Weak: real coverage only for cartSlice, transform, useStripeCheckout; smoke.test.ts is a `1+1` placeholder; ZERO component/page tests; NO coverage thresholds. (typecheck now gated, but runtime behavior still under-tested. The new useFocusTrap hook is likewise untested.)",
+      "sharedTests": "Adequate for a types package (6 spec files, 65 tests, Zod schema round-trips incl. order/product update parity + default_price anchoring)."
+    },
+
+    "strengths": [
+      {
+        "id": "str:auth-defense-in-depth",
+        "area": "services/auth",
+        "summary": "PBKDF2-SHA256 @600k iters, random salt, constant-time compare, dummy-hash timing defense on login. HS256 JWT with constant-time sig check + explicit exp/type/issuer guards. Role authority derived from LIVE KV user record (stale-token-proof), DISABLED users rejected even with valid JWT.",
+        "evidence": "services/src/auth/crypto/passwordHash.ts, jwt.ts, resolveCaller.ts:29-49"
+      },
+      {
+        "id": "str:cookie-hardening",
+        "area": "services/auth",
+        "summary": "HttpOnly + SameSite=Lax + env-gated Secure (fail-closed when ENVIRONMENT unset); refresh cookie Path-scoped to /auth/refresh; full refresh-token-family rotation with replay detection that burns the family on JTI mismatch.",
+        "evidence": "services/src/auth/utils/cookies.ts, refresh.ts:114-118"
+      },
+      {
+        "id": "str:webhook-idempotency",
+        "area": "services/stripe",
+        "summary": "Stripe signature verified (constructEventAsync) before any side effect; idempotency key RESERVED in KV before dispatch (closes the concurrent-duplicate window) and released on confirmOrder failure so retries still work.",
+        "evidence": "services/src/stripe/webhook/webhook-handler.ts (reserve-before-dispatch + delete-on-failure)"
+      },
+      {
+        "id": "str:middleware-composition",
+        "area": "services",
+        "summary": "Two-layer wrapper (withAuthHandler -> withStripeHandler) with deliberate, documented ordering: CORS -> method -> origin -> resolveCaller -> write-method floor (>=EMPLOYEE for any mutating verb) -> rate-limit-last -> handler. Write-floor is a safety net even if a route forgets requiredRole.",
+        "evidence": "services/src/utils/withAuthHandler.ts:30-108, withStripeHandler.ts"
+      },
+      {
+        "id": "str:pure-logic-extraction",
+        "area": "services",
+        "summary": "Runtime-coupled logic extracted to pure, unit-testable functions: checkRateLimit, aggregateProductStats, paginateArray, matchesSearch/Category/Tag.",
+        "evidence": "services/src/utils/rate-limiter-do.ts:21, stripe/product/get-products-stats.ts:47, utils/paginate.ts:8"
+      },
+      {
+        "id": "str:sse-backpressure",
+        "area": "services/notifications",
+        "summary": "SSE replay pump detached via waitUntil to avoid TransformStream single-chunk-buffer deadlock; per-write 5s timeout so a half-open client can't stall the webhook; lex-sortable fixed-width event IDs so SQLite string ORDER BY matches numeric order; two-axis eviction (age + count<=500). Fanout iterates a snapshot of the connection set and deletes dead writers in place, so a concurrent subscribe is never lost.",
+        "evidence": "services/src/notifications/notification-hub.ts (waitUntil pump, tryWrite timeout, snapshot iteration in heartbeat/broadcast)"
+      },
+      {
+        "id": "str:admin-api-client",
+        "area": "admin",
+        "summary": "Production-grade axios client: envelope unwrap (204-aware), typed ApiError carrying IApiError, 401-refresh interceptor that COALESCES concurrent refreshes via store-subscribe, Symbol retry-marker prevents infinite loops, /auth/* excluded from refresh path.",
+        "evidence": "admin/src/utils/api.ts:122-178,222-252"
+      },
+      {
+        "id": "str:boundary-validation",
+        "area": "cross-cutting",
+        "summary": "Zod validation at every trust boundary: Stripe->IProduct transform (.loose()), localStorage cart load (drops corrupt shape, clears key), order/product updates in strict mode (reject unknown fields), DO notify() re-validates before SQLite write. Client OrderUpdateSchema now mirrors the server's order_status enum refinement, and default_price is validated with an anchored /^price_[A-Za-z0-9]+$/ regex (rejects bare prefix + newline-injection bypass).",
+        "evidence": "admin/src/utils/transform.ts:28-71, web/src/store/cartSlice.ts:8-43, services/src/stripe/order/update-order.ts:25, shared/src/order.ts, shared/src/product.ts"
+      },
+      {
+        "id": "str:accessibility",
+        "area": "admin+web",
+        "summary": "Consistent a11y per AGENTS.md: pervasive data-testid, ARIA (role dialog/status/alert, aria-modal/labelledby/live), aria-hidden decorative icons, sr-only guard text. No dangerouslySetInnerHTML anywhere. Storefront cart dialog uses a reusable useFocusTrap hook (Tab-trap + Escape-close + focus restoration); the Navbar cart count is announced via a polite sr-only aria-live region and the numeric badge is aria-hidden.",
+        "evidence": "admin/src/components/**, web/src/components/**, web/src/hooks/useFocusTrap.ts, web/src/components/layout/Navbar.tsx"
+      },
+      {
+        "id": "str:enumeration-resistance",
+        "area": "services/auth",
+        "summary": "request-reset always 200; login collapses missing/invalid/disabled into indistinguishable responses; CORS refuses credentialed wildcard; IPs truncated to /24 (v4) / /64 (v6) before storage (GDPR-conscious).",
+        "evidence": "services/src/auth/handlers/requestReset.ts, login.ts:56-60, utils/isAllowedOrigin.ts"
+      }
+    ],
+
+    "gaps": [
+      {
+        "id": "gap:no-typecheck-gate",
+        "severity": "high",
+        "status": "resolved-2026-07-29",
+        "area": "ci/services",
+        "summary": "No `typecheck` (tsc --noEmit) script anywhere; ~24 standing tsc errors in services were invisible because Cloudflare esbuild strips types. RESOLVED: added `typecheck` to services/admin/web + root aggregate, wired into deploy.yml test job; all errors fixed.",
+        "evidence": "root package.json `typecheck`, services/admin/web package.json, .github/workflows/deploy.yml",
+        "recommendation": "Done — keep the gate; consider extending services tsconfig to also typecheck test/."
+      },
+      {
+        "id": "gap:settings-type-drift",
+        "severity": "high",
+        "status": "resolved-2026-07-29",
+        "area": "services/settings",
+        "summary": "SettingsType = keyof typeof ESettingsType yielded UPPERCASE ('SITE'|...) but the handler switches on lowercase KV keys ('site'|...). RESOLVED: replaced the mis-cast with a local `SettingsKey = 'site'|'process'|'testimonials'|'categories'` union that matches the router regex + actual KV keys.",
+        "evidence": "services/src/settings/settings-handler.ts (SettingsKey)",
+        "recommendation": "Done. Longer-term, reconcile @bee-epic/shared ESettingsType casing with the runtime KV keys so a shared type can be authoritative."
+      },
+      {
+        "id": "gap:web-untested",
+        "severity": "high",
+        "area": "web",
+        "summary": "Storefront (the revenue path) has near-zero component coverage and NO coverage thresholds. Cart drawer, product grid, contact form, SEO all untested. smoke.test.ts is a placeholder.",
+        "evidence": "web/src/__tests__/smoke.test.ts, web/vitest.config.ts (no thresholds)",
+        "recommendation": "Test CartDrawer, ProductCard/Grid, ContactPage honeypot; add thresholds block."
+      },
+      {
+        "id": "gap:no-error-boundaries",
+        "severity": "medium",
+        "area": "admin+web",
+        "summary": "Neither SPA has a React error boundary; a single render throw white-screens the whole app with no recovery.",
+        "evidence": "grep confirmed none in admin/src, web/src",
+        "recommendation": "Wrap App shells in an ErrorBoundary with a recoverable fallback."
+      },
+      {
+        "id": "gap:checkout-price-data",
+        "severity": "medium",
+        "area": "services/stripe",
+        "summary": "Checkout validation allows price_data-only line items, but the handler unconditionally calls prices.retrieve(item.price) to split recurring vs one-time — a price_data-only item throws on retrieve(undefined).",
+        "evidence": "services/src/stripe/checkout/stripe-checkout.ts:27,40",
+        "recommendation": "Reject price_data explicitly, or branch before the retrieve split."
+      },
+      {
+        "id": "gap:web-stringly-errors",
+        "severity": "low",
+        "area": "web",
+        "summary": "web api unwrap throws plain Error('API error: CODE'), discarding the structured IApiError that admin preserves — no field-level validation rendering.",
+        "evidence": "web/src/utils/api.ts:25-28",
+        "recommendation": "Port admin's typed ApiError to web (or lift it into shared)."
+      }
+    ],
+
+    "vulnerabilities": [
+      {
+        "id": "vuln:stripe-error-relay",
+        "severity": "medium",
+        "area": "services/stripe",
+        "summary": "Stripe errors with statusCode<500 relay err.message verbatim to clients (incl. unauthenticated POST /checkout), disclosing upstream identifiers/param names. Not a secret leak (Stripe scrubs keys) but more detail than needed.",
+        "evidence": "services/src/utils/stripeErrorResponse.ts:25-27, withStripeHandler.ts:96-98",
+        "exploitability": "low-moderate; craft inputs that trip specific Stripe validation errors",
+        "recommendation": "Map <500 Stripe errors to an app-defined safe-message allowlist; log raw message server-side only."
+      },
+      {
+        "id": "vuln:jsonld-injection",
+        "severity": "medium",
+        "area": "web/seo",
+        "summary": "SeoHead stringifies admin-editable KV content into <script type=application/ld+json>. Cleared as NON-exploitable today (client-only SPA, helmet DOM .innerHTML path does not execute injected <script>), but becomes real stored-XSS if SSR/prerender is ever added. Admin-authored, low likelihood.",
+        "evidence": "web/src/components/seo/SeoHead.tsx:50",
+        "exploitability": "none today; latent under future SSR",
+        "recommendation": "Escape < as \\u003c in the stringified payload; add a code comment flagging the SSR risk."
+      },
+      {
+        "id": "vuln:whoami-unthrottled-kv-list",
+        "severity": "low",
+        "area": "services/router",
+        "summary": "/whoami is handled inline in the router (NOT via withAuthHandler) so it has no rate-limit and no origin gate; the null-caller branch runs a full KV LIST (listUsers) to compute bootstrapAvailable on every anonymous GET.",
+        "evidence": "services/src/router.ts:285-302",
+        "exploitability": "trivial to hit; bounded (KV LIST cost, boolean out)",
+        "recommendation": "Cache an owner-exists flag / short-circuit the LIST, or route /whoami through the rate-limited middleware."
+      },
+      {
+        "id": "vuln:rate-limiter-fail-open",
+        "severity": "low",
+        "area": "services/rate-limit",
+        "summary": "When the RateLimiterDO is unreachable, check() returns allowed:true. Deliberate availability trade-off, but during a DO outage all brute-force/credential-stuffing throttles vanish (PBKDF2 600k is the only remaining backstop).",
+        "evidence": "services/src/utils/rateLimiter.ts:26-33",
+        "exploitability": "requires DO outage window",
+        "recommendation": "Consider fail-closed (or a degraded in-isolate counter) specifically for /auth/login and /auth/request-reset."
+      },
+      {
+        "id": "vuln:products-count-public",
+        "severity": "low",
+        "area": "services/stripe",
+        "summary": "GET /products/count is public (no requiredRole), disclosing raw catalogue size (a mild BI signal). /products/stats IS correctly EMPLOYEE-gated.",
+        "evidence": "services/src/stripe/product/get-products-count.ts:29",
+        "exploitability": "trivial; minor info",
+        "recommendation": "Gate to EMPLOYEE if the storefront doesn't need the raw count; otherwise accept as intended."
+      },
+      {
+        "id": "vuln:csrf-no-client-defense",
+        "severity": "medium-verify",
+        "area": "admin",
+        "summary": "Admin mutations use withCredentials cookie auth with NO client-side CSRF token/header. Safety rests entirely on server SameSite=Lax (blocks cross-site POST/PUT/DELETE). Likely OK but no defense-in-depth; confirm server cookie flags + consider a worker origin check on mutations.",
+        "evidence": "admin/src/utils/api.ts:95-101",
+        "exploitability": "depends on server SameSite; verify",
+        "recommendation": "Confirm SameSite server-side; add an Origin/Referer check on mutating routes as defense-in-depth."
+      }
+    ],
+
+    "techDebt": [
+      {
+        "id": "debt:missing-source-files",
+        "severity": "blocker",
+        "status": "resolved-2026-07-27",
+        "area": "services",
+        "summary": "Two git-tracked source files were DELETED from the working tree (git status D): services/src/contact/contact-handler.ts and services/src/stripe/order/confirm-order.ts, while still imported (router.ts:30, webhook-handler.ts:3), breaking tsc/vitest/deploy. RESOLVED: restored from HEAD (commit a169161); confirmed accidental (pure deletions, importers untouched, files recently maintained).",
+        "evidence": "commit a169161; both files present + typecheck clean",
+        "recommendation": "Done. The typecheck CI gate (gap:no-typecheck-gate) now catches this class of breakage."
+      },
+      {
+        "id": "debt:duplicated-transform",
+        "severity": "medium",
+        "area": "admin+web",
+        "summary": "transformStripeProduct/transformStripeProductsList are near-identical copies in admin and web and have ALREADY diverged (unpriced-product handling: admin keeps, web drops). Belongs in @bee-epic/shared.",
+        "evidence": "admin/src/utils/transform.ts:81, web/src/utils/transform.ts:21",
+        "recommendation": "Lift the transform into shared; parameterize the unpriced-product policy."
+      },
+      {
+        "id": "debt:contact-bypasses-wrapper",
+        "severity": "medium",
+        "area": "services",
+        "summary": "contact-handler.ts (and settings-handler.ts) hand-roll OPTIONS/method/origin/rate-limit instead of using withAuthHandler({public:true}); the rate-limit block is a copy of withAuthHandler.ts:96-108 — divergence risk.",
+        "evidence": "services/src/contact/contact-handler.ts:17-28, settings/settings-handler.ts:29-38",
+        "recommendation": "Fold both onto the shared wrapper."
+      },
+      {
+        "id": "debt:duplicated-path-parsing",
+        "severity": "medium",
+        "area": "services",
+        "summary": "Each Stripe handler re-derives :id/:email with its own regex although the router already matched it; get-products.ts uses an UNANCHORED regex vs the router's anchored one (subtly different matching contract).",
+        "evidence": "services/src/stripe/product/get-products.ts:46, update-product.ts:17, delete-product.ts:58, order/get-orders.ts:68",
+        "recommendation": "Have the router pass the captured param to the handler."
+      },
+      {
+        "id": "debt:stale-agents-thresholds",
+        "severity": "low",
+        "area": "docs",
+        "summary": "AGENTS.md quotes admin coverage thresholds 88/85/45/88; actual enforced values are 80/67/75/78 (the 88/85/45 are stale never-met targets in a config comment). Doc drift.",
+        "evidence": "AGENTS.md:114, admin/vitest.config.ts",
+        "recommendation": "Update AGENTS.md to the real thresholds."
+      },
+      {
+        "id": "debt:prop-drilling",
+        "severity": "low",
+        "area": "admin+web",
+        "summary": "SiteContentTab takes 11 callback props; SettingsPage is ~589 lines orchestrating it; web drills siteContent through every route.",
+        "evidence": "admin/src/pages/settings/SiteContentTab.tsx:7-33, web/src/App.tsx:90-125",
+        "recommendation": "Consider context or a settings slice for site content."
+      },
+      {
+        "id": "debt:console-logs",
+        "severity": "low",
+        "area": "web",
+        "summary": "~13 console.* calls remain in production web source.",
+        "evidence": "web/src/utils/transform.ts:42,48, hooks/useStripeCheckout.ts:125",
+        "recommendation": "Route through a logger with a prod no-op, or strip via build."
+      },
+      {
+        "id": "debt:deploy-branch-drift",
+        "severity": "low",
+        "status": "resolved-2026-07-29",
+        "area": "ci",
+        "summary": "deploy.yml triggered on push to [main, release] but the repo default branch is master (and main/release aren't pushed to origin), so commits reviewed on master never deployed. RESOLVED: trigger changed to [master].",
+        "evidence": ".github/workflows/deploy.yml:4",
+        "recommendation": "Done."
+      }
+    ],
+
+    "scalability": [
+      {
+        "id": "scale:single-default-do",
+        "severity": "medium",
+        "area": "services",
+        "summary": "Both NotificationHub and RateLimiterDO use a single 'default' instance. A DO is single-threaded + location-pinned; ALL rate-limit traffic serializing through one object is a throughput ceiling and a latency tax for distant regions. Fine for single-tenant admin; it is the hard scaling limit.",
+        "evidence": "services/src/utils/rateLimiter.ts:22, notifications/notification-hub.ts",
+        "recommendation": "Shard the RateLimiterDO key across N instances (hash of IP); keep NotificationHub single (fanout needs one log)."
+      },
+      {
+        "id": "scale:full-catalogue-walks",
+        "severity": "medium",
+        "area": "services",
+        "summary": "fetchAllActiveProducts pages 100-at-a-time with no cap on every filtered /products, /products/count, /products/stats, cleanup; /orders walks up to MAX_SESSIONS=1000 sessions in memory. In-memory paginateArray re-fetches+re-filters the whole set per page (O(n) per page). Stripe-rate-limit-prone and CPU-heavy as volume grows; 120s KV caches only cover the UNFILTERED count/stats paths.",
+        "evidence": "services/src/stripe/product/shared.ts:30, order/get-orders.ts:7,90, utils/paginate.ts",
+        "recommendation": "Use real Stripe cursor pagination / server-side search for filtered paths before catalogue/order volume grows."
+      }
+    ],
+
+    "topPriorities": [
+      "DONE (2026-07-31): SSE fanout race, webhook idempotency reservation, origin allow-list hardening, atomic product update, focus-trap a11y, client/server schema parity, default_price anchoring, shared CI gate. [remediation2026_07_31]",
+      "P1: Give the storefront real tests + coverage thresholds — it is the revenue path with near-zero component coverage; the new useFocusTrap hook and CartDrawer/ProductCard changes are untested. [gap:web-untested]",
+      "P2: Fix the Stripe-error relay (info leakage) and add React error boundaries. [vuln:stripe-error-relay, gap:no-error-boundaries]",
+      "P2: Reject price_data-only checkout line items before the prices.retrieve split. [gap:checkout-price-data]",
+      "P2: De-duplicate the Stripe->IProduct transform into shared (already diverged). [debt:duplicated-transform]",
+      "P3: Plan for the single-DO + full-catalogue-walk scaling ceilings; verify admin CSRF/SameSite server-side. [scale:single-default-do, scale:full-catalogue-walks, vuln:csrf-no-client-defense]"
+    ],
+
+    "remediation2026_07_31": {
+      "commit": "10fffc4",
+      "method": "High-recall code-review pass (3 correctness + 3 cleanup + 1 altitude finder angles, 1-vote recall-biased verify). 11 findings fixed, 2 re-verified as non-bugs. Full green: monorepo typecheck clean; 953 services + 545 admin + 65 shared + 22 web tests pass; lint clean.",
+      "fixed": [
+        {
+          "id": "fix:sse-set-swap-race",
+          "area": "services/notifications",
+          "summary": "heartbeat()/broadcast() previously could drop a connection added by a concurrent fetch() when a set was swapped; now iterate a snapshot and delete dead writers in place.",
+          "evidence": "services/src/notifications/notification-hub.ts"
+        },
+        {
+          "id": "fix:webhook-idempotency-reservation",
+          "area": "services/stripe",
+          "summary": "Idempotency key is now reserved BEFORE dispatch and released on failure, closing the concurrent-duplicate window that the old record-after-success pattern left open.",
+          "evidence": "services/src/stripe/webhook/webhook-handler.ts; test kv mocks gained delete()"
+        },
+        {
+          "id": "fix:origin-allowlist-origin-compare",
+          "area": "services/utils",
+          "summary": "hostnameAllowed compared only hostname, admitting http:// downgrades and arbitrary ports; now compares full URL origin. Regression tests added.",
+          "evidence": "services/src/utils/hostnameAllowed.ts, services/test/utils/hostnameAllowed.spec.ts"
+        },
+        {
+          "id": "fix:atomic-product-update",
+          "area": "admin",
+          "summary": "updateProduct made two PUTs (price then metadata), risking an orphaned price if the second failed; now creates the Price first then applies metadata + default_price in a single PUT.",
+          "evidence": "admin/src/utils/api.ts, admin/src/utils/__tests__/api.test.ts"
+        },
+        {
+          "id": "fix:productform-submit-lock",
+          "area": "admin",
+          "summary": "ProductFormDialog kept the submit button disabled after an error (submitError in the disabled expr) and never cleared the error on edit; removed the lock and clear error on input change.",
+          "evidence": "admin/src/components/products/ProductFormDialog.tsx"
+        },
+        {
+          "id": "fix:focus-trap-hook",
+          "area": "web",
+          "summary": "New reusable useFocusTrap hook (Tab-trap, Escape-close, focus restoration) wired into CartDrawer.",
+          "evidence": "web/src/hooks/useFocusTrap.ts, web/src/components/shop/CartDrawer.tsx"
+        },
+        {
+          "id": "fix:cart-aria-live",
+          "area": "web",
+          "summary": "Navbar cart count now announced via a polite sr-only aria-live region; numeric badge aria-hidden.",
+          "evidence": "web/src/components/layout/Navbar.tsx"
+        },
+        {
+          "id": "fix:image-cls-lazy",
+          "area": "web",
+          "summary": "ProductCard + CartItem images got explicit width/height + loading=lazy to curb layout shift and defer offscreen loads.",
+          "evidence": "web/src/components/shop/ProductCard.tsx, web/src/components/shop/CartItem.tsx"
+        },
+        {
+          "id": "fix:shared-ci-gate",
+          "area": "ci",
+          "summary": "Added shared:typecheck + shared:test scripts; root typecheck runs shared first; deploy.yml test job runs shared:test.",
+          "evidence": "shared/package.json, package.json, .github/workflows/deploy.yml"
+        },
+        {
+          "id": "fix:client-server-schema-parity",
+          "area": "shared",
+          "summary": "Client OrderUpdateSchema.metadata now carries the same order_status enum refinement as the server schema.",
+          "evidence": "shared/src/order.ts, shared/src/__tests__/order-product-schemas.spec.ts"
+        },
+        {
+          "id": "fix:default-price-anchored-regex",
+          "area": "shared",
+          "summary": "default_price regex anchored to /^price_[A-Za-z0-9]+$/, rejecting a bare prefix and an embedded-newline bypass.",
+          "evidence": "shared/src/product.ts, shared/src/__tests__/order-product-schemas.spec.ts"
+        }
+      ],
+      "reverifiedNotBugs": [
+        {
+          "id": "nonbug:orderspage-load-more",
+          "area": "admin",
+          "summary": "OrdersPage cumulative URL `limit` is intentional (restores accumulated rows on reload); the 'N of M' count reads live store totalCount/orders.length, not the URL. No change."
+        },
+        {
+          "id": "nonbug:dashboard-lastfetchparams",
+          "area": "admin",
+          "summary": "Dashboard/ProductsPage pickFilterParams correctly strips limit and keeps only search/category; the empty unfiltered set is correct and ProductsPage re-fetches with its own filters on mount before any CUD op. No change."
+        }
+      ]
+    }
+  }
+}

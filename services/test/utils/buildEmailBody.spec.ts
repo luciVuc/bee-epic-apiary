@@ -84,6 +84,16 @@ describe('buildEmailBody', () => {
 			expect(result).not.toContain('<script>');
 			expect(result).toContain('&lt;script&gt;');
 		});
+
+		it('strips raw HTML when rendering markdown (defense in depth — review I7)', async () => {
+			// Templates already escape user input before passing it to `marked`, but
+			// `marked` defaults to passing raw HTML through. If a future template author
+			// forgets to escape, raw <script> tags would render directly. Disabling raw
+			// HTML at the marked-config level is a defense-in-depth backstop.
+			const { marked } = await import('marked');
+			const rendered = await marked('Hi <script>alert(1)</script> there');
+			expect(rendered).not.toMatch(/<script/i);
+		});
 	});
 
 	describe('default format', () => {

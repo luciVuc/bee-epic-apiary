@@ -1,14 +1,19 @@
 /** Fixed top navigation bar with mobile hamburger menu, dynamic title from settings, notifications panel, and user indicator */
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { Bell, User, Menu, Sun, Moon } from "lucide-react";
+import { Bell, Menu, Sun, Moon } from "lucide-react";
+import { ENotificationType } from "@bee-epic/shared";
 import { useTheme } from "../../hooks/useTheme";
+import { useCaller } from "../../hooks/useCaller";
 import * as api from "../../utils/api";
+import { UserMenu } from "../auth/UserMenu";
 import type { ISiteContent } from "../../types/settings";
 import type { IOrder } from "../../types/order";
 import {
   ORDER_STATUS_CHANGED_EVENT,
   NEW_ORDER_EVENT,
+  PRODUCT_UPDATED_EVENT,
+  PRODUCT_DELETED_EVENT,
   DEFAULT_LOGO,
 } from "../../utils/constants";
 import { DEFAULT_API_URL } from "../../utils/constants";
@@ -19,13 +24,32 @@ export interface IAdminNavbarProps {
   onMenuClick?: () => void;
 }
 
+/**
+ * Fixed top bar: mobile hamburger, settings-driven business name/logo, theme
+ * toggle, and the notifications bell backed by a Server-Sent-Events stream.
+ *
+ * The SSE stream is gated on an authenticated `caller` because EventSource
+ * cannot send the dev-email header and a 401 handshake is fatal (the browser
+ * never auto-reconnects a stream that failed to open). A bounded-backoff
+ * self-heal and a small health badge cover the "stream silently died" failure
+ * mode that otherwise looks like notifications just stopped arriving.
+ */
 export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   const navigate = useNavigate();
   const { isDark, toggleTheme } = useTheme();
+  const { caller } = useCaller();
   const [businessName, setBusinessName] = useState<string>("");
   const [logo, setLogo] = useState<string>("");
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [notifications, setNotifications] = useState<IOrder[]>([]);
+  // SSE connection health for the small badge near the bell icon
+  // (review I9). Without an indicator, a broken stream looks like
+  // "notifications just stopped arriving" — confusing to admins, and the
+  // root cause (auth cookie not forwarded — post-Phase-9 that's `bea_at`)
+  // was opaque.
+  const [sseHealth, setSseHealth] = useState<
+    "connected" | "reconnecting" | "down"
+  >("connected");
 
   useEffect(() => {
     api.api
@@ -52,26 +76,118 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
   }, []);
 
   useEffect(() => {
+    // Gate on authentication. EventSource cannot send the `X-Dev-Email` header
+    // and, post-Phase-10, dev auth is a real cookie login — so the stream only
+    // authenticates once a caller exists (the `bea_at` cookie rides the
+    // handshake via withCredentials). Opening it earlier gets a 401, which is
+    // FATAL for EventSource: a non-2xx handshake fires `error` and the browser
+    // never auto-reconnects (auto-reconnect only covers an established stream
+    // dropping mid-flight). Before this gate, the stream opened on mount, 401'd
+    // before login, and stayed dead forever — orders flipped to "new" on the
+    // server but the bell never updated. Keying the effect on `caller` (re)opens
+    // the stream when the user becomes authenticated.
+    if (!caller) return;
+
     const apiBaseUrl = DEFAULT_API_URL;
-    const eventSource = new EventSource(`${apiBaseUrl}/notifications/stream`);
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | undefined;
+    let consecutiveErrors = 0;
+    let closed = false; // set on cleanup so a pending reconnect can't fire
 
-    eventSource.addEventListener("connected", () => {
-      fetchNotifications();
-    });
+    const connect = () => {
+      if (closed) return;
+      // withCredentials: true → the `bea_at` HttpOnly access-token cookie
+      // (Phase 9 trust chain) rides the SSE handshake. Without it,
+      // `resolveCaller` on the worker can't verify the caller and silently
+      // 401s every EventSource connection (review I9).
+      const es = new EventSource(`${apiBaseUrl}/notifications/stream`, {
+        withCredentials: true,
+      });
+      eventSource = es;
 
-    eventSource.addEventListener("new-order", () => {
-      fetchNotifications();
-      window.dispatchEvent(new CustomEvent(NEW_ORDER_EVENT));
-    });
+      es.addEventListener("connected", () => {
+        consecutiveErrors = 0;
+        setSseHealth("connected");
+        fetchNotifications();
+      });
 
-    eventSource.addEventListener("error", () => {
-      // EventSource will auto-reconnect
-    });
+      es.addEventListener(ENotificationType.NEW_ORDER, () => {
+        fetchNotifications();
+        window.dispatchEvent(new CustomEvent(NEW_ORDER_EVENT));
+      });
+
+      // Another admin (or the same admin in another tab) changed an order's
+      // internal status. Refresh the notification list — the order may have
+      // moved out of `new` and should disappear from the panel.
+      es.addEventListener(ENotificationType.ORDER_STATUS_CHANGED, (evt) => {
+        fetchNotifications();
+        let detail: unknown = null;
+        try {
+          if ("data" in evt && typeof (evt as MessageEvent).data === "string") {
+            detail = JSON.parse((evt as MessageEvent).data);
+          }
+        } catch {
+          // ignore malformed payload
+        }
+        window.dispatchEvent(
+          new CustomEvent(ORDER_STATUS_CHANGED_EVENT, { detail }),
+        );
+      });
+
+      es.addEventListener(ENotificationType.PRODUCT_UPDATED, (evt) => {
+        let detail: unknown = null;
+        try {
+          if ("data" in evt && typeof (evt as MessageEvent).data === "string") {
+            detail = JSON.parse((evt as MessageEvent).data);
+          }
+        } catch {
+          // ignore malformed payload
+        }
+        window.dispatchEvent(
+          new CustomEvent(PRODUCT_UPDATED_EVENT, { detail }),
+        );
+      });
+
+      es.addEventListener(ENotificationType.PRODUCT_DELETED, (evt) => {
+        let detail: unknown = null;
+        try {
+          if ("data" in evt && typeof (evt as MessageEvent).data === "string") {
+            detail = JSON.parse((evt as MessageEvent).data);
+          }
+        } catch {
+          // ignore malformed payload
+        }
+        window.dispatchEvent(
+          new CustomEvent(PRODUCT_DELETED_EVENT, { detail }),
+        );
+      });
+
+      // Health + self-heal. On a transient blip the browser auto-reconnects
+      // and readyState stays CONNECTING — we only update the badge. But a
+      // FATAL error (bad handshake / 401) closes the stream (readyState
+      // CLOSED) and the browser will NOT retry on its own, so we schedule our
+      // own bounded-backoff reconnect. Backoff caps at 30s; the counter (and
+      // health) reset on the next `connected`.
+      es.addEventListener("error", () => {
+        consecutiveErrors++;
+        setSseHealth(consecutiveErrors > 3 ? "down" : "reconnecting");
+        if (es.readyState === es.CLOSED && !closed) {
+          es.close();
+          const delay = Math.min(1_000 * 2 ** (consecutiveErrors - 1), 30_000);
+          clearTimeout(reconnectTimer);
+          reconnectTimer = setTimeout(connect, delay);
+        }
+      });
+    };
+
+    connect();
 
     return () => {
-      eventSource.close();
+      closed = true;
+      clearTimeout(reconnectTimer);
+      eventSource?.close();
     };
-  }, [fetchNotifications]);
+  }, [fetchNotifications, caller]);
 
   useEffect(() => {
     const handleOrderStatusChange = () => {
@@ -134,7 +250,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               />
               <h1
                 className="font-heading text-xl font-bold text-dark-900 hidden sm:block"
-                data-testid="admin-navbar_title-mobile"
+                data-testid="admin-navbar_title-mobile-text"
               >
                 {title}
               </h1>
@@ -152,7 +268,7 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
               />
               <h1
                 className="font-heading text-2xl font-bold text-dark-900"
-                data-testid="admin-navbar_title-desktop"
+                data-testid="admin-navbar_title-desktop-text"
               >
                 {title}
               </h1>
@@ -196,21 +312,31 @@ export function AdminNavbar({ onMenuClick }: IAdminNavbarProps) {
                   className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
                 ></span>
               )}
-            </button>
-            <div
-              className="flex items-center gap-2 px-3 py-2 bg-gray-100 dark:bg-dark-200 rounded-lg"
-              data-testid="admin-navbar_user"
-            >
-              <User
-                data-testid="admin-navbar_user-icon"
-                className="w-5 h-5 text-dark-600"
-              />
+              {/* SSE health badge (review I9). Hidden when connected so the
+                  bell doesn't look broken in the happy path; visible only when
+                  reconnecting or down. */}
               <span
-                className="text-sm font-medium text-dark-700 hidden md:block"
-                data-testid="admin-navbar_user-name"
-              >
-                Admin
-              </span>
+                data-testid="admin-navbar_sse-health"
+                data-sse-health={sseHealth}
+                role={sseHealth === "connected" ? undefined : "status"}
+                aria-label={
+                  sseHealth === "connected"
+                    ? "Notifications stream connected"
+                    : sseHealth === "reconnecting"
+                      ? "Notifications stream reconnecting"
+                      : "Notifications stream unavailable"
+                }
+                className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${
+                  sseHealth === "connected"
+                    ? "hidden"
+                    : sseHealth === "reconnecting"
+                      ? "bg-amber-400 animate-pulse"
+                      : "bg-red-600"
+                }`}
+              ></span>
+            </button>
+            <div data-testid="admin-navbar_user">
+              <UserMenu />
             </div>
           </div>
         </div>

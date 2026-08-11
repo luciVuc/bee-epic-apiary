@@ -9,6 +9,7 @@ interface ITestimonialsSectionProps {
   content: ISiteContent;
 }
 
+/** Grid of customer testimonial cards, each with a star rating, quote, author, location, and formatted date. */
 export const TestimonialsSection = ({
   testimonials,
   content,
@@ -36,7 +37,12 @@ export const TestimonialsSection = ({
               viewport={{ once: true }}
               transition={{ duration: 0.4, delay: index * 0.1 }}
             >
-              <div className="flex items-center space-x-1 mb-4">
+              <div
+                data-testid={`testimonials-section_card-${testimonial.id}_rating`}
+                className="flex items-center space-x-1 mb-4"
+                role="img"
+                aria-label={`Rated ${testimonial.rating} out of 5 stars`}
+              >
                 {[...Array(5)].map((_, i) => (
                   <Star
                     key={i}

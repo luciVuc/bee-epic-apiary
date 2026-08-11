@@ -1,5 +1,14 @@
 # E2E Test Plan: Admin Subproject
 
+> **⚠️ DEPRECATED — DO NOT USE FOR NEW RUNS.**
+> This single-file plan (v8.0.0) is **superseded** by the multi-file plan under
+> **[`.e2e-plans/admin/`](./admin/)**. It is retained only for historical reference.
+> Notably, this file incorrectly states the admin has "no UI auth" and "no data-testid
+> attributes" — both are now false (there is a full login flow and extensive
+> `data-testid` coverage). **Start at [`admin/00-conventions.md`](./admin/00-conventions.md).**
+
+---
+
 > **Instructions for the testing agent**: This plan is designed for an agent with
 > no prior knowledge of the project. Follow every step exactly as written.
 > When the plan asks you to ask the user a question, stop and wait for their answer
@@ -36,7 +45,7 @@ cd admin && npm install
 
 # 2. Copy and configure environment
 cp .env.example .env
-# Edit .env: set VITE_API_SECRET_KEY, VITE_STRIPE_PUBLISHABLE_KEY,
+# Edit .env: set VITE_DEV_EMAIL, VITE_STRIPE_PUBLISHABLE_KEY,
 # VITE_ALLOWED_ORIGINS=http://localhost:5174
 
 # 3. Start the services worker (in a separate terminal)
@@ -57,11 +66,11 @@ cd ../admin && npm run dev
 
 The testing agent must ensure these are set in `admin/.env`:
 
-| Variable                      | Purpose                                  |
-| ----------------------------- | ---------------------------------------- |
-| `VITE_API_URL`                | API base URL (`http://localhost:8787`)   |
-| `VITE_API_SECRET_KEY`         | Bearer token for API auth                |
-| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for payment links |
+| Variable                      | Purpose                                                                       |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| `VITE_API_URL`                | API base URL (`http://localhost:8787`)                                        |
+| `VITE_DEV_EMAIL`              | Local dev identity, forwarded as `X-Dev-Email` (Plan 3 — replaces the bearer) |
+| `VITE_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key for payment links                                      |
 
 ---
 
@@ -177,7 +186,7 @@ Report a11y violations using the issue report format in this plan.
 
 ### 3.7 Authentication Detail
 
-**No UI authentication required.** The admin subproject does not have a login page. API authentication is handled automatically by the Axios client interceptor which reads `VITE_API_SECRET_KEY` from environment variables and attaches it as a Bearer token on every request. The testing agent does not need to perform any authentication steps.
+**No UI authentication required.** The admin subproject does not have a login page. As of Plan 3, identity is resolved server-side via Cloudflare Access JWT in production and via the `X-Dev-Email` header (sourced from `VITE_DEV_EMAIL`) in local dev. The axios client adds the header automatically when running in DEV mode; the testing agent does not need to perform any authentication steps.
 
 ### 3.8 Self-Contained Testing Principle
 

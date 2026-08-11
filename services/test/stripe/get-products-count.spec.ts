@@ -34,7 +34,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.total).toBe(2);
+		expect(body.ok).toBe(true);
+		expect(body.data.total).toBe(2);
 	});
 
 	it('handles pagination and returns correct total count', async () => {
@@ -61,7 +62,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.total).toBe(3);
+		expect(body.ok).toBe(true);
+		expect(body.data.total).toBe(3);
 	});
 
 	it('returns 0 when no products exist', async () => {
@@ -78,7 +80,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.total).toBe(0);
+		expect(body.ok).toBe(true);
+		expect(body.data.total).toBe(0);
 	});
 
 	it('handles Stripe errors gracefully', async () => {
@@ -90,9 +93,10 @@ describe('get-products-count handler', () => {
 		});
 		const env = { STRIPE_SECRET_KEY: 'invalid_key', ALLOWED_ORIGINS: 'https://example.com' } as Env;
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
-		expect(response.status).toBe(401);
+		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Invalid API Key');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('handles errors without statusCode', async () => {
@@ -106,7 +110,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(500);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
 	});
 
 	it('handles errors with statusCode < 500 and no message', async () => {
@@ -120,7 +125,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('returns 405 for non-GET methods', async () => {
@@ -148,7 +154,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.total).toBe(1);
+		expect(body.ok).toBe(true);
+		expect(body.data.total).toBe(1);
 	});
 
 	it('filters count by category', async () => {
@@ -166,7 +173,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.total).toBe(1);
+		expect(body.ok).toBe(true);
+		expect(body.data.total).toBe(1);
 	});
 
 	it('filters count by tag', async () => {
@@ -184,7 +192,8 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.total).toBe(1);
+		expect(body.ok).toBe(true);
+		expect(body.data.total).toBe(1);
 	});
 
 	it('counts all products when category is ALL', async () => {
@@ -202,6 +211,7 @@ describe('get-products-count handler', () => {
 		const response = await handleGetProductsCount(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 		const body = (await response.json()) as any;
-		expect(body.total).toBe(2);
+		expect(body.ok).toBe(true);
+		expect(body.data.total).toBe(2);
 	});
 });

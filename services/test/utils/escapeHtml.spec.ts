@@ -33,4 +33,15 @@ describe('escapeHtml', () => {
 	it('handles undefined gracefully using default parameter', () => {
 		expect(escapeHtml()).toBe('');
 	});
+
+	it('escapes single quotes (review I6)', () => {
+		// Single-quote escaping matters inside attribute values rendered with
+		// single quotes (e.g. <a title='...'>) — without it, an injected ' can
+		// break out of the attribute.
+		expect(escapeHtml("o'reilly")).toBe('o&#39;reilly');
+	});
+
+	it('escapes all five HTML-significant characters in one pass', () => {
+		expect(escapeHtml(`<>&"'`)).toBe('&lt;&gt;&amp;&quot;&#39;');
+	});
 });

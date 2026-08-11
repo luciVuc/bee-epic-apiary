@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { SITE_URL } from "../../utils/constants";
 
+/** Props for {@link SeoHead}. `title` is suffixed with the brand; `jsonLd` accepts one or many schema.org objects. */
 interface ISeoHeadProps {
   title: string;
   description: string;
@@ -10,6 +11,11 @@ interface ISeoHeadProps {
   jsonLd?: Record<string, unknown> | Record<string, unknown>[];
 }
 
+/**
+ * Injects per-page `<head>` metadata via react-helmet-async: title, description,
+ * canonical URL, Open Graph and Twitter card tags, and optional JSON-LD
+ * structured data. Build the `jsonLd` objects with the helpers in utils/structuredData.
+ */
 export function SeoHead({
   title,
   description,

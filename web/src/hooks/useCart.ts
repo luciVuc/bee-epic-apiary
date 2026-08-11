@@ -10,6 +10,11 @@ import { openCart, closeCart } from "../store/uiSlice";
 import type { IProduct } from "../types";
 import { useCallback } from "react";
 
+/**
+ * Cart facade over the Redux store. Selects cart items and drawer state,
+ * derives `totalItems` and `subtotal` (in cents), and exposes memoized
+ * dispatchers: `add`, `remove`, `update`, `clear`, plus drawer `open`/`close`.
+ */
 export const useCart = () => {
   const dispatch = useDispatch<AppDispatch>();
   const items = useSelector((state: RootState) => state.cart.items);

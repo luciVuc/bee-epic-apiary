@@ -16,9 +16,32 @@ interface IThemeContext {
 
 const ThemeContext = createContext<IThemeContext | undefined>(undefined);
 
+/**
+ * localStorage access throws under Safari Private Browsing, locked-down
+ * corporate browsers, and when the user has disabled site data. Treating it
+ * as unconditionally available is enough to crash the entire admin shell at
+ * boot (review I7). The wrappers silently fall back to defaults so theme
+ * just doesn't persist across reloads in those environments.
+ */
+function safeGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSet(key: string, value: string): void {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // ignore — theme will just not persist across reloads.
+  }
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<TTheme>(() => {
-    const stored = localStorage.getItem("theme");
+    const stored = safeGet("theme");
     if (stored === "dark" || stored === "light") return stored;
     return "light";
   });
@@ -30,7 +53,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       root.classList.remove("dark");
     }
-    localStorage.setItem("theme", theme);
+    safeSet("theme", theme);
   }, [theme]);
 
   const toggleTheme = () =>

@@ -5,7 +5,10 @@ import type {
   ITestimonial,
   IProcessStep,
   ICategory,
-} from "../types";
+  IApiResponse,
+  IStripeProductResponse,
+  IStripeProductsListResponse,
+} from "@bee-epic/shared";
 import { DEFAULT_API_URL, DEFAULT_SITE } from "./constants";
 import {
   transformStripeProduct,
@@ -15,13 +18,28 @@ import {
 /** Base URL for the services API, configured via VITE_API_URL env var */
 const API_BASE_URL = DEFAULT_API_URL;
 
+/**
+ * Unwrap an `IApiResponse<T>` envelope from a parsed JSON value.
+ * Throws on `ok: false` so callers can catch and show error UI.
+ */
+function unwrap<T>(envelope: IApiResponse<T>): T {
+  if (envelope.ok) return envelope.data;
+  throw new Error(`API error: ${envelope.error.code}`);
+}
+
+/** Parse the response body as an envelope and unwrap it. */
+async function parseEnvelope<T>(response: Response): Promise<T> {
+  const envelope = (await response.json()) as IApiResponse<T>;
+  return unwrap(envelope);
+}
+
 /** Fetch site content (business info, hero, about, nav, etc.) from GET /settings/site */
 export async function fetchSiteContent(): Promise<ISiteContent> {
   const response = await fetch(`${API_BASE_URL}/settings/site`);
   if (!response.ok) {
     throw new Error(`Failed to fetch site content: ${response.statusText}`);
   }
-  return response.json();
+  return parseEnvelope<ISiteContent>(response);
 }
 
 /** Fetch process steps from GET /settings/process */
@@ -30,7 +48,7 @@ export async function fetchProcessSteps(): Promise<IProcessStep[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch process steps: ${response.statusText}`);
   }
-  return response.json();
+  return parseEnvelope<IProcessStep[]>(response);
 }
 
 /** Fetch testimonials from GET /settings/testimonials */
@@ -39,7 +57,7 @@ export async function fetchTestimonials(): Promise<ITestimonial[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch testimonials: ${response.statusText}`);
   }
-  return response.json();
+  return parseEnvelope<ITestimonial[]>(response);
 }
 
 /** Fetch categories from GET /settings/categories */
@@ -48,9 +66,10 @@ export async function fetchCategories(): Promise<ICategory[]> {
   if (!response.ok) {
     throw new Error(`Failed to fetch categories: ${response.statusText}`);
   }
-  return response.json();
+  return parseEnvelope<ICategory[]>(response);
 }
 
+/** Result of a paginated products fetch: the page of products plus cursor metadata for "load more". */
 export interface IPaginatedProductsResult {
   products: IProduct[];
   hasMore: boolean;
@@ -62,24 +81,27 @@ export async function fetchProductBySlug(
   slug: string,
 ): Promise<IProduct | null> {
   const response = await fetch(
-    `${API_BASE_URL}/products/${encodeURIComponent(slug)}?expand[]=data.default_price`,
+    `${API_BASE_URL}/products/${encodeURIComponent(slug)}?expand[]=default_price`,
   );
   if (response.status === 404) return null;
   if (!response.ok) {
     throw new Error(`Failed to fetch product: ${response.statusText}`);
   }
-  const data = await response.json();
+  const data = await parseEnvelope<IStripeProductResponse>(response);
   return transformStripeProduct(data);
 }
 
 /** Fetch paginated products with search, category filter, tag filter, and cursor-based pagination */
-export async function fetchProductsPaginated(params: {
-  search?: string;
-  category?: string;
-  tag?: string;
-  limit?: number;
-  starting_after?: string;
-}): Promise<IPaginatedProductsResult> {
+export async function fetchProductsPaginated(
+  params: {
+    search?: string;
+    category?: string;
+    tag?: string;
+    limit?: number;
+    starting_after?: string;
+  },
+  signal?: AbortSignal,
+): Promise<IPaginatedProductsResult> {
   const url = new URL(`${API_BASE_URL}/products`);
   url.searchParams.append("expand[]", "data.default_price");
   if (params.search) url.searchParams.append("search", params.search);
@@ -89,11 +111,13 @@ export async function fetchProductsPaginated(params: {
   if (params.starting_after)
     url.searchParams.append("starting_after", params.starting_after);
 
-  const response = await fetch(url.toString());
+  const response = await fetch(url.toString(), { signal });
   if (!response.ok) {
     throw new Error(`Failed to fetch products: ${response.statusText}`);
   }
-  const data = await response.json();
+  const data = await parseEnvelope<
+    IStripeProductsListResponse & { total_count?: number }
+  >(response);
   return {
     products: transformStripeProductsList(data),
     hasMore: data.has_more ?? false,
@@ -101,6 +125,7 @@ export async function fetchProductsPaginated(params: {
   };
 }
 
+/** Contact form payload; `_gotcha` is a hidden honeypot field that must stay empty for real submissions. */
 export interface IContactFormData {
   name: string;
   email: string;
@@ -117,8 +142,14 @@ export async function submitContactForm(data: IContactFormData): Promise<void> {
     body: JSON.stringify(data),
   });
   if (!response.ok) {
-    const err = await response.json().catch(() => null);
-    throw new Error(err?.error || "Failed to send message");
+    const envelope = await response
+      .json()
+      .catch(() => ({ ok: false, error: { code: "INTERNAL" } }));
+    throw new Error(
+      envelope?.error?.code === "VALIDATION_FAILED"
+        ? Object.values(envelope.error.fields ?? {}).join(", ")
+        : "Failed to send message",
+    );
   }
 }
 

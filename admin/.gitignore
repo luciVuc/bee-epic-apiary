@@ -10,6 +10,9 @@ node_modules/
 # Build output
 dist/
 build/
+# vite-plugin-pwa dev-time output (sw.js + workbox runtime, generated each
+# `vite dev` boot when devOptions.enabled is true)
+dev-dist/
 
 # Environment variables
 .env

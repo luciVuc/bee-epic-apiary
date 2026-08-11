@@ -1,32 +1,9 @@
 import type { IProduct } from "../types";
 import { EProductCategory } from "../types";
-
-interface IStripePriceRecurring {
-  interval: string;
-  interval_count: number;
-}
-
-interface IStripePriceResponse {
-  id: string;
-  product: string;
-  unit_amount: number;
-  currency: string;
-  recurring: IStripePriceRecurring | null;
-  lookup_key: string | null;
-  type: string;
-}
-
-interface IStripeProductResponse {
-  id: string;
-  name: string;
-  description: string | null;
-  images: string[];
-  metadata: Record<string, string>;
-  default_price: string | IStripePriceResponse | null;
-  active: boolean;
-  created: number;
-  updated: number;
-}
+import type {
+  IStripePriceResponse,
+  IStripeProductResponse,
+} from "@bee-epic/shared";
 
 /** Fallback image when a Stripe product has no images */
 const DEFAULT_PRODUCT_IMAGE = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%23fef3c7" width="100" height="100"/><text x="50" y="55" text-anchor="middle" font-size="40">🍯</text></svg>`;
@@ -35,10 +12,15 @@ const DEFAULT_PRODUCT_THUMBNAIL = DEFAULT_PRODUCT_IMAGE;
 /**
  * Transform a Stripe Product object (with expanded default_price) into the app's IProduct shape.
  * Metadata fields mapped: slug, longDescription, category, inStock, featured, weight, tags, stripePaymentLinkId
+ *
+ * Returns `null` when `default_price` is a bare string (unexpanded). The
+ * storefront then drops the product from the catalog rather than rendering
+ * "$0.00" for it — review #14. (The admin panel still renders these, since
+ * staff need to see them to fix the underlying Stripe data.)
  */
 export function transformStripeProduct(
   stripeProduct: IStripeProductResponse,
-): IProduct {
+): IProduct | null {
   const metadata = stripeProduct.metadata || {};
   const stripeImages = stripeProduct.images || [];
   const imageUrls =
@@ -54,7 +36,19 @@ export function transformStripeProduct(
     price = priceObj.unit_amount || 0;
     stripePriceId = priceObj.id;
   } else if (defaultPrice && typeof defaultPrice === "string") {
-    stripePriceId = defaultPrice;
+    // Unexpanded price — caller forgot `expand[]=data.default_price`, or
+    // Stripe omitted the expansion. Either way the storefront can't show a
+    // real price; drop the product.
+    console.warn(
+      `Product ${stripeProduct.id} has unexpanded default_price; dropping from storefront`,
+    );
+    return null;
+  } else if (!defaultPrice) {
+    // No price set at all — same outcome: not sellable.
+    console.warn(
+      `Product ${stripeProduct.id} has no default_price; dropping from storefront`,
+    );
+    return null;
   }
 
   const rawCategory = metadata.category;
@@ -90,5 +84,10 @@ export function transformStripeProductsList(
   if (!response?.data || !Array.isArray(response.data)) {
     return [];
   }
-  return response.data.map(transformStripeProduct);
+  // .filter(Boolean) drops null returns from transformStripeProduct (products
+  // with unexpanded or missing default_price); the cast preserves the
+  // narrowed IProduct[] type since TS doesn't track Boolean()-filtering.
+  return response.data
+    .map(transformStripeProduct)
+    .filter(Boolean) as IProduct[];
 }

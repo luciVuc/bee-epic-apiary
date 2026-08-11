@@ -1,9 +1,48 @@
 # ⚠️ STRIPE_SECRET_KEY is your live/test Stripe secret key — never share it
 STRIPE_SECRET_KEY=sk_test_your_stripe_test_key_here
+
 # STRIPE_WEBHOOK_SECRET is required for verifying Stripe webhook events.
-# Get it from Stripe Dashboard > Developers > Webhooks > your endpoint > Signing secret
 STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret_here
+
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174,http://localhost:8787
-# API_SECRET_KEY protects write endpoints (create/update/delete products, settings).
-# If not set, auth is disabled — anyone can modify data.
+
+# ---------- Admin auth (Phase 9 trust chain) ----------
+#
+# All admin write endpoints authenticate via `resolveCaller()` in
+# src/utils/resolveCaller.ts. There are three paths in evaluation order:
+#
+#   1. Cookie      — `bea_at` HttpOnly session cookie (production path)
+#   2. Bearer      — `Authorization: Bearer <API_SECRET_KEY>` (CI / scripts)
+#   3. Dev bypass  — `X-Dev-Email` header (only when ENVIRONMENT=development)
+#
+# ENVIRONMENT: set to `development` locally so the dev bypass is active and
+# session cookies drop the `Secure` flag (localhost is http-only). Any other
+# value — including empty — is treated as production. Keep it unset in prod.
+ENVIRONMENT=development
+
+# JWT_SIGNING_SECRET: HMAC-SHA256 key used to sign session JWTs (`bea_at`,
+# `bea_rt`) via `signJwt` in src/auth/crypto/jwt.ts. MUST be at least 32 bytes
+# when base64-decoded. Generate locally with:
+#   openssl rand -base64 48
+# In production this MUST be set as a Wrangler secret; NEVER commit the value.
+JWT_SIGNING_SECRET=change-me-min-32-bytes-base64-decoded
+
+# AUTH_FROM_ADDRESS: the `From:` on every auth email (invite, reset, password-
+# changed notification). Format: `Display Name <you@example.com>` or bare
+# address. Must be a domain your email provider is authorized to send from.
+AUTH_FROM_ADDRESS=Bee Epic Apiary <noreply@example.com>
+
+# API_SECRET_KEY: bearer fallback for CI / service-to-service calls. Maps to
+# OWNER role at runtime. Optional — leave blank to disable bearer auth
+# entirely.
 API_SECRET_KEY=dev-api-key-change-me
+
+# OWNER_EMAILS: bootstrap allow-list AND never-lockout safety net. Comma-
+# separated. Any email here can:
+#   (a) drive `POST /auth/bootstrap-owner` to mint the very first OWNER invite
+#   (b) authenticate via `X-Dev-Email` in dev even before their user record
+#       exists (bootstrap escape hatch)
+# Once at least one ACTIVE OWNER exists, (a) is disabled by the completion
+# gate in src/auth/handlers/bootstrapOwner.ts. Keep this list SHORT — a single
+# operator address is the norm.
+OWNER_EMAILS=owner@example.com

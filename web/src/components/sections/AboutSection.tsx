@@ -8,6 +8,11 @@ interface IAboutSectionProps {
   content: ISiteContent;
 }
 
+/**
+ * "Our Story" section: about copy, a carousel of about images with a full-screen
+ * lightbox (prev/next + dot indicators when there are multiple), and a stats
+ * band. Renders a bee placeholder when no images are configured.
+ */
 export const AboutSection = ({ content }: IAboutSectionProps) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
@@ -60,7 +65,7 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
             transition={{ duration: 0.6 }}
           >
             <SectionHeader
-              data-testid="about-title"
+              testId="about-title"
               title={content.aboutTitle}
               align="left"
             />
@@ -139,6 +144,7 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
                             onClick={() => setCurrentImageIndex(idx)}
                             className={`w-2 h-2 rounded-full transition-colors ${idx === currentImageIndex ? "bg-primary-500 dark:bg-primary-400" : "bg-dark-300 dark:bg-dark-600"}`}
                             aria-label={`Go to image ${idx + 1}`}
+                            aria-current={idx === currentImageIndex}
                             title={`Go to image ${idx + 1}`}
                           />
                         ))}
@@ -270,6 +276,7 @@ export const AboutSection = ({ content }: IAboutSectionProps) => {
             <img
               src={images[currentImageIndex]}
               alt={content.aboutTitle}
+              data-testid="about-image_lightbox-image"
               className="max-w-full max-h-full object-contain"
               onClick={(e) => e.stopPropagation()}
             />

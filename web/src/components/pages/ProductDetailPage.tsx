@@ -19,15 +19,30 @@ import { fetchProductBySlug } from "../../utils/api";
 import { productSchema, breadcrumbSchema } from "../../utils/structuredData";
 import type { IProduct } from "../../types";
 
+/**
+ * `/products/:slug` route. Fetches a single product by slug (with loading,
+ * error, and not-found states), shows an image gallery with lightbox, a
+ * quantity stepper, and an add/update-cart button, plus product/breadcrumb
+ * JSON-LD. The back button restores the saved products-list URL when present.
+ */
 export function ProductDetailPage() {
   const navigate = useNavigate();
   const { slug } = useParams<{ slug: string }>();
-  const { add, items } = useCart();
+  const { add, update, items } = useCart();
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showLightbox, setShowLightbox] = useState(false);
   const [product, setProduct] = useState<IProduct | null>(null);
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState<string | null>(null);
+
+  // Client-side navigation does not reset the scroll position, so arriving here
+  // from a deep-scrolled products list would leave the detail page scrolled to
+  // the bottom. Reset to the top on mount / slug change. The products list keeps
+  // its own saved scroll (products_page_scroll) and restores it on back-nav —
+  // this only affects forward navigation into a detail page.
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [slug]);
 
   useEffect(() => {
     if (!slug) {
@@ -76,7 +91,7 @@ export function ProductDetailPage() {
         data-testid="product-detail-page"
         className="min-h-screen bg-primary-50 dark:bg-dark-950 flex items-center justify-center"
       >
-        <div className="text-center">
+        <div className="text-center" role="alert">
           <h1 className="font-heading text-2xl font-bold text-dark-900 mb-4">
             Unable to load product
           </h1>
@@ -111,7 +126,12 @@ export function ProductDetailPage() {
   const hasMultipleImages = images.length > 1;
 
   const handleAddToCart = () => {
-    if (product.inStock) {
+    if (!product.inStock) return;
+    // Quantity stepper shows an explicit target; if the item is already in the
+    // cart, write that target via updateQuantity instead of incrementing.
+    if (cartItem) {
+      update(product.id, quantity);
+    } else {
       add(product, quantity);
     }
   };
@@ -298,6 +318,7 @@ export function ProductDetailPage() {
                   {product.tags.map((tag) => (
                     <span
                       key={tag}
+                      data-testid={`product-detail-page_tag-${tag.toLowerCase().replace(/\s+/g, "-")}`}
                       className="px-3 py-1 bg-primary-50 dark:bg-primary-950 text-primary-700 dark:text-primary-300 rounded-full text-sm font-body"
                     >
                       {tag}
@@ -323,7 +344,12 @@ export function ProductDetailPage() {
                           aria-hidden="true"
                         />
                       </button>
-                      <span className="font-body text-dark-900 w-8 text-center">
+                      <span
+                        data-testid="product-detail-page_qty-value"
+                        className="font-body text-dark-900 w-8 text-center"
+                        aria-live="polite"
+                        aria-label={`Quantity: ${quantity}`}
+                      >
                         {quantity}
                       </span>
                       <button
@@ -426,6 +452,7 @@ export function ProductDetailPage() {
             <img
               src={images[currentImageIndex]}
               alt={product.name}
+              data-testid="product-detail-page_lightbox-image"
               className="max-w-full max-h-full object-contain"
               onClick={(e) => e.stopPropagation()}
             />

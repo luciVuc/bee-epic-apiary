@@ -13,6 +13,11 @@ interface ILocationMapProps {
   location: string;
 }
 
+/**
+ * Renders a Leaflet/OpenStreetMap map centered on the given coordinates with a
+ * labeled marker. Falls back to a static pin-and-text card when `lat`/`lng`
+ * are undefined. Creates the map once per mount and tears it down on unmount.
+ */
 export function LocationMap({ lat, lng, location }: ILocationMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -75,7 +80,7 @@ export function LocationMap({ lat, lng, location }: ILocationMapProps) {
       ref={mapRef}
       data-testid="contact-map"
       className="aspect-[4/3] rounded-2xl overflow-hidden"
-      role="img"
+      role="region"
       aria-label={`Map showing location: ${location}`}
     />
   );

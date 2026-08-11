@@ -3,17 +3,27 @@ import { Plus, Trash2, Star } from "lucide-react";
 import type { ITestimonial } from "../../types/settings";
 import { TextField, TextAreaField } from "../../components/forms";
 
+/** Props for {@link TestimonialsTab}; CRUD callbacks are owned by the parent. */
 export interface ITestimonialsTabProps {
+  /** Current testimonials being edited. */
   testimonialsContent: ITestimonial[];
+  /** Append a new blank testimonial. */
   addTestimonial: () => void;
+  /** Update one field of the testimonial at `index`. */
   updateTestimonial: <K extends keyof ITestimonial>(
     index: number,
     field: K,
     value: ITestimonial[K],
   ) => void;
+  /** Remove the testimonial at `index`. */
   removeTestimonial: (index: number) => void;
 }
 
+/**
+ * Settings tab for editing customer testimonials (name, location, star rating,
+ * text, date). The rating is a row of toggle buttons using `aria-pressed`.
+ * Presentational only — mutations are delegated to the parent.
+ */
 export function TestimonialsTab({
   testimonialsContent,
   addTestimonial,
@@ -60,11 +70,16 @@ export function TestimonialsTab({
               <label className="block text-sm font-medium text-dark-700 mb-2">
                 Rating
               </label>
-              <div className="flex items-center gap-1">
+              <div
+                className="flex items-center gap-1"
+                role="group"
+                aria-label={`Rating: ${testimonial.rating} of 5 stars`}
+              >
                 {[1, 2, 3, 4, 5].map((star) => (
                   <button
                     key={star}
                     type="button"
+                    data-testid={`testimonials-tab_rating-${i}-${star}`}
                     onClick={() =>
                       updateTestimonial(
                         i,
@@ -73,10 +88,11 @@ export function TestimonialsTab({
                       )
                     }
                     aria-label={`${star} star${star > 1 ? "s" : ""}`}
+                    aria-pressed={star <= testimonial.rating}
                     title={`${star} star${star > 1 ? "s" : ""}`}
                     className={`p-1 rounded transition-colors ${star <= testimonial.rating ? "text-yellow-400" : "text-gray-300 dark:text-gray-600"}`}
                   >
-                    <Star className="w-5 h-5 fill-current" />
+                    <Star className="w-5 h-5 fill-current" aria-hidden="true" />
                   </button>
                 ))}
               </div>

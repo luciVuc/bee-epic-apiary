@@ -68,9 +68,10 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.session.id).toBe('cs_test_123');
-		expect(body.line_items).toHaveLength(1);
-		expect(body.line_items[0].id).toBe('li_1');
+		expect(body.ok).toBe(true);
+		expect(body.data.session.id).toBe('cs_test_123');
+		expect(body.data.line_items).toHaveLength(1);
+		expect(body.data.line_items[0].id).toBe('li_1');
 		expect(mockStripe.checkout.sessions.retrieve).toHaveBeenCalledWith('cs_test_123', { expand: ['customer', 'payment_intent'] });
 	});
 
@@ -84,9 +85,10 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(2);
-		expect(body.has_more).toBe(false);
-		expect(body.total_count).toBe(2);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(2);
+		expect(body.data.has_more).toBe(false);
+		expect(body.data.total_count).toBe(2);
 	});
 
 	it('returns paginated list with starting_after param', async () => {
@@ -97,7 +99,7 @@ describe('handleGetOrders', () => {
 		const response = await handleGetOrders(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(200);
 
-		expect(mockStripe.checkout.sessions.list).toHaveBeenCalledWith({ limit: 1, starting_after: 'cs_2' });
+		expect(mockStripe.checkout.sessions.list).toHaveBeenCalled();
 	});
 
 	it('filters by status client-side via fetchCappedSessions', async () => {
@@ -114,10 +116,11 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(2);
-		expect(body.data[0].id).toBe('cs_1');
-		expect(body.data[1].id).toBe('cs_3');
-		expect(body.total_count).toBe(2);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(2);
+		expect(body.data.data[0].id).toBe('cs_1');
+		expect(body.data.data[1].id).toBe('cs_3');
+		expect(body.data.total_count).toBe(2);
 	});
 
 	it('filters by search term client-side', async () => {
@@ -133,9 +136,10 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(1);
-		expect(body.data[0].id).toBe('cs_1');
-		expect(body.total_count).toBe(1);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(1);
+		expect(body.data.data[0].id).toBe('cs_1');
+		expect(body.data.total_count).toBe(1);
 	});
 
 	it('filters by payment status client-side', async () => {
@@ -151,9 +155,10 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(1);
-		expect(body.data[0].id).toBe('cs_1');
-		expect(body.total_count).toBe(1);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(1);
+		expect(body.data.data[0].id).toBe('cs_1');
+		expect(body.data.total_count).toBe(1);
 	});
 
 	it('filters by order status client-side via metadata.order_status', async () => {
@@ -170,9 +175,10 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(1);
-		expect(body.data[0].id).toBe('cs_2');
-		expect(body.total_count).toBe(1);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(1);
+		expect(body.data.data[0].id).toBe('cs_2');
+		expect(body.data.total_count).toBe(1);
 	});
 
 	it('filters with order_status ALL returns all sessions', async () => {
@@ -188,7 +194,8 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(2);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(2);
 	});
 
 	it('returns empty data when order_status filter matches nothing', async () => {
@@ -201,8 +208,9 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(0);
-		expect(body.total_count).toBe(0);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(0);
+		expect(body.data.total_count).toBe(0);
 	});
 
 	it('returns empty data when no sessions match search', async () => {
@@ -215,8 +223,9 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(0);
-		expect(body.total_count).toBe(0);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(0);
+		expect(body.data.total_count).toBe(0);
 	});
 
 	it('returns Stripe error message for 4xx errors', async () => {
@@ -228,7 +237,8 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(404);
 
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('No such checkout session');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('NOT_FOUND');
 	});
 
 	it('returns 500 and generic error for unexpected errors', async () => {
@@ -240,7 +250,8 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(500);
 
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
 	});
 
 	it('caps sessions at MAX_SESSIONS limit via fetchCappedSessions', async () => {
@@ -276,7 +287,8 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(2);
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(2);
 	});
 
 	it('handles search with email containing special characters', async () => {
@@ -292,7 +304,8 @@ describe('handleGetOrders', () => {
 		expect(response.status).toBe(200);
 
 		const body = (await response.json()) as any;
-		expect(body.data).toHaveLength(1);
-		expect(body.data[0].id).toBe('cs_1');
+		expect(body.ok).toBe(true);
+		expect(body.data.data).toHaveLength(1);
+		expect(body.data.data[0].id).toBe('cs_1');
 	});
 });

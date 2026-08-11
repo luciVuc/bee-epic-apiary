@@ -9,3 +9,20 @@ services/.dev.vars
 admin/.env
 services/.env
 web/.env
+
+# Build outputs
+dist
+web/dist
+admin/dist
+# vite-plugin-pwa dev-mode service-worker output
+web/dev-dist
+
+# E2E run artifacts (plans themselves are tracked; run outputs are not)
+.e2e-plans/.screenshots/
+.e2e-plans/TEST-EXECUTION-REPORT.md
+# Issue reports are handoff artifacts for a coding agent, not source
+.issues/
+
+# Claude Code session-local state (permission grants, agent-memory scratch,
+# subagent notes). Never part of the tracked tree.
+.claude/

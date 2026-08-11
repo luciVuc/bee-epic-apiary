@@ -110,19 +110,48 @@ describe("recurringText", () => {
 });
 
 describe("formatPrice", () => {
-  it("formats cents to dollars", () => {
+  it("formats cents to dollars with default USD", () => {
     expect(formatPrice(1000)).toBe("$10.00");
   });
 
-  it("handles zero", () => {
+  it("handles zero with default USD", () => {
     expect(formatPrice(0)).toBe("$0.00");
   });
 
-  it("handles small amounts", () => {
+  it("handles small amounts with default USD", () => {
     expect(formatPrice(50)).toBe("$0.50");
   });
 
-  it("handles large amounts", () => {
+  it("handles large amounts with default USD", () => {
     expect(formatPrice(99999)).toBe("$999.99");
+  });
+
+  describe("currency-aware (review I10)", () => {
+    // Stripe checkout sessions can be created in any currency, but the admin
+    // previously always rendered amounts as USD — so a £15.00 order showed
+    // up as "$15.00", causing reconciliation pain. formatPrice now takes the
+    // session's currency code and delegates to Intl.NumberFormat.
+
+    it("renders EUR with the proper symbol and grouping", () => {
+      // Locale-dependent layout (some locales put €1.000,00, others €1,000.00).
+      const out = formatPrice(12345, "eur");
+      // Strip non-digit-and-decimal so the test is locale-tolerant.
+      expect(out).toMatch(/€|EUR/);
+      expect(out).toMatch(/123/); // 12345/100 = 123.45
+    });
+
+    it("renders GBP with the proper symbol", () => {
+      const out = formatPrice(1500, "gbp");
+      expect(out).toMatch(/£|GBP/);
+      expect(out).toMatch(/15/);
+    });
+
+    it("accepts uppercase or lowercase currency codes", () => {
+      expect(formatPrice(1000, "USD")).toBe(formatPrice(1000, "usd"));
+    });
+
+    it("falls back to USD when currency omitted (back-compat)", () => {
+      expect(formatPrice(1000)).toBe(formatPrice(1000, "usd"));
+    });
   });
 });

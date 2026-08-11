@@ -1,8 +1,6 @@
-import type { SimpleIcon } from "simple-icons";
 import { siFacebook, siInstagram, siEtsy, siX, siYoutube } from "simple-icons";
 
-export type BrandIcon = {} & SimpleIcon;
-
+/** Props shared by every brand icon component: an optional `className` for sizing/color. */
 export interface IBrandIconProps {
   className?: string;
 }

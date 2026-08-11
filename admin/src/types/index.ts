@@ -1,57 +1,44 @@
+/**
+ * Admin-side type barrel.
+ *
+ * As of Plan 2, the cross-project types (`IProduct`, `IProductInput`,
+ * `EProductCategory`, order types) come from `@bee-epic/shared`. The
+ * admin-only `IDashboardStats` stays here. Existing imports across `admin/src/`
+ * keep working unchanged.
+ */
+
+import { EUserStatus } from "@bee-epic/shared";
+
 export * from "./order";
 
-/** Product category enum matching Stripe metadata values */
-export enum EProductCategory {
-  HONEY = "HONEY",
-  BEESWAX = "BEESWAX",
-  GIFTS = "GIFTS",
-  SUBSCRIPTIONS = "SUBSCRIPTIONS",
+export { EProductCategory, EStaffRole } from "@bee-epic/shared";
+export type {
+  ProductCategory,
+  IProduct,
+  IProductInput,
+} from "@bee-epic/shared";
+export { EUserStatus } from "@bee-epic/shared";
+
+/** Caller identity resolved from session cookie / bearer / dev bypass. */
+export interface ICaller {
+  email: string;
+  role: import("@bee-epic/shared").EStaffRole;
+  via: "cookie" | "bearer" | "dev";
+  /**
+   * Optional display name. Not populated by the server today (login /
+   * whoami return only email/role/via), but downstream UI (Phase 10.13
+   * UserMenu) will consume it if present — keeping the type honest.
+   */
+  displayName?: string;
+  /**
+   * Optional lifecycle status mirrored from the server user record.
+   * When `DISABLED`, the caller must be treated as unauthorized regardless
+   * of role — a stale probe should never leak privileged UI.
+   */
+  status?: EUserStatus;
 }
 
-/** Union type of product category keys */
-export type ProductCategory = keyof typeof EProductCategory;
-
-/** Full product shape as used by the admin UI, transformed from Stripe */
-export interface IProduct {
-  id: string;
-  name: string;
-  slug: string;
-  description: string;
-  longDescription?: string;
-  price: number;
-  stripePriceId?: string;
-  stripePaymentLinkId?: string;
-  category: string;
-  imageUrls: string[];
-  thumbnailUrls: string[];
-  inStock: boolean;
-  featured: boolean;
-  weight: string;
-  tags: string[];
-  recurringInterval?: string;
-  recurringIntervalCount?: number;
-}
-
-/** Input shape for creating/updating a product (before Stripe transformation) */
-export interface IProductInput {
-  name: string;
-  slug: string;
-  description: string;
-  longDescription?: string;
-  price: number;
-  stripePaymentLinkId?: string;
-  category: string;
-  imageUrls: string[];
-  thumbnailUrls: string[];
-  inStock: boolean;
-  featured: boolean;
-  weight: string;
-  tags: string[];
-  recurringInterval?: string;
-  recurringIntervalCount?: number;
-}
-
-/** Computed statistics for the dashboard page */
+/** Computed statistics for the dashboard page (admin-only). */
 export interface IDashboardStats {
   totalProducts: number;
   inStockProducts: number;

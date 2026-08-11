@@ -21,6 +21,12 @@ export const ORDER_STATUS_CHANGED_EVENT = "order-status-changed";
 /** Custom event dispatched when a new order notification is received via SSE */
 export const NEW_ORDER_EVENT = "new-order-received";
 
+/** Custom event dispatched when a product-updated notification is received via SSE */
+export const PRODUCT_UPDATED_EVENT = "product-updated-received";
+
+/** Custom event dispatched when a product-deleted notification is received via SSE */
+export const PRODUCT_DELETED_EVENT = "product-deleted-received";
+
 /** Default product categories used when no remote categories are loaded */
 export const CATEGORIES = [
   { id: "HONEY", label: "Honey" },

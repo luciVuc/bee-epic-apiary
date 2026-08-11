@@ -150,7 +150,7 @@ describe('products/:id endpoint', () => {
 		});
 		const response = await worker.fetch(request, { ...env, ALLOWED_ORIGINS: 'https://example.com' });
 		expect(response.status).toBe(204);
-		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('PUT, DELETE, GET, OPTIONS');
+		expect(response.headers.get('Access-Control-Allow-Methods')).toBe('GET, PUT, DELETE, OPTIONS');
 	});
 
 	it('returns 405 for POST on /products/:id', async () => {

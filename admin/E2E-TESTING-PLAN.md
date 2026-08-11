@@ -6,7 +6,7 @@ Tests for the `admin/` sub-project: a React 19 + Vite admin panel for Stripe pro
 **Base URL**: `http://localhost:5174`
 **Router**: BrowserRouter (standard paths)
 **API**: Vite proxy `/api` → `http://localhost:8787` (rewrites `/api` prefix)
-**Auth**: Bearer token `VITE_API_SECRET_KEY=dev-api-key-change-me` sent with every request
+**Auth**: Cookie session — the server issues a `bea_at` HttpOnly JWT cookie on `POST /auth/login`. Admin SPA E2E scenarios authenticate either by (a) navigating to `/login` and signing in with seed-data credentials, or (b) calling `POST /auth/login` directly to establish the `bea_at` cookie before driving other endpoints. The worker honors `X-Dev-Email` (for scripted API calls, not the SPA) only when `ENVIRONMENT=development`.
 **Stripe**: Real Stripe test mode — created products are real Stripe resources
 **Requires**: `services/` dev server running on port 8787
 
@@ -54,7 +54,8 @@ until curl -s -o /dev/null -w "%{http_code}" http://localhost:5174 | grep -q 200
 **Preconditions**:
 
 - `services/.dev.vars` has `STRIPE_SECRET_KEY` set to a valid Stripe test key
-- `admin/.env` has `VITE_API_SECRET_KEY=dev-api-key-change-me`
+- Seeded OWNER account (`owner@example.com`) with known password; sign in through `/login` before running tests
+- `services/.dev.vars` has `ENVIRONMENT=development` (already set in `wrangler.jsonc` `env.development`) and `OWNER_EMAILS=owner@example.com`
 
 **Clean state** (run before each test session):
 
@@ -65,7 +66,8 @@ localStorage.removeItem("beeEpicAdminSettings");
 **Preconditions**:
 
 - `services/.dev.vars` has `STRIPE_SECRET_KEY` set to a valid Stripe test key
-- `admin/.env` has `VITE_API_SECRET_KEY=dev-api-key-change-me`
+- Seeded OWNER account (`owner@example.com`) with known password; sign in through `/login` before running tests
+- `services/.dev.vars` has `ENVIRONMENT=development` (already set in `wrangler.jsonc` `env.development`) and `OWNER_EMAILS=owner@example.com`
 
 **Clean state** (run before each test session):
 
@@ -385,3 +387,93 @@ Set Interval="month", Every=1. Add placeholder image URLs. Click "Create Product
 | Delete confirmation     | Fixed overlay with "Confirm Delete" heading           |
 | Settings success banner | Green banner with text "Settings saved successfully!" |
 | Error banner            | Red banner with `AlertCircle` icon                    |
+
+---
+
+## Test 20: E2E — First-time bootstrap
+
+**Prerequisites**:
+
+- Fresh backend: `bea-users` KV namespace empty, no OWNER seeded.
+- Worker configured with `JWT_SIGNING_SECRET` and `OWNER_EMAILS=owner@example.com`.
+- `ENVIRONMENT=development` set in `services/.dev.vars`.
+
+**Steps**:
+
+1. Navigate to `http://localhost:5174/`.
+2. Verify redirect to `http://localhost:5174/bootstrap`.
+3. Confirm `GET /whoami` returns `{ bootstrapAvailable: true }`.
+4. Enter `owner@example.com` in the bootstrap form.
+5. Submit — the form calls `POST /auth/bootstrap-owner`.
+6. Capture the invite URL printed to dev-mode server logs (look for `[invite]` log line).
+7. Open the invite URL in the same browser session.
+8. Set a password that satisfies the active auth policy (minimum length, complexity).
+9. Verify redirect to `http://localhost:5174/dashboard`.
+10. Confirm `GET /whoami` returns `{ caller: { email: "owner@example.com", role: "OWNER", status: "ACTIVE" }, bootstrapAvailable: false }`.
+
+**Expected observable outcomes**:
+
+- `/bootstrap` page renders the email-input form at step 2.
+- No error banners at any step.
+- After step 9 the dashboard loads with the owner's session cookie set (`bea_at`).
+- `bootstrapAvailable` is `false` from step 10 onward; navigating to `/bootstrap` redirects back to `/dashboard`.
+
+**Cleanup**: Reset `bea-users` KV namespace (delete all entries) after the test.
+
+---
+
+## Test 21: E2E — Full login / logout cycle
+
+**Prerequisites**:
+
+- Seeded OWNER account: `owner@example.com` with a known password.
+
+**Steps**:
+
+1. Navigate to `http://localhost:5174/login`.
+2. Enter email `owner@example.com` and the known password.
+3. Submit the login form.
+4. Verify redirect to `http://localhost:5174/dashboard`.
+5. Navigate to a protected page (e.g. `/products`).
+6. Confirm the page loads without a 401 redirect.
+7. Click **UserMenu** (top-right avatar / email) → select "Log out".
+8. Verify redirect to `http://localhost:5174/login`.
+9. Confirm `GET /whoami` returns `{ caller: null }` (cookie cleared / expired).
+
+**Expected observable outcomes**:
+
+- Login form submits successfully (no error banner at step 3).
+- Dashboard and protected pages render after login.
+- After logout the `bea_at` cookie is gone (browser storage confirms no valid cookie).
+- Any subsequent navigation to a protected page redirects to `/login`.
+
+**Cleanup**: Clear all cookies for `localhost`.
+
+---
+
+## Test 22: E2E — OWNER invites a new user; new user accepts invite
+
+**Prerequisites**:
+
+- Seeded OWNER (`owner@example.com`) already logged in (cookie session active).
+- `alice@example.com` does NOT exist in `bea-users` KV.
+
+**Steps**:
+
+1. Navigate to `http://localhost:5174/settings` and click the **Users** tab.
+2. Enter `alice@example.com` in the invite email field; select role `EMPLOYEE`; click **Invite**.
+3. Verify the users table shows a row for `alice@example.com` with status `INVITED`.
+4. Capture the invite URL printed to dev-mode server logs.
+5. Open the invite URL in a **fresh browser context** (no existing cookies — use an incognito window or a new Playwright browser context).
+6. Set a password that satisfies the auth policy.
+7. Verify redirect to `http://localhost:5174/dashboard`.
+8. Confirm `GET /whoami` (in the new context) returns `{ caller: { email: "alice@example.com", role: "EMPLOYEE", status: "ACTIVE" } }`.
+
+**Expected observable outcomes**:
+
+- Invite row appears immediately in the Users tab after step 2 (no page reload needed).
+- The invite URL contains a one-time token and is only valid once.
+- After accepting, Alice's row in the Users tab (when viewed as OWNER) shows status `ACTIVE`.
+- No error banners in either browser context.
+
+**Cleanup**: As OWNER, call `DELETE /users/alice@example.com` to remove Alice's account.

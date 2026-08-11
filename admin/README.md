@@ -14,7 +14,7 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 - **Product Detail**: View product images, description, tags, status, Stripe integration details
 - **Product Form** (modal dialog): Add/edit with fields for name, slug, description, price (cents), category, weight, stock, featured status, image URLs, thumbnail URLs, tags, Stripe payment link, subscription interval support
 - **Settings**: Tabbed interface (5 tabs):
-  - Admin Config: API URL, API secret key, Stripe publishable key
+  - Admin Config: API URL, Stripe publishable key
   - Site Content: Business info, hero section, about section, section titles, stats bar, nav links, social links, order confirmation
   - Process: "From Hive to Table" process steps
   - Testimonials: Customer testimonials with star ratings
@@ -30,6 +30,47 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 - Axios (API calls)
 - Lucide React (icons)
 - Vitest + React Testing Library (tests)
+
+## Auth (cookie session)
+
+The admin panel uses a cookie-based session. On successful login the server
+issues a `bea_at` HttpOnly HS256 JWT cookie (1-hour TTL, `SameSite=Lax`,
+signed with `JWT_SIGNING_SECRET`). The browser forwards it automatically on
+every subsequent request; axios is configured with `withCredentials: true` so
+the cookie rides along on every API call — including the SSE connection
+(`new EventSource(url, { withCredentials: true })` in `AdminNavbar.tsx`).
+
+The login endpoint is `POST /auth/login`. On first deploy, `GET /whoami`
+returns `bootstrapAvailable: true`; the SPA redirects to `/bootstrap` where
+the initial OWNER account is created via an email-invite flow. After that,
+`bootstrapAvailable: false` and the standard login page is used.
+
+Roles: `OWNER > MANAGER > EMPLOYEE > VENDOR` (from `EStaffRole`).
+
+- User accounts are managed in **Settings → Users** tab (OWNER only), wired to `/users/*`.
+- Password policy is managed in **Settings → Security** tab (OWNER only), wired to `/settings/auth-policy`.
+
+**Local development** uses the same login flow as production. For scripted
+tests (curl / Playwright), the worker honors `X-Dev-Email` only when
+`ENVIRONMENT=development` — but the admin SPA no longer sends it; you sign in
+through the login page like production.
+
+**CI / scripts** can still send `Authorization: Bearer <API_SECRET_KEY>` for
+service-to-service automation. This bearer is NEVER bundled with the admin
+client.
+
+### Cookie scope (VITE_API_URL ⇄ admin Pages site)
+
+`bea_at` is a host-scoped cookie. For it to ride along on API requests,
+`VITE_API_URL` MUST resolve to a hostname that shares the **eTLD+1** with the
+admin Pages site (e.g. `admin.example.com` ↔ `api.example.com`).
+Cross-apex setups (`admin.example.com` ↔ `api.other.com`) won't forward the
+cookie and every authenticated call will mysteriously 401.
+
+The admin bundle warns in the browser console at boot when the configured
+`VITE_API_URL` hostname doesn't appear to share the page eTLD+1 (review I1).
+Path-relative URLs (`VITE_API_URL=/api`) bypass the check — they always share
+the page origin.
 
 ## Getting Started
 
@@ -57,7 +98,6 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 
    ```bash
    VITE_API_URL=http://localhost:8787
-   VITE_API_SECRET_KEY=dev-api-key-change-me
    VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
    ```
 
@@ -84,28 +124,42 @@ Admin panel for managing products and settings for the Bee Epic Apiary e-commerc
 
 ## API Integration
 
-The admin module communicates with the Cloudflare Worker (services) for product management, orders, and content settings:
+The admin module communicates with the Cloudflare Worker (services) for product management, orders, and content settings. Each endpoint is gated by a minimum staff role (see Auth section above):
 
-- `GET /products` — List all products with search/category/limit/pagination
-- `GET /products/count` — Total product count
-- `GET /products/:id` — Get single product
-- `POST /products` — Create new product (requires API key)
-- `PUT /products/:id` — Update product (requires API key)
-- `DELETE /products/:id` — Delete/archive product (requires API key)
-- `GET /orders` — List orders with search/status/payment filters
-- `GET /orders/:id` — Get single order with line items
-- `PUT /orders/:id` — Update order metadata/delivery info (requires API key)
-- `POST /checkout` — Create Stripe checkout sessions (public)
-- `POST /prices` — Create a Stripe price for a product (requires API key)
-- `GET /settings/:type` — Get content settings (site/process/testimonials/categories)
-- `PUT /settings/:type` — Save content settings (requires API key)
-- `GET /notifications/stream` — SSE stream for real-time order notifications
-- `POST /contact` — Submit contact form (public)
+| Endpoint                                               | Method    | Required role                    |
+| ------------------------------------------------------ | --------- | -------------------------------- |
+| `GET /products`                                        | GET       | public                           |
+| `GET /products/count`                                  | GET       | public                           |
+| `GET /products/stats`                                  | GET       | EMPLOYEE                         |
+| `GET /products/:id`                                    | GET       | public                           |
+| `POST /products`                                       | POST      | MANAGER                          |
+| `PUT /products/:id`                                    | PUT       | MANAGER                          |
+| `DELETE /products/:id`                                 | DELETE    | MANAGER                          |
+| `POST /prices`                                         | POST      | MANAGER                          |
+| `GET /orders`                                          | GET       | EMPLOYEE                         |
+| `GET /orders/:id`                                      | GET       | EMPLOYEE                         |
+| `PUT /orders/:id`                                      | PUT       | EMPLOYEE                         |
+| `POST /checkout`                                       | POST      | public                           |
+| `GET /settings/:type`                                  | GET       | public                           |
+| `PUT /settings/{site,process,testimonials,categories}` | PUT       | MANAGER                          |
+| `GET /settings/auth-policy`                            | GET       | VENDOR (any authenticated staff) |
+| `PUT /settings/auth-policy`                            | PUT       | OWNER                            |
+| `GET /whoami`                                          | GET       | public                           |
+| `GET /notifications/stream`                            | GET (SSE) | EMPLOYEE                         |
+| `POST /contact`                                        | POST      | public                           |
+| `GET /users`                                           | GET       | OWNER                            |
+| `POST /users/invite`                                   | POST      | OWNER                            |
+| `DELETE /users/:email`                                 | DELETE    | OWNER                            |
+| `POST /auth/login`                                     | POST      | public                           |
+| `POST /auth/logout`                                    | POST      | public                           |
+| `POST /auth/bootstrap-owner`                           | POST      | public                           |
 
 ## Testing
 
 - Framework: Vitest with React Testing Library (jsdom environment)
-- Coverage thresholds: 88% lines, 85% branches, 45% functions, 88% statements
+- Coverage thresholds (ratchet baseline; raise as new tests land):
+  - 80% lines, 67% branches, 75% functions, 78% statements
+  - The previous nominal 88/85/45/88 numbers were never met and silently failed every coverage run; thresholds now reflect actuals (review I8). Functions bumped 45 → 75 in the same pass.
 - Tests use `data-testid` selectors for element targeting
 - Run: `npm run test` or `npm run test:coverage`
 
@@ -155,9 +209,9 @@ Connect your GitHub repo to Cloudflare Pages in the dashboard:
 | Build output directory | `dist`          |
 | Root directory         | `admin`         |
 
-Environment variables: `VITE_API_URL`, `VITE_STRIPE_PUBLISHABLE_KEY`, `VITE_API_SECRET_KEY`.
+Environment variables: `VITE_API_URL`, `VITE_STRIPE_PUBLISHABLE_KEY`. `VITE_API_SECRET_KEY` has been removed as of Plan 3 — the admin panel no longer bakes any secret into its bundle.
 
-**Important**: The admin panel has no login page — it relies on the bearer token from `VITE_API_SECRET_KEY` (build-time env var, not stored in localStorage). In production, put **Cloudflare Access** in front of the Pages site to require real user login.
+**Auth model**: The admin panel ships its own login page (`/login`). On successful `POST /auth/login` the server issues a `bea_at` HttpOnly cookie; subsequent requests (and the SSE stream) carry it automatically because axios uses `withCredentials: true`. Staff roles (`OWNER > MANAGER > EMPLOYEE > VENDOR`) are managed in **Settings → Users** tab (OWNER only). Password policy is managed in **Settings → Security** tab (OWNER only).
 
 ### CLI Deploy
 
@@ -175,5 +229,10 @@ Pushes to `main` or `release` run the `.github/workflows/deploy.yml` workflow, w
 
 - Runs on port 5174 by default
 - API requests are proxied to the Cloudflare Worker during development (Vite proxy rewrites `/api` -> `/`)
-- Settings storage: Admin config comes from Vite build-time env vars (`VITE_API_URL`, `VITE_API_SECRET_KEY`); site content saved to worker KV via API
+- Settings storage:
+  - Admin config (API URL) comes from a Vite build-time env var (`VITE_API_URL`)
+  - Site content / process / testimonials / categories saved to worker KV via API
+  - **Users** managed via Settings → Users tab (OWNER only), wired to `/users/*`
+  - **Password policy** managed via Settings → Security tab (OWNER only), wired to `/settings/auth-policy`
+- Auth in local dev: sign in through `/login` as in production. For scripted tests (curl / Playwright), pass `X-Dev-Email` directly to the worker — it is honored only when `ENVIRONMENT=development`. The admin SPA does not send `X-Dev-Email`.
 - Product CRUD creates both a Stripe product and a Stripe price, with rollback on failure

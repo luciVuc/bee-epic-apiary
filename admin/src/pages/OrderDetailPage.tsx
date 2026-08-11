@@ -20,6 +20,7 @@ import {
 } from "../store/ordersSlice";
 import { Spinner } from "../components/shared/Spinner";
 import type { IOrder, IOrderUpdate } from "../types";
+import { OrderUpdateSchema } from "@bee-epic/shared";
 import { ORDER_STATUS_CHANGED_EVENT } from "../utils/constants";
 import {
   orderStatusBadge,
@@ -37,6 +38,14 @@ function getBackUrl(location: ReturnType<typeof useLocation>): string {
   return (location.state as { from?: string } | null)?.from || "/orders";
 }
 
+/**
+ * Order detail view for a single Checkout Session. Fetches by route `:id`
+ * (guarding against StrictMode double-fetch via a ref), renders line items,
+ * status/customer/details cards, and a copyable full-order-id popup. When the
+ * URL ends in `/edit` it swaps the whole view for {@link OrderEditDialog}. The
+ * back target is read from router `location.state.from`, defaulting to
+ * `/orders`.
+ */
 export function OrderDetailPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -99,7 +108,10 @@ export function OrderDetailPage() {
   if (error) {
     return (
       <div className="text-center py-12" data-testid="order-detail-page_error">
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <AlertCircle
+          className="w-16 h-16 text-red-500 mx-auto mb-4"
+          aria-hidden="true"
+        />
         <h2 className="text-2xl font-bold text-red-600 mb-4">
           Order Not Found
         </h2>
@@ -142,7 +154,7 @@ export function OrderDetailPage() {
             aria-label="Back to orders"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-200"
           >
-            <ArrowLeft className="w-5 h-5 text-dark-600" />
+            <ArrowLeft className="w-5 h-5 text-dark-600" aria-hidden="true" />
           </button>
           <div>
             <div
@@ -160,7 +172,7 @@ export function OrderDetailPage() {
                 aria-label="Show full order ID"
                 className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-800"
               >
-                <Eye className="w-5 h-5 text-dark-400" />
+                <Eye className="w-5 h-5 text-dark-400" aria-hidden="true" />
               </button>
             </div>
             <p className="text-sm text-dark-500 mt-1">
@@ -181,7 +193,7 @@ export function OrderDetailPage() {
               className="flex items-center gap-2 px-4 py-2 bg-gray-100 text-dark-700 rounded-lg hover:bg-gray-200 transition-colors dark:bg-dark-800 dark:text-dark-300 dark:hover:bg-dark-700"
               title="Open Checkout Session"
             >
-              <ExternalLink className="w-4 h-4" />
+              <ExternalLink className="w-4 h-4" aria-hidden="true" />
               <span className="hidden md:block">Checkout URL</span>
             </a>
           )}
@@ -191,7 +203,7 @@ export function OrderDetailPage() {
             className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
             title="Edit Order Metadata"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-4 h-4" aria-hidden="true" />
             <span
               data-testid="order-detail-page_edit-button_text"
               className="hidden md:block"
@@ -353,13 +365,13 @@ export function OrderDetailPage() {
                           data-testid="order-detail-page_line-items-table-cell-subtotal"
                           className="px-4 py-3 text-right text-dark-700"
                         >
-                          {formatPrice(item.amountSubtotal)}
+                          {formatPrice(item.amountSubtotal, item.currency)}
                         </td>
                         <td
                           data-testid="order-detail-page_line-items-table-cell-total"
                           className="px-4 py-3 text-right text-dark-900 font-medium"
                         >
-                          {formatPrice(item.amountTotal)}
+                          {formatPrice(item.amountTotal, item.currency)}
                         </td>
                       </tr>
                     ))}
@@ -380,7 +392,7 @@ export function OrderDetailPage() {
                         className="px-4 py-3 text-right text-dark-900 font-medium"
                         data-testid="order-detail-page_line-items-table-footer-subtotal-value"
                       >
-                        {formatPrice(order.amountSubtotal)}
+                        {formatPrice(order.amountSubtotal, order.currency)}
                       </td>
                     </tr>
                     <tr
@@ -398,7 +410,7 @@ export function OrderDetailPage() {
                         className="px-4 py-3 text-right text-dark-900 font-bold text-lg"
                         data-testid="order-detail-page_line-items-table-footer-total-value"
                       >
-                        {formatPrice(order.amountTotal)}
+                        {formatPrice(order.amountTotal, order.currency)}
                       </td>
                     </tr>
                   </tfoot>
@@ -602,7 +614,10 @@ export function OrderDetailPage() {
                     aria-label="Show full order ID"
                     className="p-1 hover:bg-gray-100 rounded transition-colors dark:hover:bg-dark-800"
                   >
-                    <Eye className="w-3.5 h-3.5 text-dark-400" />
+                    <Eye
+                      className="w-3.5 h-3.5 text-dark-400"
+                      aria-hidden="true"
+                    />
                   </button>
                 </div>
               </div>
@@ -620,7 +635,7 @@ export function OrderDetailPage() {
                   data-testid="order-detail-page_details_subtotal_value"
                   className="text-dark-700 font-medium"
                 >
-                  {formatPrice(order.amountSubtotal)}
+                  {formatPrice(order.amountSubtotal, order.currency)}
                 </p>
               </div>
               <div
@@ -637,7 +652,7 @@ export function OrderDetailPage() {
                   data-testid="order-detail-page_details_total_value"
                   className="text-dark-900 font-bold text-lg"
                 >
-                  {formatPrice(order.amountTotal)}
+                  {formatPrice(order.amountTotal, order.currency)}
                 </p>
               </div>
               <div
@@ -705,7 +720,7 @@ export function OrderDetailPage() {
                 autoFocus
                 className="p-1 hover:bg-gray-100 rounded dark:hover:bg-dark-800"
               >
-                <X className="w-5 h-5" />
+                <X className="w-5 h-5" aria-hidden="true" />
               </button>
             </div>
             <div className="flex items-stretch gap-2">
@@ -725,7 +740,7 @@ export function OrderDetailPage() {
                     Copied!
                   </span>
                 ) : (
-                  <Copy className="w-4 h-4" />
+                  <Copy className="w-4 h-4" aria-hidden="true" />
                 )}
               </button>
             </div>
@@ -742,6 +757,15 @@ const ORDER_STATUS_OPTIONS = [
   { label: "Fulfilled", value: "fulfilled" },
 ];
 
+/**
+ * Modal form for editing an order's mutable fields (order status, description,
+ * customer name, shipping address). Address fields are re-derived into
+ * `address_*` metadata keys on save — stale keys are stripped first so clearing
+ * the form doesn't leave zombies (review I3). The payload is validated against
+ * the shared `OrderUpdateSchema` before dispatch so UI mistakes surface with a
+ * field message instead of a Stripe 400, and a successful save broadcasts
+ * `ORDER_STATUS_CHANGED_EVENT` so the notifications panel refreshes.
+ */
 function OrderEditDialog({
   order,
   onClose,
@@ -779,8 +803,17 @@ function OrderEditDialog({
       setSaving(true);
       setError(null);
 
+      // Drop any address_* keys from prior saves before re-deriving them from
+      // the form. Without this, clearing the form leaves zombie keys behind
+      // because the spread of `order.metadata` would otherwise re-introduce
+      // them (review I3).
+      const baseMetadata = { ...order.metadata };
+      for (const key of Object.keys(baseMetadata)) {
+        if (key.startsWith("address_")) delete baseMetadata[key];
+      }
+
       const metadata: Record<string, string> = {
-        ...order.metadata,
+        ...baseMetadata,
         order_status: orderStatus,
         description,
         customer_name: customerName,
@@ -816,7 +849,19 @@ function OrderEditDialog({
         };
       }
 
-      await dispatch(updateOrder(payload)).unwrap();
+      // Validate against the shared schema before dispatch — same shape the
+      // worker re-validates server-side, so a UI mistake surfaces here with
+      // a field-level message instead of a 400 from Stripe (review I3).
+      const parsed = OrderUpdateSchema.safeParse(payload);
+      if (!parsed.success) {
+        const first = parsed.error.issues[0];
+        const path = first?.path?.join(".") || "payload";
+        setError(`Invalid ${path}: ${first?.message ?? "validation failed"}`);
+        setSaving(false);
+        return;
+      }
+
+      await dispatch(updateOrder(parsed.data)).unwrap();
       window.dispatchEvent(new CustomEvent(ORDER_STATUS_CHANGED_EVENT));
       onClose();
     } catch {
@@ -847,7 +892,7 @@ function OrderEditDialog({
             aria-label="Close"
             className="p-1 hover:bg-gray-100 rounded dark:hover:bg-dark-200"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
         <div className="px-6 py-4 space-y-6 overflow-y-auto flex-1 min-h-0">

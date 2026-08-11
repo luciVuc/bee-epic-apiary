@@ -1,59 +1,40 @@
-export enum ESettingsType {
-	SITE = 'SITE',
-	PROCESS = 'PROCESS',
-	TESTIMONIALS = 'TESTIMONIALS',
-	CATEGORIES = 'CATEGORIES',
-}
+/**
+ * Services-side type barrel.
+ *
+ * As of Plan 2, the canonical type definitions live in `@bee-epic/shared`.
+ * This file re-exports them so existing `import { ... } from '../types'`
+ * call sites across `services/src/` keep working unchanged. New code should
+ * import directly from `@bee-epic/shared`.
+ */
 
-export type SettingsType = keyof typeof ESettingsType;
+export { ESettingsType, EStaffRole } from '@bee-epic/shared';
+export type {
+	SettingsType,
+	ISiteContent,
+	IOrderTemplateData,
+	ICommTemplateData,
+	IEmailBodyType,
+	EmailFormat,
+	IApiUpstreamError,
+} from '@bee-epic/shared';
 
-export interface IAPIResponseError {
-	status?: number;
-	statusCode?: number;
-	code?: string;
-	message?: string;
-	stack?: string;
-	type?: string;
-}
-
-/** Site content stored in CONTENT_KV used for email routing and notification formatting */
-export interface ISiteContent {
-	email?: string;
-	businessName?: string;
-	formsparkFormId?: string;
-	emailFormat?: EmailFormat;
-}
-
-/** Data payload for order notification email templates */
-export interface IOrderTemplateData {
-	sessionId: string;
-	customerName: string;
-	customerEmail: string;
-	amountTotal: string;
-	orderLink: string;
-	businessName: string;
-}
-
-/** Data payload for contact form notification email templates */
-export interface ICommTemplateData {
-	name: string;
-	email: string;
-	subject: string;
-	message: string;
-}
-
-/** Supported email body formats */
-export type EmailFormat = 'text' | 'markdown' | 'html';
-
-/** Structured email body for the Cloudflare Email Service `body` field */
-export interface IEmailBodyType {
-	type: 'text' | 'html';
-	content: string;
-}
-
-/** Builder interface for Cloudflare Email Service `send()` */
+/**
+ * Builder interface for Cloudflare Email Service `send()`.
+ *
+ * Kept defined locally (rather than in `@bee-epic/shared/email`) because it
+ * references the Workers runtime types `EmailAddress` / `EmailAttachment`
+ * — globals declared by `worker-configuration.d.ts` and unavailable in admin/web.
+ */
+import type { IEmailBodyType } from '@bee-epic/shared';
 export interface IEmailMessageBuilder {
-	from: string | EmailAddress;
+	/**
+	 * Sender identity. Cloudflare's Email Service `send()` accepts either
+	 * a bare RFC-5322 address string or a structured `EmailAddress`. We
+	 * always pass `EmailAddress` so the `name` field renders in the
+	 * recipient's inbox — narrowing the type makes that contract explicit
+	 * (review M4).
+	 */
+	from: EmailAddress;
 	to: string | EmailAddress | (string | EmailAddress)[];
 	subject: string;
 	replyTo?: string | EmailAddress;

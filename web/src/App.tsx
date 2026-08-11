@@ -20,6 +20,11 @@ import type {
   ICategory,
 } from "./types";
 
+/**
+ * Root application content: fetches all site data once on mount (with loading
+ * and error fallbacks), wires up the router with the Layout + CartDrawer, and
+ * shows a post-checkout success modal when the URL carries `?session=success`.
+ */
 function AppContent() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [siteContent, setSiteContent] = useState<ISiteContent>(DEFAULT_SITE);
@@ -178,6 +183,7 @@ function AppContent() {
   );
 }
 
+/** Top-level app component; thin wrapper around {@link AppContent} (providers live in main.tsx). */
 function App() {
   return <AppContent />;
 }

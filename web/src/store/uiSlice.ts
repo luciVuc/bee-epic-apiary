@@ -12,6 +12,11 @@ const initialState: IUIState = {
   isLoading: false,
 };
 
+/**
+ * Transient UI state slice (not persisted). Tracks cart drawer visibility,
+ * the active single-page section for nav highlighting, and a global loading flag.
+ * Reducers: openCart, closeCart, toggleCart, setActiveSection, setLoading.
+ */
 const uiSlice = createSlice({
   name: "ui",
   initialState,
@@ -34,6 +39,7 @@ const uiSlice = createSlice({
   },
 });
 
+/** UI action creators: openCart, closeCart, toggleCart, setActiveSection, setLoading. */
 export const { openCart, closeCart, toggleCart, setActiveSection, setLoading } =
   uiSlice.actions;
 export default uiSlice.reducer;

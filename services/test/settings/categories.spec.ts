@@ -1,6 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
 import { router } from '../../src/router';
-import { ESettingsType } from '../../src/types';
 
 const TEST_CATEGORIES = [
 	{ id: 'HONEY', label: 'Honey' },
@@ -10,7 +9,7 @@ const TEST_CATEGORIES = [
 describe('categories settings endpoint', () => {
 	const env = {
 		CONTENT_KV: {
-			get: vi.fn((key: string) => Promise.resolve(key === ESettingsType.CATEGORIES ? JSON.stringify({ name: 'Test Category' }) : null)),
+			get: vi.fn((key: string) => Promise.resolve(key === 'categories' ? JSON.stringify({ name: 'Test Category' }) : null)),
 			put: vi.fn(() => Promise.resolve()),
 		} as unknown as KVNamespace,
 		STRIPE_SECRET_KEY: 'sk_test_123',
@@ -49,7 +48,8 @@ describe('categories settings endpoint', () => {
 		const response = await router(request, env);
 		expect(response.status).toBe(400);
 		const data = (await response.json()) as any;
-		expect(data.error).toBe('Invalid JSON body');
+		expect(data.ok).toBe(false);
+		expect(data.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('should return 400 for validation failure on PUT', async () => {
@@ -64,7 +64,8 @@ describe('categories settings endpoint', () => {
 		const response = await router(request, env);
 		expect(response.status).toBe(400);
 		const data = (await response.json()) as any;
-		expect(data.error).toBe('Invalid categories data');
+		expect(data.ok).toBe(false);
+		expect(data.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('should return 401 without auth on PUT', async () => {
@@ -84,8 +85,8 @@ describe('categories settings endpoint', () => {
 		const response = await router(request, env);
 		expect(response.status).toBe(200);
 		const data = (await response.json()) as any;
-		expect(data.success).toBe(true);
-		expect(data.type).toBe(ESettingsType.CATEGORIES);
+		expect(data.ok).toBe(true);
+		expect(data.data.type).toBe('categories');
 	});
 
 	it('should return 200 for GET request', async () => {
@@ -93,7 +94,8 @@ describe('categories settings endpoint', () => {
 		const response = await router(request, env);
 		expect(response.status).toBe(200);
 		const data = (await response.json()) as any;
-		expect(data.name).toBe('Test Category');
+		expect(data.ok).toBe(true);
+		expect(data.data.name).toBe('Test Category');
 	});
 
 	it('should return 204 for OPTIONS request', async () => {

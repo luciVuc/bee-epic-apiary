@@ -41,7 +41,7 @@
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
-	"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "" },
+	"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "", "ENVIRONMENT": "production" },
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/
@@ -82,7 +82,15 @@
 			"kv_namespaces": [
 				{ "binding": "CONTENT_KV", "id": "fdc9777103a94fd18fb9b1dab54bc730", "preview_id": "fdc9777103a94fd18fb9b1dab54bc730" },
 			],
-			"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "http://localhost:5174" },
+			"vars": {
+				"RATE_LIMIT_MAX": "100",
+				"RATE_LIMIT_WINDOW": "60",
+				"ADMIN_BASE_URL": "http://localhost:5174",
+				"ENVIRONMENT": "development",
+				// Test-only stub: base64 that decodes to 59 bytes (>= 32-byte contract floor).
+				// Real deployments set this via `wrangler secret put JWT_SIGNING_SECRET`.
+				"JWT_SIGNING_SECRET": "dGVzdC1zZWNyZXQtdmFsdWUtYWJjLTEyMy1tdXN0LWJlLWF0LWxlYXN0LTMyLWJ5dGVzLWRlY29kZWQ=",
+			},
 			"send_email": [{ "name": "EMAIL", "remote": false }],
 			"durable_objects": {
 				"bindings": [

@@ -19,6 +19,12 @@ interface ISuccessPageProps {
   content: ISiteContent;
 }
 
+/**
+ * `/success` route shown after Stripe checkout. Clears the cart exactly once
+ * when the URL carries a valid `session_id` (guarded on the "cs_" prefix to
+ * ignore stale/forged links), lets the user copy the order id, and strips the
+ * query string from the URL to prevent re-clearing on refresh.
+ */
 export const SuccessPage = ({ content }: ISuccessPageProps) => {
   const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
@@ -36,11 +42,16 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
   };
 
   useEffect(() => {
-    if (!hasClearedCart.current) {
+    // Stripe Checkout Session IDs always start with "cs_". Anything else
+    // arrived from a stale link, a copy/paste accident, or a malicious
+    // /success?session_id=abc URL trying to silently nuke the cart. Guard
+    // the clearCart() dispatch on the prefix and the once-per-mount ref.
+    const id = searchParams.get("session_id");
+    if (id && id.startsWith("cs_") && !hasClearedCart.current) {
       dispatch(clearCart());
       hasClearedCart.current = true;
     }
-  }, [dispatch]);
+  }, [dispatch, searchParams]);
 
   const sessionId = searchParams.get("session_id");
 
@@ -75,7 +86,7 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
           transition={{ delay: 0.2, type: "spring" }}
         >
           <ShoppingBag
-            data-testid="success-page_icon"
+            data-testid="success-page_glyph"
             className="w-10 h-10 text-green-600 dark:text-green-400"
             aria-hidden="true"
           />
@@ -195,5 +206,3 @@ export const SuccessPage = ({ content }: ISuccessPageProps) => {
     </div>
   );
 };
-
-export default SuccessPage;

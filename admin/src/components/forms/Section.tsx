@@ -10,6 +10,11 @@ export interface ISectionProps {
   children: ReactNode;
 }
 
+/**
+ * Titled content section (bordered card) with an optional leading icon. Used
+ * to group related fields inside the settings forms so long forms stay
+ * visually scannable.
+ */
 export function Section({ title, icon, children }: ISectionProps) {
   return (
     <div

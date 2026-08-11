@@ -4,6 +4,11 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { AdminNavbar } from "./AdminNavbar";
 
+/**
+ * Root shell for every authenticated admin route: fixed sidebar + top navbar
+ * with an `<Outlet>` for the page body. On mobile the sidebar slides in over a
+ * dimming overlay; `sidebarOpen` drives both.
+ */
 export function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 

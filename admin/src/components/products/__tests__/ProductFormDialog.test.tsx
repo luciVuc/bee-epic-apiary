@@ -271,4 +271,165 @@ describe("ProductFormDialog", () => {
       ).not.toBeInTheDocument();
     }
   });
+
+  describe("seeding stability (review I4)", () => {
+    /**
+     * The form used to re-seed itself from `selectedProduct` whenever that
+     * reference changed — including after an unrelated `fetchProducts` rerun
+     * that returned an updated `items` array containing the same product.
+     * Result: while an admin was editing, a background poll could silently
+     * revert their unsaved changes. The fix seeds exactly once per productId,
+     * gated by a useRef so subsequent reference changes don't clobber.
+     */
+
+    it("seeds the form once per productId and does not re-seed on subsequent selectedProduct reference changes", async () => {
+      const initialState = {
+        products: {
+          items: [],
+          loading: false,
+          error: null,
+          selectedProduct: mockProduct,
+          hasMore: false,
+          lastId: null,
+          totalCount: 1,
+          lastFetchParams: null,
+          scrollPosition: 0,
+        },
+      };
+      const store = createStore(initialState);
+      renderWithProviders(
+        <ProductFormDialog productId="prod_1" onClose={() => {}} />,
+        { store },
+      );
+
+      // First seed: the form should show the product's name.
+      const nameInput = (await screen.findByLabelText(
+        "Product Name *",
+      )) as HTMLInputElement;
+      expect(nameInput.value).toBe("Test Honey");
+
+      // Admin edits the name.
+      const user = userEvent.setup();
+      await user.clear(nameInput);
+      await user.type(nameInput, "Edited Name");
+      expect(nameInput.value).toBe("Edited Name");
+
+      // Simulate a stale background refresh that replaces selectedProduct with
+      // an updated reference for the SAME id (same data shape, different ref).
+      store.dispatch({
+        type: "products/fetchById/fulfilled",
+        payload: { ...mockProduct },
+      });
+      // Let any effects flush.
+      await new Promise((r) => setTimeout(r, 0));
+      // Verify the dispatch actually replaced selectedProduct with a new ref:
+      const after = (store.getState() as any).products.selectedProduct;
+      expect(after).not.toBe(mockProduct);
+      expect(after.name).toBe("Test Honey");
+
+      // The edited name MUST survive the reference change.
+      expect(
+        (screen.getByLabelText("Product Name *") as HTMLInputElement).value,
+      ).toBe("Edited Name");
+    });
+
+    it("seeds again after the dialog is closed and reopened for the same productId", async () => {
+      // The seeding ref is per-mount lifetime; reopening produces a fresh
+      // dialog instance that should re-seed.
+      const initialState = {
+        products: {
+          items: [],
+          loading: false,
+          error: null,
+          selectedProduct: mockProduct,
+          hasMore: false,
+          lastId: null,
+          totalCount: 1,
+          lastFetchParams: null,
+          scrollPosition: 0,
+        },
+      };
+      const store = createStore(initialState);
+      const { unmount } = renderWithProviders(
+        <ProductFormDialog productId="prod_1" onClose={() => {}} />,
+        { store },
+      );
+      expect(
+        ((await screen.findByLabelText("Product Name *")) as HTMLInputElement)
+          .value,
+      ).toBe("Test Honey");
+      unmount();
+
+      renderWithProviders(
+        <ProductFormDialog productId="prod_1" onClose={() => {}} />,
+        { store },
+      );
+      expect(
+        ((await screen.findByLabelText("Product Name *")) as HTMLInputElement)
+          .value,
+      ).toBe("Test Honey");
+    });
+  });
+
+  describe("integer-only price input (review I14)", () => {
+    /**
+     * The price field stores Stripe minor units (cents). The previous
+     * type=number input let the browser surface "1.5", "1e10", or "-3" — all
+     * silently became non-integer cents downstream and created Stripe Price
+     * records the admin couldn't reconcile. The fix is a digits-only text
+     * input with inputMode="numeric" so mobile users still get the digit
+     * keypad, plus an onChange that strips non-digit characters before
+     * setting state.
+     */
+
+    it("strips non-digit characters as the user types", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ProductFormDialog onClose={() => {}} />);
+      await screen.findByText("Add New Product");
+      const priceInput = (await screen.findByLabelText(
+        "Price in cents",
+      )) as HTMLInputElement;
+      await user.clear(priceInput);
+      await user.type(priceInput, "1a2.b3");
+      expect(priceInput.value).toBe("123");
+    });
+
+    it("treats empty string as 0 (does not crash)", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ProductFormDialog onClose={() => {}} />);
+      await screen.findByText("Add New Product");
+      const priceInput = (await screen.findByLabelText(
+        "Price in cents",
+      )) as HTMLInputElement;
+      await user.clear(priceInput);
+      expect(priceInput.value).toBe("0");
+    });
+
+    it("renders a cents-hint description so admins know the unit", async () => {
+      renderWithProviders(<ProductFormDialog onClose={() => {}} />);
+      await screen.findByText("Add New Product");
+      expect(document.getElementById("price-hint")).toBeTruthy();
+    });
+
+    it("strips non-digits from a $14.99-style entry (1499 cents)", async () => {
+      const user = userEvent.setup();
+      renderWithProviders(<ProductFormDialog onClose={() => {}} />);
+      await screen.findByText("Add New Product");
+      const priceInput = (await screen.findByLabelText(
+        "Price in cents",
+      )) as HTMLInputElement;
+      await user.clear(priceInput);
+      await user.type(priceInput, "$14.99");
+      expect(priceInput.value).toBe("1499");
+    });
+
+    it("uses inputMode=numeric so the mobile keypad opens", async () => {
+      renderWithProviders(<ProductFormDialog onClose={() => {}} />);
+      await screen.findByText("Add New Product");
+      const priceInput = (await screen.findByLabelText(
+        "Price in cents",
+      )) as HTMLInputElement;
+      expect(priceInput.inputMode).toBe("numeric");
+    });
+  });
 });

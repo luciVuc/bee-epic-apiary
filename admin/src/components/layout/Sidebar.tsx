@@ -14,6 +14,11 @@ export interface ISidebarProps {
   onClose?: () => void;
 }
 
+/**
+ * Primary navigation aside (Dashboard, Orders, Products, Settings). The active
+ * route is highlighted via `NavLink`'s `isActive`; `onClose` lets the mobile
+ * overlay dismiss itself after a link is tapped.
+ */
 export function Sidebar({ onClose }: ISidebarProps) {
   const navItems = [
     {
@@ -22,14 +27,14 @@ export function Sidebar({ onClose }: ISidebarProps) {
       label: "Dashboard",
     },
     {
-      to: "/products",
-      icon: Package,
-      label: "Products",
-    },
-    {
       to: "/orders",
       icon: ShoppingCart,
       label: "Orders",
+    },
+    {
+      to: "/products",
+      icon: Package,
+      label: "Products",
     },
     {
       to: "/settings",
@@ -53,7 +58,7 @@ export function Sidebar({ onClose }: ISidebarProps) {
           onClick={onClose}
           style={{ margin: "0.125rem 0" }}
         >
-          <Hexagon className="w-8 h-8 text-primary-500" />
+          <Hexagon className="w-8 h-8 text-primary-500" aria-hidden="true" />
           <span className="font-heading text-xl font-bold text-dark-900">
             Admin Panel
           </span>
@@ -65,7 +70,7 @@ export function Sidebar({ onClose }: ISidebarProps) {
           className="lg:hidden p-1 hover:bg-gray-100 dark:hover:bg-dark-200 rounded"
           data-testid="sidebar_close-btn"
         >
-          <X className="w-5 h-5" />
+          <X className="w-5 h-5" aria-hidden="true" />
         </button>
       </div>
       <nav

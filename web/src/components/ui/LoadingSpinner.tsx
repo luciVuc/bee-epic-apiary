@@ -5,6 +5,7 @@ interface ILoadingSpinnerProps {
   className?: string;
 }
 
+/** Accessible animated loading spinner (role="status" with an sr-only "Loading..." label). */
 export const LoadingSpinner = ({
   size = "md",
   className = "",

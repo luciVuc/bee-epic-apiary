@@ -26,6 +26,13 @@ function getBackUrl(location: ReturnType<typeof useLocation>): string {
   return (location.state as { from?: string } | null)?.from || "/products";
 }
 
+/**
+ * Product detail view for a single Stripe product. Fetches by route `:id`
+ * (ref-guarded against StrictMode double-fetch) and renders images,
+ * description, tags, and status/details/Stripe-integration cards. `/edit`
+ * swaps in {@link ProductFormDialog}; delete goes through a confirm dialog then
+ * navigates back to `location.state.from` (default `/products`).
+ */
 export function ProductDetailPage() {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
@@ -77,7 +84,10 @@ export function ProductDetailPage() {
         className="text-center py-12"
         data-testid="product-detail-page_error"
       >
-        <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
+        <AlertCircle
+          className="w-16 h-16 text-red-500 mx-auto mb-4"
+          aria-hidden="true"
+        />
         <h2 className="text-2xl font-bold text-red-600 mb-4">
           Product Not Found
         </h2>
@@ -121,7 +131,7 @@ export function ProductDetailPage() {
             title="Back to products"
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors dark:hover:bg-dark-200"
           >
-            <ArrowLeft className="w-5 h-5 text-dark-600" />
+            <ArrowLeft className="w-5 h-5 text-dark-600" aria-hidden="true" />
           </button>
           <h2
             data-testid="product-detail-page_name"
@@ -140,7 +150,7 @@ export function ProductDetailPage() {
             className="flex items-center gap-2 px-4 py-2 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
             title="Edit Product"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-4 h-4" aria-hidden="true" />
             <span
               data-testid="product-detail-page_edit-button_text"
               className="hidden md:block"
@@ -154,7 +164,7 @@ export function ProductDetailPage() {
             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
             title="Delete Product"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4" aria-hidden="true" />
             <span
               data-testid="product-detail-page_delete-button_text"
               className="hidden md:block"
@@ -285,7 +295,7 @@ export function ProductDetailPage() {
                 <span className="text-dark-600">Featured</span>
                 {product.featured ? (
                   <span className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
-                    <Star className="w-4 h-4 fill-current" />
+                    <Star className="w-4 h-4 fill-current" aria-hidden="true" />
                     Yes
                   </span>
                 ) : (
@@ -335,7 +345,7 @@ export function ProductDetailPage() {
                   data-testid="product-detail-page_price_value"
                   className="text-2xl font-bold text-dark-900"
                 >
-                  {formatPrice(product.price)}
+                  {formatPrice(product.price, "usd")}
                 </p>
                 {product.recurringInterval && (
                   <p

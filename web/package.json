@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "typecheck": "tsc --noEmit",
     "format": "npx -y prettier --write .",
     "format:staged": "npx -y pretty-quick --staged --no-restage --verbose",
     "lint": " npx -y eslint . --report-unused-disable-directives --max-warnings 0",
@@ -17,8 +18,8 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@bee-epic/shared": "file:../shared",
     "@reduxjs/toolkit": "^2.12.0",
-    "@stripe/stripe-js": "^9.7.0",
     "framer-motion": "^12.40.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.17.0",
@@ -27,7 +28,8 @@
     "react-helmet-async": "^3.0.0",
     "react-redux": "^9.3.0",
     "react-router-dom": "^7.15.1",
-    "simple-icons": "^16.21.0"
+    "simple-icons": "^16.21.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@eslint/css": "^1.2.0",
@@ -35,16 +37,21 @@
     "@eslint/json": "^1.2.0",
     "@eslint/markdown": "^8.0.2",
     "@tailwindcss/postcss": "^4.3.0",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
     "@types/leaflet": "^1.9.21",
     "@types/react": "^19.2.15",
     "@types/react-dom": "^19.2.3",
     "@typescript-eslint/eslint-plugin": "^8.60.0",
     "@typescript-eslint/parser": "^8.60.0",
     "@vitejs/plugin-react": "^6.0.2",
+    "@vitest/coverage-v8": "^4.1.9",
     "autoprefixer": "^10.5.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.5.2",
     "globals": "^17.6.0",
+    "jsdom": "^29.1.1",
     "postcss": "^8.5.15",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",

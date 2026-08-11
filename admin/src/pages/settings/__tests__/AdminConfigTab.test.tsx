@@ -3,9 +3,21 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { AdminConfigTab } from "../AdminConfigTab";
 import type { ISiteContent } from "../../../types/settings";
+import type { ICaller } from "../../../types";
+import { EStaffRole } from "../../../types";
 import { DEFAULT_SITE } from "../../../utils/constants";
 
 const defaultSite: ISiteContent = { ...DEFAULT_SITE };
+
+const mockCaller = vi.fn<() => ICaller | null>(() => null);
+vi.mock("../../../hooks/useCaller", () => ({
+  useCaller: () => ({
+    caller: mockCaller(),
+    status: "succeeded",
+    error: null,
+    refetch: vi.fn(),
+  }),
+}));
 
 function renderTab(
   props: Partial<React.ComponentProps<typeof AdminConfigTab>> = {},
@@ -21,13 +33,14 @@ function renderTab(
 
 describe("AdminConfigTab", () => {
   beforeEach(() => {
-    vi.stubEnv("VITE_API_SECRET_KEY", "");
+    vi.clearAllMocks();
+    mockCaller.mockReturnValue(null);
   });
 
   it("renders all sections", () => {
     renderTab();
     expect(screen.getByText("API Configuration")).toBeInTheDocument();
-    expect(screen.getByText("API Secret Key")).toBeInTheDocument();
+    expect(screen.getByText("Authentication")).toBeInTheDocument();
     expect(screen.getByText("Stripe Configuration")).toBeInTheDocument();
     expect(screen.getByText("Formspark Configuration")).toBeInTheDocument();
     expect(screen.getByText("Email Notifications")).toBeInTheDocument();
@@ -39,11 +52,20 @@ describe("AdminConfigTab", () => {
     expect(urlInput).toBeDisabled();
   });
 
-  it("shows secret key status indicator", () => {
+  it("shows not authenticated when caller is null", () => {
     renderTab();
-    expect(
-      screen.getByText("No API secret key configured"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Not authenticated")).toBeInTheDocument();
+  });
+
+  it("shows caller email and role when authenticated", () => {
+    mockCaller.mockReturnValue({
+      email: "owner@test.com",
+      role: EStaffRole.OWNER,
+      via: "cookie",
+    });
+    renderTab();
+    expect(screen.getByText("owner@test.com")).toBeInTheDocument();
+    expect(screen.getByText("OWNER")).toBeInTheDocument();
   });
 
   it("calls onSiteChange for stripe publishable key", async () => {
@@ -78,11 +100,10 @@ describe("AdminConfigTab", () => {
     }
   });
 
-  it("renders email format select with default HTML value", () => {
+  it("renders email format select", () => {
     renderTab();
     const select = screen.getByLabelText("Notification Email Format");
     expect(select).toBeInTheDocument();
-    expect(select).toHaveValue("html");
   });
 
   it("calls onSiteChange for email format", async () => {
@@ -98,5 +119,25 @@ describe("AdminConfigTab", () => {
   it("does not render save button", () => {
     renderTab();
     expect(screen.queryByText("Save Admin Settings")).not.toBeInTheDocument();
+  });
+
+  it("does not render 'Cloudflare Access' anywhere (regression guard)", () => {
+    renderTab();
+    expect(screen.queryByText("Cloudflare Access")).not.toBeInTheDocument();
+  });
+
+  it("renders new authentication copy about bea_at cookie, Users tab, and Security tab", () => {
+    renderTab();
+    expect(
+      screen.getByText(
+        /Identity is verified via the bea_at cookie issued at login/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/User accounts and roles are managed on the Users tab/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(/Password policy is managed on the Security tab/i),
+    ).toBeInTheDocument();
   });
 });

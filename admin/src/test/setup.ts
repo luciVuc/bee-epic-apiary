@@ -4,6 +4,10 @@ class MockEventSource {
   static readonly CONNECTING = 0;
   static readonly OPEN = 1;
   static readonly CLOSED = 2;
+  /** Test hook: the most recently constructed mock instance. */
+  static lastInstance: MockEventSource | null = null;
+  /** Test hook: total number of instances constructed (for reconnect assertions). */
+  static instanceCount = 0;
 
   readonly CONNECTING = 0;
   readonly OPEN = 1;
@@ -15,11 +19,17 @@ class MockEventSource {
   onerror: ((event: Event) => void) | null = null;
   url: string;
   withCredentials: boolean = false;
+  /** Test hook: the options bag the constructor was invoked with. */
+  initOptions: EventSourceInit | undefined;
   private listeners: Map<string, Set<EventListenerOrEventListenerObject>> =
     new Map();
 
-  constructor(url: string) {
+  constructor(url: string, options?: EventSourceInit) {
     this.url = url;
+    this.initOptions = options;
+    if (options?.withCredentials) this.withCredentials = true;
+    MockEventSource.lastInstance = this;
+    MockEventSource.instanceCount++;
     setTimeout(() => {
       this.readyState = MockEventSource.OPEN;
       if (this.onopen) this.onopen();

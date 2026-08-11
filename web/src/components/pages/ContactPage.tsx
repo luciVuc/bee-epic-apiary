@@ -6,6 +6,7 @@ interface IContactPageProps {
   content: ISiteContent;
 }
 
+/** `/contact` route: SEO head plus the contact form section. */
 export function ContactPage({ content }: IContactPageProps) {
   return (
     <div data-testid="contact-page">

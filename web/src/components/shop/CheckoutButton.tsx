@@ -4,14 +4,11 @@ import { useCart } from "../../hooks/useCart";
 import { ShoppingCart } from "lucide-react";
 
 interface ICheckoutButtonProps {
-  showDevNote?: boolean;
   className?: string;
 }
 
-export const CheckoutButton = ({
-  showDevNote = true,
-  className = "",
-}: ICheckoutButtonProps) => {
+/** Standalone "Proceed to Checkout" button that checks out the current cart; disabled when empty and shows errors inline. */
+export const CheckoutButton = ({ className = "" }: ICheckoutButtonProps) => {
   const { items } = useCart();
   const { checkout, isProcessing, error } = useStripeCheckout();
 
@@ -35,15 +32,6 @@ export const CheckoutButton = ({
         <ShoppingCart className="w-5 h-5 mr-2" aria-hidden="true" />
         Proceed to Checkout
       </Button>
-
-      {showDevNote && (
-        <div className="mt-3 p-3 bg-amber-50 dark:bg-amber-900/30 rounded-lg">
-          <p className="font-body text-xs text-amber-800 dark:text-amber-300">
-            Note: Stripe is in TEST MODE. Replace your Stripe publishable key in
-            .env for production.
-          </p>
-        </div>
-      )}
 
       {error && (
         <p

@@ -1,8 +1,12 @@
 import { ICommTemplateData } from '../types';
 import { escapeHtml } from '../utils';
 
-function escapeEmail(email: string): string {
-	return email.replace(/\)/g, '%29').replace(/\(/g, '%28');
+/**
+ * URL-encode a few characters that would otherwise break Markdown link syntax,
+ * then HTML-escape the result to defeat HTML injection through the email field.
+ */
+function escapeMailto(email: string): string {
+	return escapeHtml(email.replace(/\)/g, '%29').replace(/\(/g, '%28'));
 }
 
 /** Build an HTML email body for contact form notifications with XSS-safe escaping */
@@ -24,9 +28,11 @@ export function buildCommNotificationText(data: ICommTemplateData): string {
 export function buildCommNotificationMarkdown(data: ICommTemplateData): string {
 	const { name, email, subject, message } = data;
 	const safeName = escapeHtml(name);
-	const safeEmail = escapeEmail(email);
+	const safeEmail = escapeHtml(email);
+	const safeMailto = escapeMailto(email);
 	const safeSubject = escapeHtml(subject);
-	let md = `# New Message Received\n\n---\n\n**From:** [${safeName}](mailto:${safeEmail}) ([${safeEmail}](mailto:${safeEmail}))\n\n**Subject:** ${safeSubject}\n\n---\n\n**Message:**\n\n${message}`;
+	const safeMessage = escapeHtml(message);
+	let md = `# New Message Received\n\n---\n\n**From:** [${safeName}](mailto:${safeMailto}) ([${safeEmail}](mailto:${safeMailto}))\n\n**Subject:** ${safeSubject}\n\n---\n\n**Message:**\n\n${safeMessage}`;
 	md += `\n---\n\n*This notification was sent automatically by Bee Epic Apiary.*\n`;
 	return md;
 }

@@ -1,25 +1,43 @@
 /** Tab for editing site-wide content: business info, hero, about, nav links, social links, order confirmation */
-import { Store, Image, Plus, Trash2 } from "lucide-react";
+import { Store, Image, Plus, Trash2, Bell } from "lucide-react";
 import type { ISiteContent } from "../../types/settings";
 import { TextField, TextAreaField, Section } from "../../components/forms";
 
+/** Props for {@link SiteContentTab}; all mutations are owned by the parent. */
 export interface ISiteContentTabProps {
+  /** Current site-content draft being edited. */
   siteContent: ISiteContent;
+  /** Update a single scalar/object field of the site content. */
   updateSite: <K extends keyof ISiteContent>(
     field: K,
     value: ISiteContent[K],
   ) => void;
+  /** Append a blank About paragraph. */
   addAboutParagraph: () => void;
+  /** Update the About paragraph at `index`. */
   updateAboutParagraph: (index: number, value: string) => void;
+  /** Remove the About paragraph at `index`. */
   removeAboutParagraph: (index: number) => void;
+  /** Append a blank About image URL. */
   addAboutImage: () => void;
+  /** Update the About image URL at `index`. */
   updateAboutImage: (index: number, value: string) => void;
+  /** Remove the About image at `index`. */
   removeAboutImage: (index: number) => void;
+  /** Append a blank navigation link. */
   addNavLink: () => void;
+  /** Update the `id` or `label` of the nav link at `index`. */
   updateNavLink: (index: number, field: "id" | "label", value: string) => void;
+  /** Remove the nav link at `index`. */
   removeNavLink: (index: number) => void;
 }
 
+/**
+ * The largest settings tab: edits the storefront's public content — business
+ * info, hero/about copy, section titles, stats bar, nav + social links, and
+ * order-confirmation strings. Presentational only; every mutation is delegated
+ * to the parent so the draft/save lifecycle stays on SettingsPage.
+ */
 export function SiteContentTab({
   siteContent,
   updateSite,
@@ -35,7 +53,10 @@ export function SiteContentTab({
 }: ISiteContentTabProps) {
   return (
     <div className="space-y-8" data-testid="site-content-tab">
-      <Section title="Business Info" icon={<Store className="w-4 h-4" />}>
+      <Section
+        title="Business Info"
+        icon={<Store className="w-4 h-4" aria-hidden="true" />}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <TextField
             label="Business Name"
@@ -85,6 +106,38 @@ export function SiteContentTab({
         </div>
       </Section>
 
+      <Section
+        title="Admin Notifications"
+        icon={<Bell className="w-4 h-4" aria-hidden="true" />}
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <TextField
+            label="Replay window (hours)"
+            type="number"
+            value={String(siteContent.notificationReplayHours ?? 1)}
+            onChange={(v) => {
+              const parsed = v === "" ? undefined : Number(v);
+              if (parsed === undefined) {
+                updateSite("notificationReplayHours", undefined);
+                return;
+              }
+              if (!Number.isFinite(parsed)) return;
+              const clamped = Math.min(24, Math.max(1, Math.trunc(parsed)));
+              updateSite("notificationReplayHours", clamped);
+            }}
+            placeholder="1"
+          />
+        </div>
+        <p
+          className="mt-2 text-sm text-dark-500"
+          data-testid="site-content-tab_replay-help"
+        >
+          How long the admin notification stream keeps undelivered events
+          available for replay after the browser reconnects. 1&ndash;24 hours;
+          defaults to 1.
+        </p>
+      </Section>
+
       <Section title="Hero Section">
         <div className="space-y-4">
           <TextField
@@ -125,7 +178,7 @@ export function SiteContentTab({
                 title={`Remove paragraph ${i + 1}`}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1 dark:hover:bg-red-900/30"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -133,7 +186,7 @@ export function SiteContentTab({
             onClick={addAboutParagraph}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
-            <Plus className="w-4 h-4" /> Add Paragraph
+            <Plus className="w-4 h-4" aria-hidden="true" /> Add Paragraph
           </button>
         </div>
         <div className="mt-6 space-y-3">
@@ -156,7 +209,7 @@ export function SiteContentTab({
                 title={`Remove image ${i + 1}`}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1 dark:hover:bg-red-900/30"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -164,7 +217,7 @@ export function SiteContentTab({
             onClick={addAboutImage}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
-            <Plus className="w-4 h-4" /> Add Image
+            <Plus className="w-4 h-4" aria-hidden="true" /> Add Image
           </button>
         </div>
       </Section>
@@ -281,7 +334,7 @@ export function SiteContentTab({
                 title={`Remove nav link ${i + 1}`}
                 className="p-2 text-red-500 hover:bg-red-50 rounded-lg shrink-0 self-start mt-1 dark:hover:bg-red-900/30"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -289,12 +342,15 @@ export function SiteContentTab({
             onClick={addNavLink}
             className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
           >
-            <Plus className="w-4 h-4" /> Add Nav Link
+            <Plus className="w-4 h-4" aria-hidden="true" /> Add Nav Link
           </button>
         </div>
       </Section>
 
-      <Section title="Social Links" icon={<Image className="w-4 h-4" />}>
+      <Section
+        title="Social Links"
+        icon={<Image className="w-4 h-4" aria-hidden="true" />}
+      >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <TextField
             label="Instagram URL"

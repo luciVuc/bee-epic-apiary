@@ -2,6 +2,7 @@ interface IProductGridProps {
   children?: React.ReactNode;
 }
 
+/** Responsive grid wrapper for {@link ProductCard} children (1-4 columns by breakpoint). */
 export const ProductGrid = ({ children }: IProductGridProps) => {
   return (
     <div

@@ -53,6 +53,16 @@ const ORDER_STATUS_OPTIONS = [
   { value: "fulfilled", label: "Fulfilled" },
 ];
 
+/**
+ * Orders list with URL-synced search + status/payment/order-status filters,
+ * cursor pagination, and a desktop-table / mobile-card split. Filters live in
+ * the query string so the view is shareable and survives reload; the fetch
+ * effect debounces (300ms), aborts the prior in-flight request on filter change
+ * (review I13), and guards against StrictMode's double initial fetch. Scroll
+ * position is preserved across navigation to a detail page via sessionStorage,
+ * and a `NEW_ORDER_EVENT` listener refreshes the list when the SSE stream
+ * reports a new order.
+ */
 export function OrdersPage() {
   const dispatch = useDispatch<AppDispatch>();
   const location = useLocation();
@@ -99,29 +109,38 @@ export function OrdersPage() {
     [setSearchParams],
   );
 
-  const buildFetchParams = (includeLimit?: boolean) => {
-    const params: {
-      search?: string;
-      status?: string;
-      payment_status?: string;
-      order_status?: string;
-      limit?: number;
-    } = {};
-    if (searchTerm) params.search = searchTerm;
-    if (selectedStatus !== "ALL") params.status = selectedStatus;
-    if (selectedPaymentStatus !== "ALL")
-      params.payment_status = selectedPaymentStatus;
-    if (selectedOrderStatus !== "ALL")
-      params.order_status = selectedOrderStatus;
-    if (includeLimit) {
-      const limitParam = searchParams.get("limit");
-      if (limitParam) {
-        const parsed = parseInt(limitParam, 10);
-        if (!isNaN(parsed) && parsed > 0) params.limit = parsed;
+  const buildFetchParams = useCallback(
+    (includeLimit?: boolean) => {
+      const params: {
+        search?: string;
+        status?: string;
+        payment_status?: string;
+        order_status?: string;
+        limit?: number;
+      } = {};
+      if (searchTerm) params.search = searchTerm;
+      if (selectedStatus !== "ALL") params.status = selectedStatus;
+      if (selectedPaymentStatus !== "ALL")
+        params.payment_status = selectedPaymentStatus;
+      if (selectedOrderStatus !== "ALL")
+        params.order_status = selectedOrderStatus;
+      if (includeLimit) {
+        const limitParam = searchParams.get("limit");
+        if (limitParam) {
+          const parsed = parseInt(limitParam, 10);
+          if (!isNaN(parsed) && parsed > 0) params.limit = parsed;
+        }
       }
-    }
-    return params;
-  };
+      return params;
+    },
+    [
+      searchTerm,
+      selectedStatus,
+      selectedPaymentStatus,
+      selectedOrderStatus,
+      searchParams,
+    ],
+  );
 
   useLayoutEffect(() => {
     const saved = sessionStorage.getItem("adminOrdersScrollY");
@@ -135,20 +154,36 @@ export function OrdersPage() {
     return () => cancelAnimationFrame(id);
   }, []);
 
+  const didMount = useRef(false);
+  // Track the most recent fetchOrders dispatch so a filter change can abort
+  // it before the new one fires (review I13). Same shape as ProductsPage.
+  const fetchPromiseRef = useRef<{ abort?: () => void } | null>(null);
   useEffect(() => {
     const currentKey = `${searchTerm}|${selectedStatus}|${selectedPaymentStatus}|${selectedOrderStatus}`;
 
-    if (prevParamsKey.current === currentKey) {
+    // First mount: fire the initial fetch exactly once. Under StrictMode the
+    // effect runs twice, so without a mount guard we'd double-dispatch on every
+    // page load. The `didMount` ref persists across the second invocation
+    // because refs survive StrictMode's intentional double-effect.
+    if (!didMount.current) {
+      didMount.current = true;
       prevParamsKey.current = currentKey;
-      dispatch(fetchOrders(buildFetchParams(true)));
+      fetchPromiseRef.current = dispatch(fetchOrders(buildFetchParams(true)));
       return;
     }
+
+    // Subsequent runs with unchanged filters are no-ops — previously this
+    // branch unconditionally re-fetched, so any same-key re-render (filter
+    // panel toggle, etc.) caused a spurious refetch.
+    if (prevParamsKey.current === currentKey) return;
 
     prevParamsKey.current = currentKey;
 
     if (searchTimer.current) clearTimeout(searchTimer.current);
+    fetchPromiseRef.current?.abort?.();
     searchTimer.current = setTimeout(async () => {
-      await dispatch(fetchOrders(buildFetchParams()));
+      fetchPromiseRef.current = dispatch(fetchOrders(buildFetchParams()));
+      await fetchPromiseRef.current;
     }, 300);
     return () => {
       if (searchTimer.current) clearTimeout(searchTimer.current);
@@ -159,6 +194,7 @@ export function OrdersPage() {
     selectedPaymentStatus,
     selectedOrderStatus,
     dispatch,
+    buildFetchParams,
   ]);
 
   useEffect(() => {
@@ -173,6 +209,7 @@ export function OrdersPage() {
     selectedStatus,
     selectedPaymentStatus,
     selectedOrderStatus,
+    buildFetchParams,
   ]);
 
   const saveScroll = useCallback(() => {
@@ -283,6 +320,7 @@ export function OrdersPage() {
             <Search
               data-testid="orders-page_search-icon"
               className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-400"
+              aria-hidden="true"
             />
             <label htmlFor="orders-search" className="sr-only">
               Search orders
@@ -303,7 +341,7 @@ export function OrdersPage() {
                 data-testid="orders-page_search-clear"
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-dark-400 hover:text-dark-600 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -313,12 +351,14 @@ export function OrdersPage() {
             onClick={() => setShowFilters(!showFilters)}
             data-testid="orders-page_filter-toggle"
             aria-label="Toggle filters"
+            aria-expanded={showFilters}
             className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors shrink-0 dark:border-gray-600 dark:hover:bg-dark-200"
           >
-            <Filter className="w-4 h-4 text-dark-600" />
+            <Filter className="w-4 h-4 text-dark-600" aria-hidden="true" />
             <span className="text-sm font-medium text-dark-700">Filters</span>
             <ChevronDown
               className={`w-4 h-4 text-dark-400 transition-transform duration-200 ${showFilters ? "rotate-180" : ""}`}
+              aria-hidden="true"
             />
           </button>
         </div>
@@ -471,54 +511,63 @@ export function OrdersPage() {
                   className="text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                 >
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-icon"
                     className="px-2 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider w-10"
                   >
                     <span className="sr-only">Status icon</span>
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-order"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
                     Order
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-order-status"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
                     Order Status
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-customer"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
                     Customer
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-total"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
                     Total
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-checkout-status"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
                     Checkout Status
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-payment-status"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
                     Payment Status
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-date"
                     className="px-6 py-3 text-left text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
                     Date
                   </th>
                   <th
+                    scope="col"
                     data-testid="orders-page_table-header-actions"
                     className="px-6 py-3 text-right text-xs font-medium text-dark-500 uppercase tracking-wider"
                   >
@@ -526,7 +575,10 @@ export function OrdersPage() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
+              <tbody
+                data-testid="orders-page_table-tbody"
+                className="divide-y divide-gray-200 dark:divide-gray-700"
+              >
                 {orders.map((order) => (
                   <tr
                     key={order.id}
@@ -573,6 +625,8 @@ export function OrdersPage() {
                         to={`/orders/${order.id}`}
                         onClick={saveScroll}
                         state={{ from: currentUrl }}
+                        title={order.id}
+                        aria-label={order.id}
                         className="font-mono text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
                       >
                         {truncateOrderId(order.id)}
@@ -604,7 +658,7 @@ export function OrdersPage() {
                       className="px-6 py-4 whitespace-nowrap"
                     >
                       <span className="text-dark-700 font-medium">
-                        {formatPrice(order.amountTotal)}
+                        {formatPrice(order.amountTotal, order.currency)}
                       </span>
                     </td>
                     <td
@@ -668,6 +722,8 @@ export function OrdersPage() {
                 >
                   <div
                     data-testid="orders-page_mobile-card-order-id"
+                    title={order.id}
+                    aria-label={order.id}
                     className="font-mono text-sm text-primary-600 dark:text-primary-400"
                   >
                     {truncateOrderId(order.id)}
@@ -707,7 +763,7 @@ export function OrdersPage() {
                   >
                     <span className="text-dark-500">Total:</span>
                     <span className="ml-1 text-dark-700 font-medium">
-                      {formatPrice(order.amountTotal)}
+                      {formatPrice(order.amountTotal, order.currency)}
                     </span>
                   </div>
                   <div

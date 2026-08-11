@@ -26,7 +26,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Product ID is required');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for missing unit_amount', async () => {
@@ -39,7 +40,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Valid unit_amount is required');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for unit_amount <= 0', async () => {
@@ -52,7 +54,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Valid unit_amount is required');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for missing currency', async () => {
@@ -65,7 +68,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Currency is required');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('returns 400 for invalid lookup_key', async () => {
@@ -78,7 +82,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('lookup_key must be a string');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('VALIDATION_FAILED');
 	});
 
 	it('creates price successfully', async () => {
@@ -94,7 +99,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(201);
 		const body = (await response.json()) as any;
-		expect(body.id).toBe('price_123');
+		expect(body.ok).toBe(true);
+		expect(body.data.id).toBe('price_123');
 	});
 
 	it('returns 400 with empty string product', async () => {
@@ -120,7 +126,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('Invalid price data');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('handles Stripe errors with statusCode >= 500', async () => {
@@ -135,7 +142,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(500);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
 	});
 
 	it('handles Stripe errors with missing message when statusCode < 500', async () => {
@@ -150,7 +158,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(400);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('BAD_REQUEST');
 	});
 
 	it('handles Stripe errors with undefined statusCode (defaults to 500)', async () => {
@@ -165,7 +174,8 @@ describe('create-price handler', () => {
 		const response = await handleCreatePrice(mockStripe as Stripe, request, env, 'https://example.com');
 		expect(response.status).toBe(500);
 		const body = (await response.json()) as any;
-		expect(body.error).toBe('An error occurred');
+		expect(body.ok).toBe(false);
+		expect(body.error.code).toBe('INTERNAL');
 	});
 
 	it('returns 403 for disallowed origin', async () => {

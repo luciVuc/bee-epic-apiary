@@ -9,6 +9,7 @@ interface ICartItemProps {
   item: ICartItem;
 }
 
+/** A single cart line: thumbnail, name link, quantity steppers, line total, and a remove button. */
 export const CartItem = ({ item }: ICartItemProps) => {
   const { update, remove } = useCart();
   const { product, quantity } = item;
@@ -27,6 +28,9 @@ export const CartItem = ({ item }: ICartItemProps) => {
           <img
             src={product.imageUrls[0]}
             alt={product.name}
+            width={64}
+            height={64}
+            loading="lazy"
             className="w-full h-full object-cover"
           />
         ) : (

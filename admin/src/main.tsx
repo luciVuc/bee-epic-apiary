@@ -1,4 +1,5 @@
 /** Admin panel entry point. Mounts the React app with Redux Provider and BrowserRouter. */
+// cspell:ignore beforeinstallprompt
 import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import { Provider } from "react-redux";
@@ -7,6 +8,7 @@ import { CheckCircle } from "lucide-react";
 import App from "./App";
 import { store } from "./store";
 import { ThemeProvider } from "./hooks/useTheme";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 
 interface IBeforeInstallPromptEvent extends Event {
@@ -63,14 +65,28 @@ function InstallPrompt() {
 }
 
 history.scrollRestoration = "manual";
-ReactDOM.createRoot(document.getElementById("root")!).render(
+
+// Reuse a single React root across Vite HMR re-executions. Without this, every
+// hot update re-runs this module and calls createRoot() on a #root that already
+// has one, which React 18 warns about ("createRoot() on a container that has
+// already been passed to createRoot() before"). Stash the root on `window` so
+// the second invocation finds and re-renders into the existing one.
+const container = document.getElementById("root")!;
+type RootHost = Window & { __adminReactRoot?: ReactDOM.Root };
+const w = window as RootHost;
+const root = w.__adminReactRoot ?? ReactDOM.createRoot(container);
+w.__adminReactRoot = root;
+
+root.render(
   <React.StrictMode>
     <Provider store={store}>
       <BrowserRouter>
-        <ThemeProvider>
-          <App />
-          <InstallPrompt />
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <App />
+            <InstallPrompt />
+          </ThemeProvider>
+        </ErrorBoundary>
       </BrowserRouter>
     </Provider>
   </React.StrictMode>,

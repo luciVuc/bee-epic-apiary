@@ -11,11 +11,13 @@ import { EProductCategory } from "../../types";
 
 const mockSettings = vi.fn();
 const mockGetOrders = vi.fn();
+const mockGetProductsStats = vi.fn();
 
 vi.mock("../../utils/api", () => ({
   api: {
     getSettings: (...args: any[]) => mockSettings(...args),
     getOrders: (...args: any[]) => mockGetOrders(...args),
+    getProductsStats: (...args: any[]) => mockGetProductsStats(...args),
   },
 }));
 
@@ -109,6 +111,12 @@ describe("DashboardPage", () => {
       hasMore: false,
       lastId: null,
       totalCount: 0,
+    });
+    mockGetProductsStats.mockResolvedValue({
+      totalProducts: 3,
+      inStock: 3,
+      featured: 1,
+      byCategory: { HONEY: 1, BEESWAX: 1, SUBSCRIPTIONS: 1 },
     });
   });
 
@@ -256,5 +264,80 @@ describe("DashboardPage", () => {
     renderWithProviders(<DashboardPage />, { store });
 
     expect(await screen.findByText("Products by Category")).toBeInTheDocument();
+  });
+
+  it("renders orders by status section", async () => {
+    const store = createStore({
+      products: {
+        items: mockProducts,
+        loading: false,
+        error: null,
+        selectedProduct: null,
+        hasMore: false,
+        lastId: null,
+        totalCount: 3,
+        lastFetchParams: null,
+        scrollPosition: 0,
+      },
+    });
+    renderWithProviders(<DashboardPage />, { store });
+
+    expect(await screen.findByText("Orders by Status")).toBeInTheDocument();
+    // Fetches a count per status (new, pending, fulfilled)
+    expect(mockGetOrders).toHaveBeenCalledWith(
+      expect.objectContaining({ order_status: "pending" }),
+    );
+    expect(mockGetOrders).toHaveBeenCalledWith(
+      expect.objectContaining({ order_status: "fulfilled" }),
+    );
+  });
+
+  it("renders recent orders with customer and total", async () => {
+    // The recent-orders fetch is the one call without an order_status filter.
+    mockGetOrders.mockImplementation((params?: { order_status?: string }) => {
+      if (params?.order_status) {
+        return Promise.resolve({
+          orders: [],
+          hasMore: false,
+          lastId: null,
+          totalCount: 2,
+        });
+      }
+      return Promise.resolve({
+        orders: [
+          {
+            id: "cs_test_12345",
+            created: 1_700_000_000,
+            customerName: "Jane Doe",
+            customerEmail: "jane@example.com",
+            amountTotal: 4299,
+            currency: "usd",
+            orderStatus: "new",
+          },
+        ],
+        hasMore: false,
+        lastId: "cs_test_12345",
+        totalCount: 1,
+      });
+    });
+
+    const store = createStore({
+      products: {
+        items: mockProducts,
+        loading: false,
+        error: null,
+        selectedProduct: null,
+        hasMore: false,
+        lastId: null,
+        totalCount: 3,
+        lastFetchParams: null,
+        scrollPosition: 0,
+      },
+    });
+    renderWithProviders(<DashboardPage />, { store });
+
+    expect(await screen.findByText("Recent Orders")).toBeInTheDocument();
+    expect(await screen.findByText("Jane Doe")).toBeInTheDocument();
+    expect(screen.getByText("$42.99")).toBeInTheDocument();
   });
 });

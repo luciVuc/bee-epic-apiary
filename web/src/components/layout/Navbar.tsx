@@ -11,6 +11,12 @@ interface INavbarProps {
   content: ISiteContent;
 }
 
+/**
+ * Fixed top navigation. Turns opaque once the page is scrolled, renders the
+ * logo, desktop nav links (process/testimonials filtered out) with active-route
+ * highlighting, a theme toggle, a cart button showing the live item count, and
+ * a collapsible mobile menu.
+ */
 export const Navbar = ({ content }: INavbarProps) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -139,11 +145,20 @@ export const Navbar = ({ content }: INavbarProps) => {
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   key={totalItems}
+                  aria-hidden="true"
                 >
                   {totalItems > 9 ? "9+" : totalItems}
                 </motion.span>
               )}
             </button>
+
+            {/* Announce cart total changes to screen readers — a changed
+                aria-label on the (usually unfocused) cart button isn't reliably
+                announced, so mirror the count in a polite live region (WCAG
+                4.1.3). Visually hidden; the badge above conveys it sighted. */}
+            <span className="sr-only" aria-live="polite" aria-atomic="true">
+              {`${totalItems} ${totalItems === 1 ? "item" : "items"} in cart`}
+            </span>
 
             <button
               data-testid="navbar_menu-btn"
@@ -206,10 +221,6 @@ export const Navbar = ({ content }: INavbarProps) => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      {!isMobileMenuOpen && (
-        <div data-testid="navbar_mobile-menu-closed" aria-hidden="true" />
-      )}
     </motion.nav>
   );
 };

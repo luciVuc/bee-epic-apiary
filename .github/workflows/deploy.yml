@@ -1,7 +1,7 @@
 name: Deploy
 on:
   push:
-    branches: [main, release]
+    branches: [master]
   workflow_dispatch:
 
 concurrency:
@@ -18,8 +18,19 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm run services:install
-      - run: npm run admin:install
+      # shared/ is a file: dependency for services, admin, and web — install
+      # and build it before the consumers so their `tsc && vite build` and
+      # `wrangler types` postinstalls see compiled .js + .d.ts files.
+      - run: npm ci --prefix shared
+      - run: npm run build --prefix shared
+      - run: npm ci --prefix services
+      - run: npm ci --prefix admin
+      - run: npm ci --prefix web
+      # Typecheck gate: `tsc --noEmit` across shared/services/admin/web. The
+      # Worker deploys via esbuild (which strips types), so without this step
+      # type errors never surface in CI. Runs before tests to fail fast.
+      - run: npm run typecheck
+      - run: npm run shared:test
       - run: npm run services:test
       - run: npm run admin:test
       - run: npm run lint
@@ -33,16 +44,30 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      - run: npm ci --prefix shared
+      - run: npm run build --prefix shared
       - run: npm ci --prefix services
       - name: Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
           workingDirectory: services
+          # Secrets required at runtime:
+          #   STRIPE_SECRET_KEY     — Stripe API key
+          #   STRIPE_WEBHOOK_SECRET — Stripe webhook signing secret
+          #   ALLOWED_ORIGINS       — comma-separated CORS allowlist
+          #   API_SECRET_KEY        — CI / scripts bearer fallback (Plan 3 retained for service-to-service)
+          #   CF_ACCESS_TEAM_DOMAIN — Cloudflare Access team domain (e.g. myteam.cloudflareaccess.com)
+          #   CF_ACCESS_AUD         — Cloudflare Access application audience tag
+          #   OWNER_EMAILS          — comma-separated bootstrap owner emails (safety net)
           secrets: |
             STRIPE_SECRET_KEY
+            STRIPE_WEBHOOK_SECRET
             ALLOWED_ORIGINS
             API_SECRET_KEY
+            CF_ACCESS_TEAM_DOMAIN
+            CF_ACCESS_AUD
+            OWNER_EMAILS
           command: deploy
 
   deploy-web:
@@ -56,6 +81,8 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: web/package-lock.json
+      - run: npm ci --prefix shared
+      - run: npm run build --prefix shared
       - run: npm ci --prefix web
       - run: npm run build --prefix web
         env:
@@ -80,12 +107,17 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: admin/package-lock.json
+      - run: npm ci --prefix shared
+      - run: npm run build --prefix shared
       - run: npm ci --prefix admin
       - run: npm run build --prefix admin
         env:
+          # Plan 3: VITE_API_SECRET_KEY is intentionally NOT passed at build time.
+          # The admin panel authenticates via Cloudflare Access JWT cookies
+          # (CF Access in front of the admin Pages site, withCredentials: true on axios).
+          # API_SECRET_KEY remains a service-to-service / CI fallback only.
           VITE_API_URL: ${{ vars.VITE_API_URL || 'https://bee-epic-apiary.babu-frik-jr.workers.dev' }}
           VITE_STRIPE_PUBLISHABLE_KEY: ${{ secrets.VITE_STRIPE_PUBLISHABLE_KEY }}
-          VITE_API_SECRET_KEY: ${{ secrets.VITE_API_SECRET_KEY }}
       - name: Deploy to Cloudflare Pages
         uses: cloudflare/wrangler-action@v3
         with:

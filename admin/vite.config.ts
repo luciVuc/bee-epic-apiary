@@ -79,7 +79,11 @@ export default defineConfig({
         ],
       },
       devOptions: {
-        enabled: false,
+        // Serve /manifest.webmanifest (and a no-op service worker) during
+        // `vite dev` so the <link rel="manifest"> in index.html resolves to
+        // valid JSON instead of falling through to the SPA index.html, which
+        // would otherwise log "Manifest: syntax error" in the browser console.
+        enabled: true,
       },
     }),
   ],

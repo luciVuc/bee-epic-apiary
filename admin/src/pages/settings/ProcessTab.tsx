@@ -3,17 +3,27 @@ import { Plus, Trash2 } from "lucide-react";
 import type { IProcessStep } from "../../types/settings";
 import { TextField, TextAreaField } from "../../components/forms";
 
+/** Props for {@link ProcessTab}; CRUD callbacks are owned by the parent. */
 export interface IProcessTabProps {
+  /** Current "From Hive to Table" process steps being edited. */
   processContent: IProcessStep[];
+  /** Append a new blank process step. */
   addProcessStep: () => void;
+  /** Update one field of the step at `index`. */
   updateProcessStep: <K extends keyof IProcessStep>(
     index: number,
     field: K,
     value: IProcessStep[K],
   ) => void;
+  /** Remove the step at `index`. */
   removeProcessStep: (index: number) => void;
 }
 
+/**
+ * Settings tab for editing the storefront's "From Hive to Table" process steps
+ * (title, icon, description). Presentational only — mutations are delegated to
+ * the parent so draft state and saving live on SettingsPage.
+ */
 export function ProcessTab({
   processContent,
   addProcessStep,
@@ -35,7 +45,7 @@ export function ProcessTab({
               title={`Remove process step ${i + 1}`}
               className="p-1.5 text-red-500 hover:bg-red-50 rounded-lg dark:hover:bg-red-900/30"
             >
-              <Trash2 className="w-4 h-4" />
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
             </button>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -74,7 +84,7 @@ export function ProcessTab({
         data-testid="process-tab_add-btn"
         className="flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300"
       >
-        <Plus className="w-4 h-4" /> Add Step
+        <Plus className="w-4 h-4" aria-hidden="true" /> Add Step
       </button>
     </div>
   );

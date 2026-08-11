@@ -60,4 +60,33 @@ describe("DeleteConfirmDialog", () => {
     await user.click(screen.getByText("Delete"));
     expect(onConfirm).toHaveBeenCalledTimes(1);
   });
+
+  it("focuses the Cancel button when opened", () => {
+    render(
+      <DeleteConfirmDialog
+        isOpen={true}
+        productName="Test"
+        onCancel={() => {}}
+        onConfirm={() => {}}
+      />,
+    );
+    expect(
+      screen.getByTestId("delete-confirm-dialog_cancel-btn"),
+    ).toHaveFocus();
+  });
+
+  it("calls onCancel when Escape is pressed", async () => {
+    const user = userEvent.setup();
+    const onCancel = vi.fn();
+    render(
+      <DeleteConfirmDialog
+        isOpen={true}
+        productName="Test"
+        onCancel={onCancel}
+        onConfirm={() => {}}
+      />,
+    );
+    await user.keyboard("{Escape}");
+    expect(onCancel).toHaveBeenCalledTimes(1);
+  });
 });

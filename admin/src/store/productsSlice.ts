@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import type { IProduct, IProductInput } from "../types";
 import * as api from "../utils/api";
+import { apiErrorMessage } from "../utils/api";
 
 /** Parameters for fetching paginated/filtered product lists */
 export interface IFetchParams {
@@ -9,6 +10,25 @@ export interface IFetchParams {
   starting_after?: string;
   search?: string;
   category?: string;
+}
+
+/**
+ * Filter keys that describe WHAT to fetch — these are the bits worth
+ * persisting in `lastFetchParams` for count refreshes after CUD ops.
+ * `limit` and `starting_after` are HOW (pagination) and must NOT round-trip
+ * into the count call: that would refetch the count with a poisoned cursor.
+ */
+const PRODUCT_FILTER_KEYS = ["search", "category"] as const;
+
+function pickFilterParams(
+  params: IFetchParams | null | undefined,
+): IFetchParams {
+  if (!params) return {};
+  const out: IFetchParams = {};
+  for (const k of PRODUCT_FILTER_KEYS) {
+    if (k in params && params[k] !== undefined) out[k] = params[k];
+  }
+  return out;
 }
 
 /** Full shape of the products slice state */
@@ -39,8 +59,11 @@ const initialState: IProductsState = {
 /** Fetch paginated products with optional search/filter */
 export const fetchProducts = createAsyncThunk(
   "products/fetchAll",
-  async (params?: IFetchParams) => {
-    const result = await api.api.getProducts(params);
+  async (params: IFetchParams | undefined, { signal }) => {
+    // Thread the thunk's AbortSignal through to axios so a follow-up
+    // dispatch().abort() cancels the in-flight request rather than letting
+    // a stale response overwrite a fresh one (review I13).
+    const result = await api.api.getProducts({ ...(params ?? {}), signal });
     return { ...result, params: params || null };
   },
 );
@@ -79,15 +102,7 @@ export const createProduct = createAsyncThunk(
       );
       return newProduct;
     } catch (err: unknown) {
-      const axiosErr = err as {
-        response?: { data?: { error?: string } };
-        message?: string;
-      };
-      const message =
-        axiosErr?.response?.data?.error ||
-        axiosErr?.message ||
-        "Failed to create product";
-      return rejectWithValue(message);
+      return rejectWithValue(apiErrorMessage(err, "Failed to create product"));
     }
   },
 );
@@ -111,20 +126,12 @@ export const updateProduct = createAsyncThunk(
       );
       return updatedProduct;
     } catch (err: unknown) {
-      const axiosErr = err as {
-        response?: { data?: { error?: string } };
-        message?: string;
-      };
-      const message =
-        axiosErr?.response?.data?.error ||
-        axiosErr?.message ||
-        "Failed to update product";
-      return rejectWithValue(message);
+      return rejectWithValue(apiErrorMessage(err, "Failed to update product"));
     }
   },
 );
 
-/** Delete (archive) a product and refresh the count */
+/** Delete a product (permanent on Stripe, or archived if it has history) and refresh the count */
 export const deleteProduct = createAsyncThunk(
   "products/delete",
   async (id: string, { dispatch, getState }) => {
@@ -138,6 +145,29 @@ export const deleteProduct = createAsyncThunk(
       }),
     );
     return id;
+  },
+);
+
+/**
+ * Remove all un-priced (unsellable) products, then refresh the current list
+ * and count so the table reflects the cleanup. Returns the worker's summary.
+ */
+export const cleanupProducts = createAsyncThunk(
+  "products/cleanup",
+  async (_: void, { dispatch, getState, rejectWithValue }) => {
+    try {
+      const result = await api.api.cleanupProducts(false);
+      const state = getState() as { products: IProductsState };
+      const lastParams = state.products.lastFetchParams;
+      // Re-fetch the visible page and the count so removed rows disappear.
+      await dispatch(fetchProducts(lastParams ?? {}));
+      dispatch(fetchProductsCount(lastParams ?? {}));
+      return result;
+    } catch (err: unknown) {
+      return rejectWithValue(
+        apiErrorMessage(err, "Failed to clean up products"),
+      );
+    }
   },
 );
 
@@ -199,11 +229,18 @@ const productsSlice = createSlice({
           state.items = action.payload.products;
         }
         state.hasMore = action.payload.hasMore;
-        state.lastId = action.payload.lastId;
+        state.lastId = action.payload.lastId ?? null;
         state.totalCount = action.payload.totalCount;
-        state.lastFetchParams = action.payload.params;
+        state.lastFetchParams = pickFilterParams(action.payload.params);
       })
       .addCase(fetchProducts.rejected, (state, action) => {
+        // An aborted fetch is not a real failure — a fresh dispatch
+        // superseded it, so leaving state.error alone keeps any pending
+        // banner from the previous fetch from re-appearing (review I13).
+        if (action.meta.aborted) {
+          state.loading = false;
+          return;
+        }
         state.loading = false;
         state.error = action.error.message || "Failed to fetch products";
       })
@@ -254,6 +291,20 @@ const productsSlice = createSlice({
       .addCase(deleteProduct.fulfilled, (state, action) => {
         state.items = state.items.filter((p) => p.id !== action.payload);
         state.selectedProduct = null;
+      })
+      .addCase(cleanupProducts.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(cleanupProducts.fulfilled, (state) => {
+        // The list/count re-fetch dispatched by the thunk drives the visible
+        // update; just clear the loading flag here.
+        state.loading = false;
+      })
+      .addCase(cleanupProducts.rejected, (state, action) => {
+        state.loading = false;
+        state.error =
+          (action.payload as string) || "Failed to clean up products";
       });
   },
 });

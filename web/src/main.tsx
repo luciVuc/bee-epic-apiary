@@ -7,13 +7,21 @@ import { CheckCircle } from "lucide-react";
 import App from "./App.tsx";
 import { store } from "./store";
 import { ThemeProvider } from "./hooks/useTheme";
+import { UpdatePrompt } from "./components/pwa/UpdatePrompt";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import "./index.css";
 
+/** The `beforeinstallprompt` event, typed with the PWA install methods not in lib.dom. */
 interface IBeforeInstallPromptEvent extends Event {
   prompt: () => void;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
+/**
+ * "Install App" button for the PWA. Captures the deferred
+ * `beforeinstallprompt` event, then shows a button that triggers the native
+ * install prompt on click and hides itself once accepted.
+ */
 function InstallPrompt() {
   const [deferredPrompt, setDeferredPrompt] =
     useState<IBeforeInstallPromptEvent | null>(null);
@@ -67,10 +75,13 @@ createRoot(document.getElementById("root")!).render(
     <Provider store={store}>
       <HelmetProvider>
         <BrowserRouter>
-          <ThemeProvider>
-            <App />
-            <InstallPrompt />
-          </ThemeProvider>
+          <ErrorBoundary>
+            <ThemeProvider>
+              <App />
+              <InstallPrompt />
+              <UpdatePrompt />
+            </ThemeProvider>
+          </ErrorBoundary>
         </BrowserRouter>
       </HelmetProvider>
     </Provider>

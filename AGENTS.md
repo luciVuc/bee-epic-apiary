@@ -1,8 +1,17 @@
 # Bee Epic Apiary
 
-Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + `web/` (public storefront PWA).
+Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + `web/` (public storefront PWA) + `shared/` (cross-project types + Zod schemas).
 
 ## Critical Conventions Agents Often Miss
+
+### Shared Types (`shared/`)
+
+- **Canonical types + Zod schemas** for everything that crosses a network boundary: `IProduct`, `IOrder`, `ISiteContent`, `IProcessStep`, `ITestimonial`, `ICategory`, `INotificationEvent`, `IApiError`, `IApiResponse<T>`, etc.
+- Wired as an npm `file:` dependency — each consumer's `package.json` has `"@bee-epic/shared": "file:../shared"`.
+- **Build it before each consumer**: `npm run shared:install && npm run shared:build` from the root. The root `preinstall`, `dev`, and `build` scripts already chain this. CI does the same per job.
+- Edits to `shared/src/*.ts` require a rebuild (`npm run shared:build` or `npm run shared:dev` for watch mode) before consumers see the updated `.d.ts`.
+- Type-only re-exports live in each subproject's local types folder (`services/src/types/index.ts`, `admin/src/types/*.ts`, `web/src/types/index.ts`) so existing imports keep working. Prefer importing from `@bee-epic/shared` directly in new code.
+- `IEmailMessageBuilder` is intentionally NOT in `shared/` — it references the Cloudflare Workers runtime types (`EmailAddress`, `EmailAttachment`) that admin and web don't have. It lives in `services/src/types/index.ts`.
 
 ### TypeScript
 
@@ -55,16 +64,35 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 ### Admin App Specifics
 
 - Dev server proxies `/api` → `http://localhost:8787` (strips `/api` prefix)
-- API Auth: Bearer token from `VITE_API_SECRET_KEY` env var (build-time). No localStorage fallback.
+- **Auth (Phase 9)**: Cookie-based session, no credentials baked into the bundle.
+  - **Cookie session**: `bea_at` HttpOnly HS256 JWT signed with `JWT_SIGNING_SECRET`,
+    1-hour TTL, `SameSite=Lax`. Subject is the caller's email.
+  - **Server-side trust chain** (evaluated in order by `resolveCaller`):
+    1. Cookie (`bea_at`) — standard login path.
+    2. Bearer (`Authorization: Bearer <API_SECRET_KEY>`) — CI/scripts, resolves as `OWNER` (`ci@service`).
+    3. Dev header (`X-Dev-Email`) — server-side only, honored **only when `ENVIRONMENT=development`**. The SPA does **not** send this header; it is a test/script escape hatch.
+  - **Client-side auth components** live under `admin/src/components/auth/` and `admin/src/pages/`:
+    - `LoginPage` — email + password form, sets the `bea_at` cookie on success.
+    - `AcceptInvitePage` / `CompleteResetPage` — token-gated password-set flows.
+    - `BootstrapOwnerPage` — first-deploy flow; only reachable when `bootstrapAvailable: true`.
+    - `RequireCaller` — redirects unauthenticated users to `/login`.
+    - `BootstrapGuard` — redirects to `/bootstrap` when `bootstrapAvailable: true`.
+    - `UserMenu` — navbar dropdown with Change Password and Sign Out actions.
+  - `useCaller()` hook (`admin/src/hooks/useCaller.ts`) caches `/whoami` in the Redux `auth` slice and exposes `{ email, role, via }`.
+  - Axios client uses `withCredentials: true` so the session cookie is forwarded automatically.
 - Settings storage:
-  - Admin config (API URL, secret key) → Vite build-time env vars (`VITE_API_URL`, `VITE_API_SECRET_KEY`). **Not stored in localStorage.**
-  - Site content (business info, settings) → worker KV via `GET|PUT /settings/:type`
-  - Dark/light theme preference → localStorage (`"theme"` key) — the only localStorage usage
+  - Admin config (API URL) → Vite build-time env var (`VITE_API_URL`).
+  - Site content (business info, settings) → worker KV via `GET|PUT /settings/:type`.
+  - **Users list** → worker KV via `/users/*` handlers (OWNER-only write). UI tab is visible only when `caller.role === EStaffRole.OWNER`.
+  - **Password policy** → worker KV via `GET|PUT /settings/auth-policy` (OWNER-only write). UI tab visible only to OWNER.
+  - Dark/light theme preference → localStorage (`"theme"` key) — the only localStorage usage.
 - **Dynamic navbar title**: `AdminNavbar` fetches `businessName` from `GET /settings/site`
   - Displays `"{businessName} Admin"` (falls back to `"Admin"`)
+  - Also displays `caller.email` + role badge from `useCaller()`
   - **Never** hardcode site-specific display values from `ISiteContent`
 - Products use Redux Toolkit `productsSlice` (async thunks for CRUD + cursor-based pagination)
 - Orders use Redux Toolkit `ordersSlice` (async thunks for CRUD + cursor-based pagination)
+- Auth state uses Redux Toolkit `authSlice` with `fetchCaller` async thunk
 
 ### Commands
 
@@ -84,7 +112,8 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 ### Testing Thresholds
 
 - **services**: 90% lines/branches/functions/statements (istanbul, `@cloudflare/vitest-pool-workers`)
-- **admin**: 88% lines, 85% branches, 45% functions, 88% statements (v8, jsdom)
+- **admin**: 80% lines, 67% branches, 75% functions, 78% statements (v8, jsdom)
+- **web**: 45% lines, 38% branches, 30% functions, 45% statements (v8, jsdom) — a first regression floor over the critical (revenue) path; ratchets up as coverage grows
 
 ### Services Architecture
 
@@ -92,12 +121,19 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - All handlers follow `{ fetch(request, env): Promise<Response> }` interface via `withStripeHandler` wrapper
 - Stripe API version: `2026-05-27.dahlia` (in `withStripeHandler.ts`)
 - Rate limiting: Durable Object-based, 100 req/min per IP (atomic counting)
-- API key auth for mutating product endpoints if `API_SECRET_KEY` set
-- **Routes**: `POST /stripe/webhook`, `POST /checkout`, `POST /contact`, `POST /prices`, `GET|POST /products`, `GET /products/count`, `GET|PUT|DELETE /products/:id`, `GET|PUT /orders/:id`, `GET /orders`, `GET /notifications/stream`, `GET|PUT /settings/:type` (site\|process\|testimonials\|categories)
+- **Auth (Phase 9)**: role-based via `resolveCaller(request, env)` in `src/utils/resolveCaller.ts`.
+  - Three-path trust chain (evaluated in order): cookie (`bea_at` HttpOnly HS256 JWT signed with `JWT_SIGNING_SECRET`, verified and subject extracted) → bearer fallback (`Authorization: Bearer <API_SECRET_KEY>` → maps to OWNER, `ci@service`) → dev bypass (`X-Dev-Email` header, only when `ENVIRONMENT=development`).
+  - `withStripeHandler` accepts `{ requiredRole?: EStaffRole }`. The wrapper resolves the caller, checks `roleSatisfies(caller.role, required)`, and returns typed `UNAUTHORIZED` / `FORBIDDEN.requiredRole` envelopes on rejection. Caller is forwarded to the handler as the 5th arg for audit logging.
+  - Role rank: `OWNER > MANAGER > EMPLOYEE > VENDOR`. Products/prices require MANAGER; orders require EMPLOYEE; `/users/*` write requires OWNER.
+  - User list lookup: `CONTENT_KV.get('users')` parsed with `UserListSchema`; `OWNER_EMAILS` env var is a comma-separated bootstrap fallback (never lockout).
+- **Routes**: `POST /stripe/webhook`, `POST /checkout`, `POST /contact`, `POST /prices` (MANAGER), `GET|POST /products` (POST MANAGER), `GET /products/count`, `GET /products/stats` (EMPLOYEE), `POST /products/cleanup` (MANAGER), `GET|PUT|DELETE /products/:id` (PUT/DELETE MANAGER), `GET /orders` (EMPLOYEE), `GET|PUT /orders/:id` (PUT EMPLOYEE), `GET /notifications/stream` (EMPLOYEE), `GET|PUT /settings/:type` (site\|process\|testimonials\|categories; PUT MANAGER), `GET|PUT /settings/auth-policy` (GET any authenticated, PUT OWNER), `GET /users` (OWNER), `POST /users/invite` (OWNER), `PUT /users/me` (self), `POST /users/:email/reinvite` (OWNER), `PUT|DELETE /users/:email` (OWNER), `POST /auth/login`, `POST /auth/logout`, `POST /auth/refresh`, `POST /auth/request-reset`, `POST /auth/complete-reset`, `POST /auth/accept-invite`, `POST /auth/change-password`, `POST /auth/bootstrap-owner`, **`GET /whoami`** (returns `{ caller: ICaller | null, bootstrapAvailable: boolean }`, always public — admin uses it to bootstrap UI state)
 - After changing `wrangler.jsonc` bindings: `npm run services:cf-typegen`
-- KV namespaces: `CONTENT_KV` (settings storage)
-- Env vars: `STRIPE_SECRET_KEY`, `ALLOWED_ORIGINS`, `API_SECRET_KEY` (Wrangler secrets); `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`, `ADMIN_BASE_URL` (wrangler.jsonc vars)
+- KV namespaces: `CONTENT_KV` (settings + staff list storage)
+- Env vars (Wrangler secrets unless noted):
+  - `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`, `ALLOWED_ORIGINS`, `JWT_SIGNING_SECRET` (required — HS256 cookie signing key), `API_SECRET_KEY` (optional CI/scripts bearer fallback), `OWNER_EMAILS` (comma-separated bootstrap owners)
+  - `RATE_LIMIT_MAX`, `RATE_LIMIT_WINDOW`, `ADMIN_BASE_URL`, **`ENVIRONMENT`** (`production` or `development` — gates the `X-Dev-Email` bypass) in `wrangler.jsonc` vars
 - **Email Routing**: All transactional emails (contact form + order notifications) route through Formspark if `formsparkFormId` is configured in site content, otherwise through Cloudflare Email Service (`env.EMAIL.send()`). The `send_email` binding `from` domain must be onboarded via `npx wrangler email sending enable yourdomain.com`.
+- **Admin notifications (SSE)**: `GET /notifications/stream` is fanout from a single `NotificationHub` Durable Object instance (name `default`). Events are persisted in DO SQLite storage and replayed on reconnect via SSE `Last-Event-ID`. The replay window is owner-configurable via `ISiteContent.notificationReplayHours` (1–24 hours, default 1); eviction is two-axis (age + count, max 500). Event types: `new-order`, `order-status-changed`, `product-updated`, `product-deleted`. Typed via `src/notifications/types.ts` (`INotificationEvent` discriminated union).
 
 ### Web Specifics
 
@@ -142,10 +178,11 @@ After every code change, agents MUST:
 
 1. Run `npm run test` to ensure tests pass
 2. Run `npm run lint` to maintain code quality
-3. Update unit test coverage to meet thresholds (services: 90% lines/branches/functions/statements, admin: 88% lines, 85% branches, 45% functions, 88% statements)
+3. Update unit test coverage to meet thresholds (services: 90% lines/branches/functions/statements, admin: 80% lines, 67% branches, 75% functions, 78% statements, web: 45% lines, 38% branches, 30% functions, 45% statements)
 4. Update all relevant documentation to keep it in sync with code changes:
    - Source files: Add/modify JSDoc comments on functions, interfaces, exports
    - README.md files: Keep structure, commands, and feature lists current
    - API.md/SOURCE.md (in services): Keep endpoint descriptions and function signatures accurate
    - This AGENTS.md file: Update conventions, gotchas, and architecture as needed
    - E2E test plans: Update or create relevant test plans for UI/UX changes using the e2e-test-plan skill format
+   - `docs/index.json` + `docs/knowledge-graph.json`: Regenerate/patch when files, exports, routes, role gating, Durable Objects, or cross-package data flows change. `index.json` is the flat file→symbol map; `knowledge-graph.json` is the nodes+edges model (routes carry their verified `requiredRole`).

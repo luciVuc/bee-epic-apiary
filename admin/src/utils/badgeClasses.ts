@@ -38,9 +38,20 @@ export function recurringText(
   return `every ${count} ${interval}${suffix}`;
 }
 
-/** Formats a price in cents to a USD string (e.g. 2500 -> "$25.00") */
-export function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(2)}`;
+/**
+ * Format a Stripe amount in minor units (e.g. cents) to a locale-aware
+ * currency string. Stripe checkout sessions can be denominated in any
+ * supported currency, so the admin must read each session's `currency` and
+ * pass it here — otherwise a EUR order rendered as "$xx.xx" (review I10).
+ *
+ * The currency argument is case-insensitive; defaults to USD for back-compat
+ * with call sites that haven't been migrated yet.
+ */
+export function formatPrice(cents: number, currency: string = "usd"): string {
+  return new Intl.NumberFormat(undefined, {
+    style: "currency",
+    currency: currency.toUpperCase(),
+  }).format(cents / 100);
 }
 
 /** Returns Tailwind classes for order status badge */
