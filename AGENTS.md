@@ -96,18 +96,18 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 
 ### Commands
 
-| Command                 | Purpose                                                                 |
-| ----------------------- | ----------------------------------------------------------------------- |
-| `npm run dev`           | Start all 3 dev servers (admin:5174, services:8787, web:5173)           |
-| `npm run dev:all`       | Same as `npm run dev` (alias)                                           |
-| `npm run test`          | services tests → admin tests (Vitest)                                   |
-| `npm run services:test` | Worker tests (Vitest + `@cloudflare/vitest-pool-workers`)               |
-| `npm run admin:test`    | Admin tests (Vitest + jsdom + React Testing Library)                    |
-| `npm run lint`          | ESLint on web, admin, and services                                      |
-| `npm run format`        | Prettier on entire repo                                                 |
-| `npm run build`         | Deploy services worker + build web + build admin                        |
-| `npm run deploy`        | Deploy all 3 to Cloudflare (worker via Wrangler, web + admin via Pages) |
-| `npm run preview`       | Preview web production build                                            |
+| Command                 | Purpose                                                                                        |
+| ----------------------- | ---------------------------------------------------------------------------------------------- |
+| `npm run dev`           | Start all 3 dev servers (admin:5174, services:8787, web:5173)                                  |
+| `npm run dev:all`       | Same as `npm run dev` (alias)                                                                  |
+| `npm run test`          | services tests → admin tests (Vitest)                                                          |
+| `npm run services:test` | Worker tests (Vitest + `@cloudflare/vitest-pool-workers`)                                      |
+| `npm run admin:test`    | Admin tests (Vitest + jsdom + React Testing Library)                                           |
+| `npm run lint`          | ESLint on web, admin, and services                                                             |
+| `npm run format`        | Prettier on entire repo                                                                        |
+| `npm run build`         | Build static output only (shared + web + admin) — Worker deploys via `npm run services:deploy` |
+| `npm run deploy`        | Deploy all 3 to Cloudflare (worker via Wrangler, web + admin via Pages)                        |
+| `npm run preview`       | Preview web production build                                                                   |
 
 ### Testing Thresholds
 
@@ -154,9 +154,9 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - `admin/src/utils/api.ts` uses axios; `web/src/utils/api.ts` uses native fetch
 - Local dev requires KV namespace created (`npx wrangler kv namespace create "CONTENT_KV"`)
 - services has observability + source maps enabled in wrangler config
-- `npm run build` includes `services:deploy` (= actual Cloudflare Worker deploy, not just build)
+- `npm run build` builds static output only (shared + web + admin). The Worker is deployed separately via `npm run services:deploy` (Wrangler) in CI or locally — never from a Pages build.
 - `npm run deploy` deploys all 3: Worker via Wrangler, web + admin via Cloudflare Pages
-- GitHub Actions: `.github/workflows/deploy.yml` runs tests then deploys all 3 on push to `main`/`release`
+- GitHub Actions: `.github/workflows/deploy.yml` runs tests then deploys the Worker (`deploy-services`) and both Pages sites separately on push to `master`
 - **`SETUP.md`** at root is the business-owner guide (accounts, deployment setup, domain, email). Keep it in sync with actual config values.
 - web and admin both use `tsc && vite build` (type-check before bundling)
 - `services/AGENTS.md`, `services/API.md`, `services/SOURCE.md` are maintained separately

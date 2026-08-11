@@ -27,18 +27,18 @@ npm run dev
 
 ## Available Commands
 
-| Command                 | Purpose                                                       |
-| ----------------------- | ------------------------------------------------------------- |
-| `npm run dev`           | Start services + admin + web dev servers (concurrently)       |
-| `npm run build`         | Deploy services, build web + admin                            |
-| `npm run deploy`        | Deploy all 3 projects to Cloudflare (worker + 2 Pages sites)  |
-| `npm run test`          | Run all tests (services then admin)                           |
-| `npm run services:test` | Run services tests only (Vitest + Cloudflare Workers pool)    |
-| `npm run admin:test`    | Run admin tests only (Vitest + jsdom + React Testing Library) |
-| `npm run lint`          | Lint web, admin, and services                                 |
-| `npm run format`        | Format all code with Prettier                                 |
-| `npm run web:deploy`    | Deploy web storefront to Cloudflare Pages                     |
-| `npm run admin:deploy`  | Deploy admin panel to Cloudflare Pages                        |
+| Command                 | Purpose                                                                                          |
+| ----------------------- | ------------------------------------------------------------------------------------------------ |
+| `npm run dev`           | Start services + admin + web dev servers (concurrently)                                          |
+| `npm run build`         | Build static output only (shared + web + admin); deploy the Worker via `npm run services:deploy` |
+| `npm run deploy`        | Deploy all 3 projects to Cloudflare (worker + 2 Pages sites)                                     |
+| `npm run test`          | Run all tests (services then admin)                                                              |
+| `npm run services:test` | Run services tests only (Vitest + Cloudflare Workers pool)                                       |
+| `npm run admin:test`    | Run admin tests only (Vitest + jsdom + React Testing Library)                                    |
+| `npm run lint`          | Lint web, admin, and services                                                                    |
+| `npm run format`        | Format all code with Prettier                                                                    |
+| `npm run web:deploy`    | Deploy web storefront to Cloudflare Pages                                                        |
+| `npm run admin:deploy`  | Deploy admin panel to Cloudflare Pages                                                           |
 
 ## CI/CD
 
