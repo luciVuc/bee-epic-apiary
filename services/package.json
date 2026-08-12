@@ -31,7 +31,8 @@
 		"globals": "^17.6.0",
 		"typescript": "^6.0.3",
 		"typescript-eslint": "^8.60.0",
-		"vitest": "^4.1.7"
+		"vitest": "^4.1.7",
+		"wrangler": "^4.121.0"
 	},
 	"dependencies": {
 		"@bee-epic/shared": "file:../shared",
