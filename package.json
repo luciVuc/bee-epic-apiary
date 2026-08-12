@@ -41,7 +41,7 @@
     "admin:test:coverage": "npm run test:coverage --prefix admin",
     "dev": "npx -y concurrently \"npm run shared:dev\" \"npm run services:dev\" \"npm run admin:dev\" \"npm run web:dev\"",
     "dev:all": "npx -y concurrently \"npm run shared:dev\" \"npm run services:dev\" \"npm run web:dev\" \"npm run admin:dev\"",
-    "build": "npm run shared:build && npm run web:build && npm run admin:build",
+    "build": "npm run build --workspaces && npx wrangler deploy --dry-run",
     "lint": "npm run web:lint && npm run admin:lint && npm run services:lint",
     "typecheck": "npm run shared:typecheck && npm run services:typecheck && npm run admin:typecheck && npm run web:typecheck",
     "preview": "npm run web:preview",
