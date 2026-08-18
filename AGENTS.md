@@ -66,7 +66,7 @@ Monorepo: `admin/` (React admin panel, PWA) + `services/` (Cloudflare Worker) + 
 - Dev server proxies `/api` → `http://localhost:8787` (strips `/api` prefix)
 - **Auth (Phase 9)**: Cookie-based session, no credentials baked into the bundle.
   - **Cookie session**: `bea_at` HttpOnly HS256 JWT signed with `JWT_SIGNING_SECRET`,
-    1-hour TTL, `SameSite=Lax`. Subject is the caller's email.
+    1-hour TTL, `SameSite=None` (cross-origin), `Secure` in production. Subject is the caller's email.
   - **Server-side trust chain** (evaluated in order by `resolveCaller`):
     1. Cookie (`bea_at`) — standard login path.
     2. Bearer (`Authorization: Bearer <API_SECRET_KEY>`) — CI/scripts, resolves as `OWNER` (`ci@service`).

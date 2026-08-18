@@ -18,9 +18,12 @@ import { ACCESS_TTL_MS, REFRESH_TTL_MS } from '@bee-epic/shared';
  * them, which defangs XSS-based token theft (an attacker can still ride the
  * cookie via same-origin requests, but they cannot exfiltrate the raw JWT).
  *
- * Both cookies are `SameSite=Lax` — CSRF defence for cross-site POSTs while
- * still allowing top-level navigations (needed so magic-link email flows can
- * land on `/auth/*` GET routes with the session intact).
+ * Both cookies are `SameSite=None` — required because the admin SPA
+ * (`bee-epic-apiary-admin.pages.dev`) and the worker
+ * (`bee-epic-apiary.babu-frik-jr.workers.dev`) are on different sites.
+ * `SameSite=Lax` would prevent the browser from sending cookies on
+ * cross-origin XHR/fetch requests. CSRF defence is handled by CORS
+ * origin validation instead.
  *
  * `Secure` is env-gated. Production requires it (browsers refuse to send
  * `Secure` cookies over http, and we serve admin over https-only). Local dev
@@ -55,7 +58,7 @@ function isSecure(env: Env): boolean {
 function buildCookie(name: string, value: string, path: string, maxAge: number, env: Env): string {
 	// Order mirrors typical browser dev-tools display; not semantically
 	// significant but makes debugging easier when reading raw headers.
-	const parts = [`${name}=${value}`, `Path=${path}`, `Max-Age=${maxAge}`, 'HttpOnly', 'SameSite=Lax'];
+	const parts = [`${name}=${value}`, `Path=${path}`, `Max-Age=${maxAge}`, 'HttpOnly', 'SameSite=None'];
 	if (isSecure(env)) parts.push('Secure');
 	return parts.join('; ');
 }

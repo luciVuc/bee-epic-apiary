@@ -28,6 +28,9 @@ dashboard):
 - ☐ `ALLOWED_ORIGINS` — the real storefront + admin domains, comma-separated.
   **Must NOT be `*`** — the worker rejects `*` outside `development`, but confirm
   the real domains are listed (e.g. `https://beeepic.example,https://admin.beeepic.example`)
+- ☐ `ADMIN_BASE_URL` — the admin panel URL (e.g. `https://admin.beeepicapiary.com`).
+  **Required** — if empty, invite emails and order notification links will have
+  broken relative URLs. Set this _before_ deploying.
 - ☐ `ENVIRONMENT` — `production` (this disables the dev auth bypass in
   `resolveCaller` and the `ALLOWED_ORIGINS=*` escape hatch)
 - ☐ `RATE_LIMIT_MAX` / `RATE_LIMIT_WINDOW` — sane values (defaults: 100 / 60s)
@@ -38,6 +41,29 @@ Frontend build-time vars (Cloudflare Pages env for each project):
 - ☐ admin `VITE_API_URL` → the deployed worker origin
 - ☐ Cookie scope: the API host and each SPA host share an eTLD+1 (else the
   auth cookies won't ride along — the admin api client warns about this)
+
+### Cookie & cross-origin gotchas
+
+When the admin SPA and worker are on **different domains** (e.g. `pages.dev`
+vs `workers.dev`), the following must hold:
+
+- ☐ Auth cookies use `SameSite=None` (already in `cookies.ts`). `SameSite=Lax`
+  silently blocks cookies on cross-origin XHR even with `withCredentials: true`.
+- ☐ CSRF defence relies on CORS origin validation (`ALLOWED_ORIGINS`), not
+  `SameSite`.
+- ☐ If you use a custom domain where admin and worker share an eTLD+1 (e.g.
+  `admin.example.com` + `api.example.com`), you can optionally revert to
+  `SameSite=Lax` for tighter browser-level CSRF protection.
+
+### PBKDF2 iteration limit
+
+- ☐ The Workers runtime **hard-caps** PBKDF2 at 100,000 iterations. The
+  `passwordHash.ts` `derive()` function clamps to this value. Do NOT increase
+  `ITERATIONS` above 100,000 or login will 500 with:
+  `Pbkdf2 failed: iteration counts above 100000 are not supported`.
+- ☐ If you previously deployed with a higher iteration count, stale user
+  records in KV will fail verification. Delete them and re-bootstrap (see
+  `SETUP.md` Step 11, Gotcha 2).
 
 ---
 
@@ -93,8 +119,8 @@ npm run admin:deploy      # wrangler pages deploy → bee-epic-apiary-admin
 
 - Storefront test coverage is ~47% (revenue path covered; marketing pages/layout
   not). A regression floor is enforced in `web/vitest.config.ts`.
-- No client-side CSRF token — `SameSite=Lax` cookies + server Origin allow-list
-  are the defense, which is sufficient for this app.
+- No client-side CSRF token — `SameSite=None` cookies + server CORS origin
+  allow-list are the defense, which is sufficient for this app.
 - Single `NotificationHub` Durable Object and full-catalogue Stripe walks — only
   a concern at higher volume.
 - `transformStripeProduct` is duplicated (and diverged) between web and admin.

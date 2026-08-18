@@ -175,12 +175,19 @@ credentials are baked into the bundle. Identity is resolved in this order on
 every request:
 
 1. **Cookie session** — `bea_at` HttpOnly JWT signed with `JWT_SIGNING_SECRET`
-   (1-hour TTL, `SameSite=Lax`). Set after a successful login.
+   (1-hour TTL, `SameSite=None` for cross-origin, `Secure` in production).
+   Set after a successful login.
 2. **CI / scripts** — `Authorization: Bearer <API_SECRET_KEY>` is accepted and
    maps to `OWNER` role (`ci@service`).
 3. **Local dev only** — `X-Dev-Email` header honored only when
    `ENVIRONMENT=development`. The SPA no longer sends this header; it is a
    server-side escape hatch for scripts and automated tests.
+
+> **Cross-origin cookies**: When the admin SPA and worker run on different
+> domains (e.g. `pages.dev` vs `workers.dev`), the cookies must use
+> `SameSite=None` so the browser sends them on cross-origin XHR/fetch.
+> `SameSite=Lax` silently blocks cookies on cross-origin requests even with
+> `withCredentials: true`. CSRF defence is handled by CORS origin validation.
 
 Roles are `OWNER > MANAGER > EMPLOYEE > VENDOR`. Manage users (and their roles)
 from **Settings → Users** in the admin panel — visible only when the signed-in
@@ -530,7 +537,128 @@ Once you're signed in as OWNER:
 
 ---
 
-## Step 11 — What you see now
+## Step 11 — Production Gotchas (read this before deploying)
+
+These are real issues encountered during deployment. If you're setting up from
+scratch, read through this section to avoid hours of debugging.
+
+### Gotcha 1: `ADMIN_BASE_URL` must be set in `wrangler.jsonc`
+
+The worker needs `ADMIN_BASE_URL` to generate correct invite email links and
+order notification links. If this is empty (the default), invite emails contain
+broken relative URLs like `/accept-invite?token=...` with no domain.
+
+In `services/wrangler.jsonc`, under the top-level `vars`, make sure it is set:
+
+```jsonc
+"vars": {
+    "RATE_LIMIT_MAX": "100",
+    "RATE_LIMIT_WINDOW": "60",
+    "ADMIN_BASE_URL": "https://your-admin-domain.pages.dev",
+    "ENVIRONMENT": "production",
+}
+```
+
+For the `development` environment at the bottom of the same file:
+
+```jsonc
+"development": {
+    "vars": {
+        "ADMIN_BASE_URL": "http://localhost:5174",
+        "ENVIRONMENT": "development",
+    }
+}
+```
+
+After changing `wrangler.jsonc`, redeploy with `npx wrangler deploy`.
+
+### Gotcha 2: PBKDF2 iterations capped at 100,000
+
+The Cloudflare Workers runtime **hard-caps** PBKDF2 at 100,000 iterations.
+If the code has a higher value (e.g. 600,000), login will return 500 with this
+error in the worker logs:
+
+```
+Pbkdf2 failed: iteration counts above 100000 are not supported (requested 600000)
+```
+
+The fix is already applied in `services/src/auth/crypto/passwordHash.ts`:
+the `derive()` function clamps iterations to `WORKERS_MAX_ITERATIONS = 100_000`.
+If you change the iteration count, never exceed 100,000 for production deploys.
+
+If you previously deployed with a higher iteration count (e.g. 600k), existing
+user records in KV will have been hashed at that higher count. The clamping in
+`derive()` gracefully handles this at verify time (it re-hashes at 100k), but
+the old record will still fail verification because the stored digest was
+computed with more iterations. **You must delete the stale user record from KV**
+and re-run the bootstrap flow:
+
+```bash
+# List KV keys to find the user record
+npx wrangler kv key list --binding CONTENT_KV
+
+# Delete the stale user (replace <email> with the actual email)
+npx wrangler kv key delete --binding CONTENT_KV "user:<email>"
+
+# Also delete the user index if present
+npx wrangler kv key delete --binding CONTENT_KV "user_index:<email>"
+```
+
+Then re-do the bootstrap flow from Step 10.2.
+
+### Gotcha 3: Cross-origin cookies require `SameSite=None`
+
+When the admin SPA (e.g. `bee-epic-apiary-admin.pages.dev`) and the worker
+(e.g. `bee-epic-apiary.your-subdomain.workers.dev`) are on **different
+domains**, the browser treats them as different sites. Cookies set by the
+worker with `SameSite=Lax` will **not** be sent on cross-origin XHR/fetch
+requests — even with `withCredentials: true`. This causes login to return 200
+(set-cookie succeeds), but every subsequent API call returns 401 (no cookie
+sent).
+
+**Symptoms:**
+
+- Login returns 200, the app briefly shows the dashboard, then redirects back
+  to `/login`
+- API calls to orders, products, etc. all return 401
+
+**Fix:** Cookies must use `SameSite=None` (already applied in
+`services/src/auth/cookies.ts`). CSRF defence is handled by CORS origin
+validation (`ALLOWED_ORIGINS`), not by SameSite.
+
+If you need to change this back for a same-site setup (custom domain where
+admin and worker share an eTLD+1), change `SameSite=None` to `SameSite=Lax`
+in `cookies.ts`.
+
+### Gotcha 4: Stale invite tokens in KV
+
+If you run the bootstrap flow, receive an invite email, but don't complete it,
+the invite token remains in KV. If you later delete the user record and
+re-bootstrap, the old token may still be in KV and could cause confusion.
+
+Clean up stale tokens:
+
+```bash
+npx wrangler kv key list --binding CONTENT_KV | grep invite
+npx wrangler kv key delete --binding CONTENT_KV "invite:<token-value>"
+```
+
+### Gotcha 5: Rate limit lockout during testing
+
+If you attempt login multiple times with wrong credentials, the rate limiter
+(100 requests per 60 seconds per IP) may lock you out. During testing you can
+temporarily increase `RATE_LIMIT_MAX` in `wrangler.jsonc`:
+
+```jsonc
+"RATE_LIMIT_MAX": "10000",
+```
+
+Remember to set it back to `100` (or your preferred limit) before production
+deploy. Redeploy after changing this value.
+
+---
+
+## Step 12 — What you see now
 
 After deployment, you have three live sites:
 
@@ -584,6 +712,18 @@ This works automatically on Cloudflare — no additional configuration required.
   publishable key and secret key are both from the same mode (both test or
   both live).
 
+**Login returns 500 Internal Server Error**
+
+- Check the worker logs. If you see `Pbkdf2 failed: iteration counts above
+100000 are not supported`, the code has an iteration count above the
+  Workers runtime limit. See Step 11, Gotcha 2. The fix is to clamp the
+  iteration count to 100,000 and delete stale user records from KV.
+
+**Invite emails have broken links (relative URLs)**
+
+- The `ADMIN_BASE_URL` env var in `wrangler.jsonc` is empty or missing.
+  See Step 11, Gotcha 1. Set it to your admin domain and redeploy.
+
 **The contact form doesn't send emails**
 
 - If using Cloudflare Email Service: the domain must be onboarded (Step 3.3).
@@ -601,6 +741,11 @@ This works automatically on Cloudflare — no additional configuration required.
   Have an OWNER bump your role in **Settings → Users**.
 - For CI / scripts, set `Authorization: Bearer <API_SECRET_KEY>` — that path
   still works and maps to OWNER.
+- **Cross-origin 401 loop**: If login returns 200 but you are immediately
+  redirected back to `/login` and all API calls return 401, this is a
+  cross-origin cookie issue. The worker must set `SameSite=None` on auth
+  cookies when the admin SPA and worker are on different domains. See
+  Step 11, Gotcha 3.
 
 **Webhook returns 401 Unauthorized**
 

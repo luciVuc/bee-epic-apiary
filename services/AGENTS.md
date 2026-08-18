@@ -42,7 +42,7 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 ### Authentication & Authorization (Phase 9)
 
 - **`src/utils/resolveCaller.ts`** is the single source of caller identity. It implements a three-path trust chain evaluated in order (cookie → bearer → dev):
-  1. **Cookie** — `bea_at` HttpOnly HS256 JWT signed with `JWT_SIGNING_SECRET` (1-hour TTL, `SameSite=Lax`). On successful verification the subject (caller email) is resolved to a user record from the user KV store.
+  1. **Cookie** — `bea_at` HttpOnly HS256 JWT signed with `JWT_SIGNING_SECRET` (1-hour TTL, `SameSite=None` for cross-origin, `Secure` in production). On successful verification the subject (caller email) is resolved to a user record from the user KV store.
   2. **Bearer** — `Authorization: Bearer <API_SECRET_KEY>` returns `{ email: 'ci@service', role: OWNER, via: 'bearer' }` for CI / service-to-service callers.
   3. **Dev** — `X-Dev-Email: <email>` header, honored only when `ENVIRONMENT=development`. If the email is in `OWNER_EMAILS` the caller resolves as OWNER; otherwise the user's role is read from user KV (must be ACTIVE). Never honored in production.
 - **`roleSatisfies(actual, required)`** ranks roles `OWNER > MANAGER > EMPLOYEE > VENDOR` — higher rank satisfies lower.
@@ -168,7 +168,8 @@ The dev-mode `X-Dev-Email` header is a server-side escape hatch for scripted API
 - **Origin Validation**: All requests are validated against `ALLOWED_ORIGINS` to prevent unauthorized cross-origin requests.
 - **Rate Limiting**: Uses Cloudflare KV to limit requests to 100 per minute per IP (configurable in `withStripeHandler.ts`). Uses trusted `cf.connectingIp` field to prevent IP spoofing.
 - **Role-Based Authorization**: All mutating admin endpoints declare a minimum role via `{ requiredRole: EStaffRole.X }` on `withStripeHandler`. The middleware resolves the caller through `resolveCaller` (cookie → bearer → dev) and returns typed `UNAUTHORIZED` / `FORBIDDEN.requiredRole` envelopes on rejection. `OWNER_EMAILS` is a never-lockout bootstrap fallback that runs even before the user KV is populated.
-- **Cookie Session**: Production auth relies solely on the `bea_at` HttpOnly `SameSite=Lax` cookie (HS256 JWT, 1-hour TTL). No external identity provider is required.
+- **Cookie Session**: Production auth relies solely on the `bea_at` HttpOnly `SameSite=None` cookie (HS256 JWT, 1-hour TTL). CSRF defence is handled by CORS origin validation. No external identity provider is required.
+- **PBKDF2 Cap**: The Workers runtime hard-caps PBKDF2 at 100,000 iterations. The `derive()` function in `passwordHash.ts` clamps to this value. Do not set `ITERATIONS` above 100,000.
 - **Input Validation**: All endpoints validate input (e.g., required fields, URL formats, quantity limits). Settings PUTs are validated against Zod schemas from `@bee-epic/shared`.
 
 ## Contributing
