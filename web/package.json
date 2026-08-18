@@ -12,7 +12,7 @@
     "lint": " npx -y eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "npx wrangler pages deploy dist --project-name=bee-epic-apiary",
+    "deploy": "npx wrangler pages deploy dist --project-name=bee-epic-apiary-web",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
