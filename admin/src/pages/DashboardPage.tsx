@@ -25,6 +25,7 @@ import {
   DEFAULT_PRODUCT_THUMBNAIL,
   DEFAULT_CATEGORIES,
   NEW_ORDER_EVENT,
+  ORDER_STATUS_CHANGED_EVENT,
 } from "../utils/constants";
 import {
   formatPrice,
@@ -138,6 +139,19 @@ export function DashboardPage() {
     };
     window.addEventListener(NEW_ORDER_EVENT, handleNewOrder);
     return () => window.removeEventListener(NEW_ORDER_EVENT, handleNewOrder);
+  }, [fetchOrderStatusCounts, fetchRecentOrders]);
+
+  useEffect(() => {
+    const handleStatusChanged = () => {
+      fetchOrderStatusCounts();
+      fetchRecentOrders();
+    };
+    window.addEventListener(ORDER_STATUS_CHANGED_EVENT, handleStatusChanged);
+    return () =>
+      window.removeEventListener(
+        ORDER_STATUS_CHANGED_EVENT,
+        handleStatusChanged,
+      );
   }, [fetchOrderStatusCounts, fetchRecentOrders]);
 
   const stats: IDashboardStats = useMemo(() => {

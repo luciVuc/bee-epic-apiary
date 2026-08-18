@@ -100,6 +100,26 @@ vs `workers.dev`), the following must hold:
 - ☐ Admin: log in, view orders, edit a product, log out.
 - ☐ Spot-check the deployed apps' console for errors (0 expected).
 
+### Notification & email pipeline (common failure mode)
+
+If checkout succeeds but the admin gets no notification and no email:
+
+1. ☐ **`STRIPE_WEBHOOK_SECRET` is set** — `wrangler secret list` must include
+   it. Without it, the worker returns 500 on every webhook and events are
+   silently dropped.
+2. ☐ **Stripe webhook endpoint registered** — dashboard.stripe.com →
+   Developers → Webhooks → endpoint must point to
+   `https://<worker-domain>/stripe/webhook` and be subscribed to
+   `checkout.session.completed`.
+3. ☐ **Admin email configured** — Settings → Site Content → email field must
+   be set (emails are skipped if empty; SSE notifications still work).
+4. ☐ **Formspark or CF Email** — if `formsparkFormId` is set, Formspark
+   delivers the email; otherwise Cloudflare Email Service is used and the
+   `from` domain must be onboarded.
+5. ☐ **SSE connection active** — admin panel must be open and logged in for
+   real-time notifications. The `bea_at` cookie must be present (check
+   cross-origin `SameSite=None` if admin and worker are on different domains).
+
 ---
 
 ## 5. Deploy commands

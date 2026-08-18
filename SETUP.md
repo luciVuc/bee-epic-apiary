@@ -656,6 +656,60 @@ temporarily increase `RATE_LIMIT_MAX` in `wrangler.jsonc`:
 Remember to set it back to `100` (or your preferred limit) before production
 deploy. Redeploy after changing this value.
 
+### Gotcha 6: Notifications and emails silently not working
+
+When a customer completes checkout, the admin panel should receive a real-time
+SSE notification and an email should be sent. If neither happens, the most
+common cause is a **missing `STRIPE_WEBHOOK_SECRET`**.
+
+**How the notification pipeline works:**
+
+1. Customer completes checkout on the web store → Stripe fires
+   `checkout.session.completed` webhook
+2. Worker receives the webhook at `POST /stripe/webhook` → verifies the
+   HMAC signature using `STRIPE_WEBHOOK_SECRET` → calls `confirmOrder()`
+3. `confirmOrder()` dispatches an SSE notification to the admin panel via the
+   `NotificationHub` Durable Object, and sends an email (via Formspark if
+   `formsparkFormId` is set in site content, otherwise via Cloudflare Email
+   Service)
+
+**If `STRIPE_WEBHOOK_SECRET` is not set**, the worker returns 500 on every
+incoming webhook event. Stripe events are silently dropped — no notification,
+no email, no error visible to the customer.
+
+Verify the secret is set:
+
+```bash
+npx wrangler secret list
+# Should include STRIPE_WEBHOOK_SECRET
+```
+
+If it is missing:
+
+```bash
+npx wrangler secret put STRIPE_WEBHOOK_SECRET
+# Paste your whsec_... value from Stripe dashboard → Developers → Webhooks
+```
+
+**Other things to check:**
+
+- **Stripe webhook endpoint registered**: In the Stripe dashboard
+  (Developers → Webhooks), there must be an endpoint pointing to
+  `https://<your-worker-domain>/stripe/webhook` subscribed to
+  `checkout.session.completed`. Without this, Stripe never sends events.
+- **Admin email configured**: `sendOrderNotificationEmail()` reads
+  `siteContent.email` from KV. If empty, no email is sent (SSE notification
+  still works).
+- **Formspark or Cloudflare Email**: If `formsparkFormId` is set in site
+  content (Settings → Site Content), emails route through Formspark.
+  Otherwise they go through Cloudflare Email Service, which requires the
+  `from` domain to be onboarded (`npx wrangler email sending enable`).
+- **SSE connection active**: The admin SPA must be open and logged in for
+  real-time notifications to appear. The SSE connection is established in
+  `AdminNavbar` and is gated on an authenticated session. If the `bea_at`
+  cookie is missing (e.g. cross-origin issue), the SSE handshake fails
+  silently.
+
 ---
 
 ## Step 12 — What you see now
@@ -753,6 +807,20 @@ This works automatically on Cloudflare — no additional configuration required.
   from your Stripe webhook endpoint.
 - For local development, use the secret printed by `stripe listen`.
 - For production, use the secret from the Stripe dashboard (Step 8).
+
+**Notifications and emails not working after checkout**
+
+- Verify `STRIPE_WEBHOOK_SECRET` is set: `npx wrangler secret list`. If
+  missing, the worker returns 500 on every webhook and events are silently
+  dropped. See Step 11, Gotcha 6.
+- Verify the Stripe webhook endpoint is registered in the dashboard
+  (Developers → Webhooks) pointing to `https://<worker>/stripe/webhook`
+  and subscribed to `checkout.session.completed`.
+- Check the admin email in Settings → Site Content — if empty, emails are
+  skipped (SSE notifications still work).
+- If using Formspark, verify the Formspark Form ID is correct.
+- If using Cloudflare Email Service, the `from` domain must be onboarded.
+- The admin panel must be open and logged in for SSE notifications to appear.
 
 **Deployment fails on GitHub Actions**
 

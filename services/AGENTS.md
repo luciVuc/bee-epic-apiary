@@ -112,13 +112,13 @@ This directory contains a Cloudflare Worker providing Stripe checkout session cr
 
 ### Required
 
-| Variable                | Description                                                         | Source                                                            |
-| ----------------------- | ------------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `STRIPE_SECRET_KEY`     | Stripe secret key for API authentication                            | Wrangler Secret (`npx wrangler secret put STRIPE_SECRET_KEY`)     |
-| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret                                       | Wrangler Secret (`npx wrangler secret put STRIPE_WEBHOOK_SECRET`) |
-| `ALLOWED_ORIGINS`       | Comma-separated list of allowed CORS origins, or `*` for all        | Wrangler Secret or `.dev.vars`                                    |
-| `JWT_SIGNING_SECRET`    | HS256 signing secret for `bea_at` cookie JWTs (required)            | Wrangler Secret (`npx wrangler secret put JWT_SIGNING_SECRET`)    |
-| `OWNER_EMAILS`          | Comma-separated owner email allowlist — bootstrap + dev-header gate | Wrangler Secret (`npx wrangler secret put OWNER_EMAILS`)          |
+| Variable                | Description                                                                                                                                              | Source                                                            |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `STRIPE_SECRET_KEY`     | Stripe secret key for API authentication                                                                                                                 | Wrangler Secret (`npx wrangler secret put STRIPE_SECRET_KEY`)     |
+| `STRIPE_WEBHOOK_SECRET` | Stripe webhook signing secret — **critical for notifications**: without it, the worker returns 500 on every webhook and orders never transition to "new" | Wrangler Secret (`npx wrangler secret put STRIPE_WEBHOOK_SECRET`) |
+| `ALLOWED_ORIGINS`       | Comma-separated list of allowed CORS origins, or `*` for all                                                                                             | Wrangler Secret or `.dev.vars`                                    |
+| `JWT_SIGNING_SECRET`    | HS256 signing secret for `bea_at` cookie JWTs (required)                                                                                                 | Wrangler Secret (`npx wrangler secret put JWT_SIGNING_SECRET`)    |
+| `OWNER_EMAILS`          | Comma-separated owner email allowlist — bootstrap + dev-header gate                                                                                      | Wrangler Secret (`npx wrangler secret put OWNER_EMAILS`)          |
 
 ### Optional
 
@@ -162,6 +162,7 @@ The dev-mode `X-Dev-Email` header is a server-side escape hatch for scripted API
 - **Compatibility Date**: Set to `2026-03-10` to match the installed Cloudflare Workers Runtime. Update after upgrading Wrangler.
 - **Email Service Domain**: The `send_email` binding requires the `from` domain to be onboarded. Run `npx wrangler email sending enable yourdomain.com` before sending emails in production. Local dev uses `--env development` with `"remote": false` (local simulator, no real emails sent). The contact handler uses `contact@<domain>` and order notification uses `noreply@<domain>` where `<domain>` is extracted from the admin email in site settings.
 - **CORS Headers**: All responses include CORS headers if the request origin is allowed. Preflight requests are handled automatically.
+- **Webhook secret required for notifications**: If `STRIPE_WEBHOOK_SECRET` is not set, the worker returns 500 on every incoming webhook event. Stripe events are silently dropped — no order confirmation, no admin SSE notification, no email. Verify with `wrangler secret list` before debugging notification issues.
 
 ## Security
 

@@ -19,7 +19,10 @@ import {
 import type { RootState, AppDispatch } from "../store";
 import { fetchOrders } from "../store/ordersSlice";
 import { Spinner } from "../components/shared/Spinner";
-import { NEW_ORDER_EVENT } from "../utils/constants";
+import {
+  NEW_ORDER_EVENT,
+  ORDER_STATUS_CHANGED_EVENT,
+} from "../utils/constants";
 import {
   orderStatusBadge,
   orderStatusLabel,
@@ -203,6 +206,25 @@ export function OrdersPage() {
     };
     window.addEventListener(NEW_ORDER_EVENT, handleNewOrder);
     return () => window.removeEventListener(NEW_ORDER_EVENT, handleNewOrder);
+  }, [
+    dispatch,
+    searchTerm,
+    selectedStatus,
+    selectedPaymentStatus,
+    selectedOrderStatus,
+    buildFetchParams,
+  ]);
+
+  useEffect(() => {
+    const handleStatusChanged = () => {
+      dispatch(fetchOrders(buildFetchParams(true)));
+    };
+    window.addEventListener(ORDER_STATUS_CHANGED_EVENT, handleStatusChanged);
+    return () =>
+      window.removeEventListener(
+        ORDER_STATUS_CHANGED_EVENT,
+        handleStatusChanged,
+      );
   }, [
     dispatch,
     searchTerm,
