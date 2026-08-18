@@ -41,7 +41,12 @@
 	 * Note: Use secrets to store sensitive data.
 	 * https://developers.cloudflare.com/workers/configuration/secrets/
 	 */
-	"vars": { "RATE_LIMIT_MAX": "100", "RATE_LIMIT_WINDOW": "60", "ADMIN_BASE_URL": "", "ENVIRONMENT": "production" },
+	"vars": {
+		"RATE_LIMIT_MAX": "100",
+		"RATE_LIMIT_WINDOW": "60",
+		"ADMIN_BASE_URL": "https://bee-epic-apiary-admin.pages.dev",
+		"ENVIRONMENT": "production",
+	},
 	/**
 	 * Static Assets
 	 * https://developers.cloudflare.com/workers/static-assets/binding/

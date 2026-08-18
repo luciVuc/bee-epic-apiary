@@ -10,7 +10,7 @@ import { timingSafeEqual } from '../../utils/timingSafeEqual';
  *
  * Salt is 16 random bytes per password; output digest is 32 bytes.
  */
-const ITERATIONS = 600_000;
+const ITERATIONS = 100_000;
 const SALT_BYTES = 16;
 const HASH_BYTES = 32;
 
@@ -60,8 +60,13 @@ export async function verifyPassword(password: string, stored: string): Promise<
 	return timingSafeEqual(base64UrlEncode(actual), base64UrlEncode(expected));
 }
 
+// Workers runtime caps PBKDF2 at 100k iterations — silently clamp so old
+// hashes with higher counts don't throw at verify time.
+const WORKERS_MAX_ITERATIONS = 100_000;
+
 async function derive(password: string, salt: Uint8Array, iterations: number): Promise<Uint8Array> {
 	const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(password), { name: 'PBKDF2' }, false, ['deriveBits']);
-	const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations }, key, HASH_BYTES * 8);
+	const clamped = Math.min(iterations, WORKERS_MAX_ITERATIONS);
+	const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', hash: 'SHA-256', salt, iterations: clamped }, key, HASH_BYTES * 8);
 	return new Uint8Array(bits);
 }
