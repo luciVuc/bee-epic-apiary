@@ -54,6 +54,7 @@ export function withAuthHandler(method: HttpMethod, handler: AuthHandler, option
 		}
 
 		const origin = request.headers.get('Origin');
+		const referer = request.headers.get('Referer');
 
 		if (request.method !== method) {
 			return jsonErr({ code: 'METHOD_NOT_ALLOWED', allowed: [method, 'OPTIONS'] }, origin, env);
@@ -61,7 +62,7 @@ export function withAuthHandler(method: HttpMethod, handler: AuthHandler, option
 
 		// Origin check — use jsonResponse directly: this is a network-level policy
 		// rejection, not a caller-identity error, and doesn't need a requiredRole.
-		if (!isAllowedOrigin(origin, env)) {
+		if (!isAllowedOrigin(origin, env, referer)) {
 			return jsonResponse({ ok: false, error: { code: 'UNAUTHORIZED' } }, 403, origin, env);
 		}
 

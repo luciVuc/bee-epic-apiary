@@ -19,8 +19,9 @@ import { isAllowedOrigin, jsonErr, resolveCaller, roleSatisfies } from '../../ut
  */
 export async function handleNotificationsStream(request: Request, env: Env): Promise<Response> {
 	const origin = request.headers.get('Origin');
+	const referer = request.headers.get('Referer');
 
-	if (!isAllowedOrigin(origin, env)) {
+	if (!isAllowedOrigin(origin, env, referer)) {
 		return jsonErr({ code: 'UNAUTHORIZED' }, origin, env);
 	}
 

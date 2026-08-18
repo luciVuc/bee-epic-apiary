@@ -43,10 +43,11 @@ function buildAllowMethodsHeader(methods: HttpMethod | HttpMethod[]): string {
  */
 export function handleCORS(request: Request, env: Env, allowedMethods: HttpMethod | HttpMethod[]): Response {
 	const origin = request.headers.get('Origin');
+	const referer = request.headers.get('Referer');
 
 	// Delegate the wildcard / allow-list decision to isAllowedOrigin so the
 	// production-wildcard refusal (review I12) applies to preflight too.
-	if (!isAllowedOrigin(origin, env)) {
+	if (!isAllowedOrigin(origin, env, referer)) {
 		const headers: Record<string, string> = { 'Content-Type': 'application/json' };
 		if (origin) headers['Access-Control-Allow-Origin'] = origin;
 		return new Response(JSON.stringify({ error: 'Origin not allowed' }), {

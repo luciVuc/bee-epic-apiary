@@ -16,6 +16,7 @@ type SettingsKey = 'site' | 'process' | 'testimonials' | 'categories';
 async function settingsHandler(request: Request, env: Env): Promise<Response> {
 	const url = new URL(request.url);
 	const origin = request.headers.get('Origin');
+	const referer = request.headers.get('Referer');
 
 	const match = url.pathname.match(/^\/settings\/(site|process|testimonials|categories)$/);
 	if (!match) {
@@ -37,7 +38,7 @@ async function settingsHandler(request: Request, env: Env): Promise<Response> {
 	}
 
 	if (request.method === 'PUT') {
-		if (!isAllowedOrigin(origin, env)) {
+		if (!isAllowedOrigin(origin, env, referer)) {
 			return jsonResponse({ ok: false, error: { code: 'UNAUTHORIZED' } }, 403, origin, env);
 		}
 		// Plan 3: role-based auth — MANAGER (or higher) can edit site content.
